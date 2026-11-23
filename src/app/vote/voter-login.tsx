@@ -55,8 +55,8 @@ export function VoterLogin() {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex border-b border-line text-xs font-semibold">
+    <Card className="overflow-hidden rounded-3xl shadow-elite">
+      <div className="flex border-b border-line bg-gradient-to-b from-slate-50 to-white text-xs font-semibold">
         {["Roll number", "Verification", "Ballot"].map((s, i) => (
           <div key={s} className={`flex flex-1 items-center justify-center gap-2 py-3 ${i === (step === "roll" ? 0 : 1) ? "text-electric" : "text-muted"}`}>
             <span className={`flex size-5 items-center justify-center rounded-full text-[10px] ${i <= (step === "roll" ? 0 : 1) ? "bg-electric text-white" : "bg-slate-100"}`}>{i + 1}</span>
@@ -75,7 +75,7 @@ export function VoterLogin() {
               <Input id="roll" value={roll} onChange={(e) => setRoll(e.target.value.toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="e.g. 2128001" maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="lg" className="w-full" loading={busy} disabled={roll.length < 3}>Send verification code <ArrowRight /></Button>
+            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>Send verification code <ArrowRight /></Button>
           </form>
         ) : (
           <form onSubmit={verify} className="space-y-5">
@@ -95,7 +95,7 @@ export function VoterLogin() {
               />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="lg" className="w-full" loading={busy} disabled={code.length !== 6}>Verify &amp; continue <ArrowRight /></Button>
+            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={code.length !== 6}>Verify &amp; continue <ArrowRight /></Button>
             <div className="flex items-center justify-between text-sm">
               <button type="button" className="inline-flex items-center gap-1 font-medium text-muted hover:text-ink" onClick={() => { setStep("roll"); setError(null); }}>
                 <ArrowLeft className="size-4" /> Change roll

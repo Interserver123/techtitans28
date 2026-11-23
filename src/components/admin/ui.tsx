@@ -7,7 +7,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">{title}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 text-sm text-slate-400">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -18,7 +18,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
 export function Stat({ label, value, hint, icon: Icon, tone = "blue" }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ComponentType<{ className?: string }>; tone?: "blue" | "green" | "amber" | "red" | "slate" }) {
   const tones = { blue: "text-gold bg-gold/10", green: "text-green-400 bg-green-500/10", amber: "text-amber-400 bg-amber-500/10", red: "text-red-400 bg-red-500/10", slate: "text-slate-300 bg-white/5" };
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-navy-800 p-5">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-navy-800 to-[#0e1628] p-5 shadow-[0_1px_0_rgb(255_255_255/0.04)_inset] transition hover:border-electric/30"><div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-electric/10 blur-2xl transition group-hover:bg-electric/20" />
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
         {Icon && <span className={cn("rounded-lg p-1.5", tones[tone])}><Icon className="size-4" /></span>}

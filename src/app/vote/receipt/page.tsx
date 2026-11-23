@@ -12,16 +12,16 @@ export default async function ReceiptPage() {
   if (!s) redirect("/vote");
   if (!s.hasVoted) redirect("/vote/ballot");
   return (
-    <Card className="animate-fade-up overflow-hidden">
-      <div className="bg-navy px-6 py-10 text-center text-white">
-        <div className="animate-pop mx-auto flex size-16 items-center justify-center rounded-full bg-success shadow-lg shadow-green-600/40">
+    <Card className="animate-fade-up overflow-hidden rounded-3xl shadow-elite">
+      <div className="noise relative overflow-hidden bg-navy px-6 py-12 text-center text-white"><div className="aurora opacity-70" aria-hidden />
+        <div className="animate-pop relative mx-auto flex size-16 items-center justify-center rounded-full bg-success shadow-lg shadow-green-600/40">
           <CheckCircle2 className="size-9" />
         </div>
-        <h1 className="font-display mt-5 text-2xl font-bold tracking-tight">Your vote has been recorded</h1>
-        <p className="mt-1 text-sm text-slate-400">Thank you for taking part in {s.electionTitle}.</p>
+        <h1 className="font-display relative mt-5 text-2xl font-extrabold tracking-tight sm:text-3xl">Your vote has been recorded</h1>
+        <p className="relative mt-1 text-sm text-slate-400">Thank you for taking part in {s.electionTitle}.</p>
       </div>
       <div className="space-y-5 p-6 sm:p-8">
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-canvas p-5 text-center">
+        <div className="rounded-2xl border border-dashed border-gold/60 bg-gradient-to-br from-amber-50/60 to-white p-5 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Receipt ID</p>
           <p className="mt-2 select-all font-mono text-xl font-bold tracking-wider sm:text-2xl" data-testid="receipt-code">{s.receiptCode}</p>
         </div>

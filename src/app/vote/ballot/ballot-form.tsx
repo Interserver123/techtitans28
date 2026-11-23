@@ -72,7 +72,7 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
             {candidates.map((c) => {
               const active = selected === c.id;
               return (
-                <Card key={c.id} className={cn("overflow-hidden transition", active ? "border-electric ring-4 ring-electric/15" : "hover:border-slate-300")}>
+                <Card key={c.id} className={cn("overflow-hidden rounded-2xl transition duration-300", active ? "border-electric bg-gradient-to-br from-electric-50/70 to-white shadow-glow ring-4 ring-electric/10" : "hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lift")}>
                   <label className="flex cursor-pointer items-center gap-4 p-4">
                     <input type="radio" name="candidate" value={c.id} checked={active} onChange={() => setSelected(c.id)} className="peer sr-only" />
                     <CandidateAvatar name={c.display_name} url={c.photo_url} className="size-16 shrink-0 rounded-xl text-lg sm:size-20" />

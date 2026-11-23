@@ -18,14 +18,14 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
         <Brand />
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-ink">
+            <Link key={n.href} href={n.href} className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-900/5 hover:text-ink">
               {n.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
           <StatusPill status={status} className="hidden sm:inline-flex" />
-          <Button asChild size="sm" variant={canVote ? "default" : "outline"}>
+          <Button asChild size="sm" variant={canVote ? "default" : "outline"} className={canVote ? "rounded-full bg-gradient-to-r from-emerald to-emerald-900 px-4 shadow-glow hover:brightness-110" : "rounded-full"}>
             <Link href="/vote">{canVote ? "Vote now" : "Voter portal"}</Link>
           </Button>
         </div>
