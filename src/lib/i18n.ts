@@ -47,7 +47,7 @@ const en = {
   campus: {
     eyebrow: "Islamic University · Kushtia", title: "One campus. One voice.",
     sub: "Under the gulmohar trees of our university, the 28th ICT batch chooses who will carry its voice.",
-    c1: "The red-brick campus", c2: "The gate", c3: "Where we learn",
+    c1: "Our department", c2: "The gate", c3: "Where we learn",
   },
   stats: { eligible: "Eligible voters", cast: "Ballots cast", turnout: "Turnout", candidates: "Candidates", window: "Voting window" },
   cand: {
@@ -225,7 +225,7 @@ const bn: Dict = {
   campus: {
     eyebrow: "ইসলামী বিশ্ববিদ্যালয় · কুষ্টিয়া", title: "এক ক্যাম্পাস। এক কণ্ঠ।",
     sub: "প্রিয় বিশ্ববিদ্যালয়ের কৃষ্ণচূড়ার ছায়ায় আইসিটির ২৮তম ব্যাচ বেছে নেবে, কে বহন করবে তাদের কণ্ঠ।",
-    c1: "লাল ইটের ক্যাম্পাস", c2: "প্রধান ফটক", c3: "যেখানে আমরা শিখি",
+    c1: "আমাদের বিভাগ", c2: "প্রধান ফটক", c3: "যেখানে আমরা শিখি",
   },
   stats: { eligible: "যোগ্য ভোটার", cast: "প্রদত্ত ব্যালট", turnout: "উপস্থিতি", candidates: "প্রার্থী", window: "ভোটগ্রহণের সময়" },
   cand: {

@@ -155,7 +155,7 @@ export default async function HomePage() {
         <Heading eyebrow={t.campus.eyebrow} title={t.campus.title} subtitle={t.campus.sub} />
         <div className="mt-12 grid gap-4 md:grid-cols-6 md:grid-rows-2">
           <figure className="reveal group relative min-h-64 overflow-hidden rounded-3xl shadow-lift md:col-span-4 md:row-span-2 md:min-h-[26rem]">
-            <Image src="/campus/aerial.jpg" alt="Islamic University campus from above" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <Image src="/campus/ict-department.webp" alt="Department of Information & Communication Technology, Islamic University, Kushtia" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
             <figcaption className="font-display absolute bottom-5 left-6 text-2xl text-white">{t.campus.c1}</figcaption>
           </figure>
