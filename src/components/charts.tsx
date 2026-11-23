@@ -4,8 +4,8 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContaine
 const fmtHour = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Dhaka", hour: "2-digit", minute: "2-digit", hour12: true, day: "2-digit", month: "short" }).format(new Date(iso));
 
-export function ParticipationChart({ data, dark = false }: { data: { bucket: string; votes: number; cumulative: number }[]; dark?: boolean }) {
-  if (!data.length) return <p className="py-12 text-center text-sm text-slate-500">No ballots recorded yet.</p>;
+export function ParticipationChart({ data, dark = false, emptyText = "No ballots recorded yet." }: { data: { bucket: string; votes: number; cumulative: number }[]; dark?: boolean; emptyText?: string }) {
+  if (!data.length) return <p className="py-12 text-center text-sm text-slate-500">{emptyText}</p>;
   const axis = dark ? "#64748b" : "#94a3b8";
   return (
     <div className="h-64 w-full">

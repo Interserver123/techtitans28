@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
+// Bengali faces: only the Bengali subset is loaded, and only when Bengali glyphs appear.
+import "@fontsource/hind-siliguri/bengali-400.css";
+import "@fontsource/hind-siliguri/bengali-500.css";
+import "@fontsource/hind-siliguri/bengali-600.css";
+import "@fontsource/hind-siliguri/bengali-700.css";
+import "@fontsource-variable/noto-serif-bengali";
+import { getLang } from "@/lib/i18n-server";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +24,10 @@ export const viewport: Viewport = {
   themeColor: "#0B1220",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const lang = await getLang();
   return (
-    <html lang="en">
+    <html lang={lang}>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

@@ -1,15 +1,17 @@
 export const TZ = "Asia/Dhaka";
 
-export function fmtDateTime(d: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = {}) {
+const locale = (lang?: "en" | "bn") => (lang === "bn" ? "bn-BD" : "en-GB");
+
+export function fmtDateTime(d: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = {}, lang?: "en" | "bn") {
   if (!d) return "—";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: TZ, day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true, ...opts,
+  return new Intl.DateTimeFormat(locale(lang), {
+    timeZone: TZ, day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: lang !== "bn", ...opts,
   }).format(new Date(d));
 }
 
-export function fmtDate(d: Date | string | null | undefined) {
+export function fmtDate(d: Date | string | null | undefined, lang?: "en" | "bn") {
   if (!d) return "—";
-  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "2-digit", month: "long", year: "numeric" }).format(new Date(d));
+  return new Intl.DateTimeFormat(locale(lang), { timeZone: TZ, day: "2-digit", month: "long", year: "numeric" }).format(new Date(d));
 }
 
 export function fmtTime(d: Date | string | null | undefined) {
