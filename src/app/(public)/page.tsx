@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { getPublicState } from "@/lib/services/public";
 import { UrgentContact } from "@/components/site/urgent-contact";
+import { RuleBanner } from "@/components/site/rule-banner";
 import { Countdown } from "@/components/site/countdown";
 import { LiveTurnout } from "@/components/site/live-turnout";
 import { SpotlightCard } from "@/components/site/spotlight-card";
@@ -214,10 +215,7 @@ export default async function HomePage() {
             <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">{t.cand.empty}</div>
           ) : positions.length > 1 ? (
             <>
-              <div className="mx-auto mt-8 flex max-w-2xl gap-3 rounded-2xl border border-gold/40 bg-gradient-to-br from-amber-50 to-white p-4 text-sm shadow-card">
-                <Users className="mt-0.5 size-5 shrink-0 text-emerald-900" aria-hidden />
-                <div><p className="font-semibold text-emerald-900">{t.rule.title}</p><p className="mt-0.5 text-slate-600">{t.rule.body}</p></div>
-              </div>
+              <RuleBanner lang={lang} className="mx-auto mt-8 max-w-2xl" />
               {positions.map((p) => {
                 const group = candidates.filter((c) => c.position_id === p.id);
                 if (!group.length) return null;
