@@ -123,7 +123,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
           )}
 
           <h2 className="font-display mb-3 text-lg font-bold">{B.chooseFor(posLabel(pos?.gender ?? null, lang, true))}</h2>
-          {totalInPos > 8 && (
+          {totalInPos > 0 && (
             <label className="relative mb-4 block">
               <span className="sr-only">{T.search}</span>
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
