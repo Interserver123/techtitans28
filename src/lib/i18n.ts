@@ -107,6 +107,7 @@ const en = {
   },
   cta: { a: "Make your vote ", b: "count", c: ".", live: "Voting is live. It takes under two minutes.", notLive: "Open the voter portal when the election goes live.", cast: "Cast your vote", watermark: "ভোট" },
   urgent: { title: "Urgent inquiry or problem?", body: "Can't vote, code not arriving, or anything else that cannot wait — message us directly.", cta: "Message us on Facebook" },
+  link: { title: "Your personal voting link", sub: "The Election Committee gave you this private link. Enter your roll number to continue to your ballot.", cta: "Continue to ballot", note: "Do not share this link — it lets whoever has it vote as you." },
   footer: {
     about: (dept: string, inst: string) => `The official Class Representative election portal of TechTitans-28, ${dept}, ${inst}.`,
     election: "Election", support: "Support",
@@ -304,6 +305,7 @@ const bn: Dict = {
   },
   cta: { a: "আপনার ভোট, আপনার ", b: "অধিকার", c: "।", live: "ভোটগ্রহণ চলছে। সময় লাগবে দুই মিনিটেরও কম।", notLive: "নির্বাচন শুরু হলে ভোটার পোর্টাল খুলুন।", cast: "ভোট দিন", watermark: "ভোট" },
   urgent: { title: "জরুরি জিজ্ঞাসা বা সমস্যা?", body: "ভোট দিতে পারছেন না, কোড আসছে না, বা অন্য কোনো জরুরি বিষয় — সরাসরি আমাদের জানান।", cta: "ফেসবুকে মেসেজ করুন" },
+  link: { title: "আপনার ব্যক্তিগত ভোটিং লিংক", sub: "নির্বাচন কমিটি আপনাকে এই গোপন লিংকটি দিয়েছে। ব্যালটে যেতে আপনার রোল নম্বর লিখুন।", cta: "ব্যালটে যান", note: "এই লিংক কাউকে দেবেন না — যার কাছে থাকবে সে আপনার হয়ে ভোট দিতে পারবে।" },
   footer: {
     about: () => "টেকটাইটানস-২৮, তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ, ইসলামী বিশ্ববিদ্যালয়ের ক্লাস প্রতিনিধি নির্বাচনের অফিসিয়াল পোর্টাল।",
     election: "নির্বাচন", support: "সহায়তা",
@@ -406,6 +408,7 @@ const bn: Dict = {
     GENDER_MISMATCH: "প্রার্থীর লিঙ্গ এই পদের সাথে মেলে না।",
     VALIDATION: "তথ্যে ভুল আছে। আবার দেখে নিন।",
     INVALID_OTP: "কোডটি ভুল অথবা মেয়াদোত্তীর্ণ।",
+    INVALID_LINK: "লিংকটি সঠিক নয়, মেয়াদ শেষ, অথবা রোল নম্বর মেলেনি। কমিটির সাথে যোগাযোগ করুন।",
     OTP_LOCKED: "অনেকবার ভুল চেষ্টা হয়েছে। নতুন কোড চান।",
     RATE_LIMITED: "অনেক বেশি অনুরোধ। একটু অপেক্ষা করে আবার চেষ্টা করুন।",
     ALREADY_VOTED: "এই নির্বাচনে আপনার একটি ব্যালট ইতিমধ্যে গৃহীত হয়েছে।",

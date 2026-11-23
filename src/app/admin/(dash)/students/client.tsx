@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileUp, Pencil, Power, Search, UserPlus } from "lucide-react";
+import { Copy, FileUp, Link2, Pencil, Power, Search, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/components/admin/use-action";
 import { api } from "@/lib/client";
 import { errorText } from "@/lib/i18n";
-import { bnNum } from "@/lib/format";
+import { bnNum, fmtDateTime } from "@/lib/format";
 import { useToast } from "@/components/admin/toast";
 
 type S = { id?: string; rollNumber: string; fullName: string; contactType: "EMAIL" | "PHONE"; contactValue: string; batch: string; gender: "MALE" | "FEMALE" | ""; isEligible: boolean; isActive: boolean; notes: string };
@@ -159,6 +159,79 @@ export function ImportDialog({ batch }: { batch: string }) {
             </div>
           )}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type LinkRow = { id: string; created_at: string; expires_at: string; first_used_at: string | null; revoked_at: string | null; reason: string | null; expired: boolean };
+
+/** Gives one student a private, time-limited voting link (no email code; the student confirms their roll number). */
+export function AccessLinkDialog({ studentId, name, roll, hasVoted }: { studentId: string; name: string; roll: string; hasVoted: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [hours, setHours] = useState("6");
+  const [reason, setReason] = useState("");
+  const [url, setUrl] = useState<string | null>(null);
+  const [links, setLinks] = useState<LinkRow[]>([]);
+  const [copied, setCopied] = useState(false);
+  const { run, busy, error } = useAction();
+  const toast = useToast();
+
+  async function load() {
+    const r = await api<{ links: LinkRow[] }>(`/api/admin/students/${studentId}/access-link`);
+    if (r.ok) setLinks(r.links);
+  }
+  async function create() {
+    const r = await run<{ url: string }>(`/api/admin/students/${studentId}/access-link`, { json: { hours: Number(hours), reason } }, "লিংক তৈরি হয়েছে");
+    if (r && r.ok) { setUrl(r.url); setCopied(false); void load(); }
+  }
+  async function copy() {
+    try { await navigator.clipboard.writeText(url ?? ""); setCopied(true); } catch { toast("error", "কপি করা যায়নি — লিংকটি নিজে সিলেক্ট করে কপি করুন।"); }
+  }
+  async function revoke(id: string) {
+    if (!confirm("এই লিংকটি বাতিল করবেন? এটি দিয়ে আর ভোট দেওয়া যাবে না।")) return;
+    const r = await run(`/api/admin/access-links/${id}`, { method: "DELETE" }, "লিংক বাতিল হয়েছে");
+    if (r) { setUrl(null); void load(); }
+  }
+  const status = (l: LinkRow) => l.revoked_at ? <Badge tone="red">বাতিল</Badge> : l.expired ? <Badge tone="amber">মেয়াদ শেষ</Badge> : l.first_used_at ? <Badge tone="blue">ব্যবহৃত</Badge> : <Badge tone="green">সক্রিয়</Badge>;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setUrl(null); void load(); } }}>
+      <DialogTrigger asChild><Button size="icon" variant="ghost" aria-label={`${name}-এর ভোটিং লিংক`} title="ব্যক্তিগত ভোটিং লিংক"><Link2 /></Button></DialogTrigger>
+      <DialogContent title="ব্যক্তিগত ভোটিং লিংক" description={`${name} (রোল ${roll}) — ইমেইল কোড ছাড়াই শুধু রোল নম্বর দিয়ে ভোট দেওয়ার লিংক।`}>
+        {hasVoted ? <Alert tone="info">এই শিক্ষার্থী ইতিমধ্যে ভোট দিয়েছেন।</Alert> : (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="মেয়াদ" htmlFor="al-h">
+                <Select id="al-h" value={hours} onChange={(e) => setHours(e.target.value)}>
+                  <option value="2">২ ঘণ্টা</option><option value="6">৬ ঘণ্টা</option><option value="24">২৪ ঘণ্টা</option><option value="72">৭২ ঘণ্টা</option>
+                </Select>
+              </Field>
+              <Field label="কারণ (ঐচ্ছিক)" htmlFor="al-r"><Input id="al-r" value={reason} maxLength={300} placeholder="যেমন: ইমেইল অ্যাক্সেস নেই" onChange={(e) => setReason(e.target.value)} /></Field>
+            </div>
+            {error && <Alert tone="error">{error}</Alert>}
+            <Button className="w-full" loading={busy} onClick={() => void create()}><Link2 /> নতুন লিংক তৈরি করুন</Button>
+            {url && (
+              <div className="space-y-2 rounded-xl border border-gold/40 bg-white/5 p-3">
+                <p className="text-xs text-amber-300">লিংকটি এখনই কপি করে শিক্ষার্থীকে পাঠান — এটি আর দেখানো হবে না। নতুন লিংক তৈরি করলে আগেরটি বাতিল হবে।</p>
+                <div className="flex gap-2"><Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="font-mono text-xs" aria-label="ভোটিং লিংক" /><Button type="button" variant="outline" onClick={() => void copy()}><Copy /> {copied ? "কপি হয়েছে" : "কপি"}</Button></div>
+              </div>
+            )}
+          </div>
+        )}
+        {links.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2 text-xs font-semibold text-slate-400">আগের লিংক</p>
+            <ul className="divide-y divide-white/5 text-xs text-slate-300">
+              {links.map((l) => (
+                <li key={l.id} className="flex items-center justify-between gap-2 py-2">
+                  <span>{fmtDateTime(l.created_at)} → {fmtDateTime(l.expires_at)}{l.reason ? ` · ${l.reason}` : ""}</span>
+                  <span className="flex items-center gap-2">{status(l)}{!l.revoked_at && !l.expired && <Button size="sm" variant="ghost" onClick={() => void revoke(l.id)}>বাতিল</Button>}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
