@@ -8,6 +8,8 @@ import { enforceRateLimit, rateLimit } from "../rate-limit";
 import { otpProvider } from "../otp/provider";
 import { getCurrentElection, isVotingOpen, type Election } from "./elections";
 import { getNumberSetting } from "./settings";
+import { maskContact } from "../mask";
+import { otpStatus } from "../otp/provider";
 import type { RequestContext } from "../http";
 
 export const rollSchema = z
@@ -26,6 +28,29 @@ export function assertElectionAcceptsVoters(e: Election | null): asserts e is El
   if (e.status === "PAUSED") throw new AppError("ELECTION_PAUSED");
   if (e.status === "CLOSED" || e.status === "RESULTS_PUBLISHED" || new Date() >= new Date(e.closes_at)) throw new AppError("ELECTION_CLOSED");
   if (!isVotingOpen(e)) throw new AppError("ELECTION_NOT_OPEN");
+}
+
+/**
+ * Step 1 of the voter flow: "who is this roll number?" Returns the student's name and a PARTLY HIDDEN
+ * contact so they can confirm it is them and where the code will go. Nothing else about the student
+ * (and never whether they have already voted) is revealed. Unknown / ineligible rolls get an error.
+ */
+export async function lookupVoter(rollInput: string, ctx: RequestContext) {
+  const roll = rollSchema.parse(rollInput);
+  // Lookups reveal a name, so they are rate-limited harder than code requests (a batch can share one campus IP).
+  await enforceRateLimit("lookup-ip", ctx.ip ?? "unknown", 120, 15 * 60);
+  await enforceRateLimit("lookup-roll", roll, 20, 15 * 60);
+  const election = await getCurrentElection();
+  assertElectionAcceptsVoters(election);
+  const s = await one<{ full_name: string; contact_type: "EMAIL" | "PHONE"; contact_value: string }>(
+    `select full_name, contact_type, contact_value from students
+      where roll_number = $1 and is_active and is_eligible and batch = setting_text('election.batch', 'TechTitans-28')`,
+    [roll],
+  );
+  if (!s) throw new AppError("NOT_ELIGIBLE", "This roll number is not on the voter list or is not eligible to vote.");
+  const st = otpStatus();
+  const deliverable = st.mode === "dev" || (s.contact_type === "EMAIL" ? st.email : st.sms);
+  return { roll, fullName: s.full_name, contactType: s.contact_type, maskedContact: maskContact(s.contact_type, s.contact_value), deliverable };
 }
 
 type EligibleStudent = { id: string; full_name: string; contact_type: "EMAIL" | "PHONE"; contact_value: string };

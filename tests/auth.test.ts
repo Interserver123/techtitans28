@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { requestOtp, verifyOtp, getVoterSession } from "@/lib/services/voter-auth";
+import { requestOtp, verifyOtp, getVoterSession, lookupVoter } from "@/lib/services/voter-auth";
 import { devOutbox } from "@/lib/otp/provider";
 import { query, one } from "@/lib/db";
 import { asOwner, ctx, makeElection, makeStudent, resetVolatile, setElectionStatus, teardown } from "./helpers/fixtures";
@@ -141,5 +141,52 @@ describe("student authentication (roll + OTP)", () => {
     expect(await getVoterSession(token)).toBeNull();
     const count = await one<{ n: number }>(`select count(*)::int as n from voter_credentials where student_id = $1`, [s.id]);
     expect(count?.n).toBe(1);
+  });
+
+  describe("roll lookup (name + partly hidden contact, before any code is sent)", () => {
+    it("shows the student's name and a masked email — never the full address", async () => {
+      await makeElection();
+      const s = await makeStudent({ email: "rahman.farhan@gmail.com" });
+      const who = await lookupVoter(s.roll, ctx());
+      expect(who).toMatchObject({ roll: s.roll, fullName: `Test Student ${s.roll}`, contactType: "EMAIL", deliverable: true });
+      expect(who.maskedContact).toBe("ra********@gmail.com");
+      expect(JSON.stringify(who)).not.toContain("rahman.farhan");
+      expect(devOutbox()).toHaveLength(0); // looking up sends nothing
+    });
+
+    it("masks short addresses and phone numbers safely", async () => {
+      const { maskContact } = await import("@/lib/mask");
+      expect(maskContact("EMAIL", "ab@x.com")).toBe("a***@x.com");
+      expect(maskContact("EMAIL", "naeemhossen905@gmail.com")).toBe("na********@gmail.com");
+      expect(maskContact("PHONE", "+8801796331349")).toBe("+88********349");
+      expect(maskContact("PHONE", "+8801796331349")).not.toContain("1796");
+    });
+
+    it("rejects unknown, ineligible, deactivated and other-batch rolls", async () => {
+      await makeElection();
+      const bad = [await makeStudent({ eligible: false }), await makeStudent({ active: false }), await makeStudent({ batch: "TechTitans-27" })];
+      for (const roll of ["NOSUCH999", ...bad.map((b) => b.roll)]) {
+        await expect(lookupVoter(roll, ctx())).rejects.toMatchObject({ code: "NOT_ELIGIBLE" });
+      }
+    });
+
+    it("does not reveal whether the student has already voted", async () => {
+      const e = await makeElection();
+      const s = await makeStudent();
+      const before = await lookupVoter(s.roll, ctx());
+      await query(`insert into voter_participation (election_id, student_id, receipt_code) values ($1, $2, 'TT28-AAAA-BBBB-CCCC')`, [e.electionId, s.id]).catch(() => {});
+      const after = await lookupVoter(s.roll, ctx());
+      expect(after).toEqual(before);
+    });
+
+    it("is refused when the election is not open, and is rate-limited per roll", async () => {
+      const e = await makeElection();
+      const s = await makeStudent();
+      for (let i = 0; i < 20; i++) await lookupVoter(s.roll, ctx());
+      await expect(lookupVoter(s.roll, ctx())).rejects.toMatchObject({ code: "RATE_LIMITED" });
+      await query("delete from rate_limit_buckets");
+      await setElectionStatus(e.electionId, "PAUSED");
+      await expect(lookupVoter(s.roll, ctx())).rejects.toMatchObject({ code: "ELECTION_PAUSED" });
+    });
   });
 });

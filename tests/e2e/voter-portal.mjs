@@ -30,10 +30,17 @@ const browser = await chromium.launch();
 const english = async (ctx) => { await ctx.addCookies([{ name: "tt_lang", value: "en", url: BASE }]); return ctx; };
 const phone = async () => english(await browser.newContext({ ...devices["Pixel 7"] }));
 
+/** Step 1 (find my details → "Is this you?") then step 2 (send the code to the shown contact). */
+async function confirmAndSend(page) {
+  await page.getByRole("button", { name: "Find my details" }).click();
+  await page.getByRole("heading", { name: "Is this you?" }).waitFor();
+  await page.getByRole("button", { name: /Yes, send the code/ }).click();
+}
+
 async function loginAs(page, ctx, roll) {
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill(roll);
-  await page.getByRole("button", { name: /Send verification code/ }).click();
+  await confirmAndSend(page);
   await page.getByLabel("6-digit code").waitFor();
   const code = await otpFor(ctx.request, mail(roll));
   await page.getByLabel("6-digit code").fill(code);
@@ -53,7 +60,7 @@ await check("wrong code is rejected with a clear message; correct code then work
   const roll = "D28010";
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill(roll);
-  await page.getByRole("button", { name: /Send verification code/ }).click();
+  await confirmAndSend(page);
   await page.getByLabel("6-digit code").waitFor();
   const code = await otpFor(ctx.request, mail(roll));
   const wrong = code === "000000" ? "111111" : "000000";
@@ -67,15 +74,24 @@ await check("wrong code is rejected with a clear message; correct code then work
   await ctx.close();
 });
 
-await check("unregistered roll: same screen as a real roll, but no code ever works", async () => {
+await check("roll lookup: shows the student's name and a partly hidden email; unknown rolls are refused; 'Not me' goes back", async () => {
   const ctx = await phone(); const page = await ctx.newPage();
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill("NOSUCH99");
-  await page.getByRole("button", { name: /Send verification code/ }).click();
-  await page.getByLabel("6-digit code").waitFor();
-  await page.getByLabel("6-digit code").fill("123456");
-  await page.getByRole("button", { name: /Verify/ }).click();
-  await page.getByText("The code is invalid or has expired.").waitFor();
+  await page.getByRole("button", { name: "Find my details" }).click();
+  await page.getByText("This roll number is not on the voter list or is not eligible to vote.").waitFor();
+  assert((await page.getByLabel("6-digit code").count()) === 0, "no code step for an unknown roll");
+  await page.getByLabel("Roll number").fill("D28011");
+  await page.getByRole("button", { name: "Find my details" }).click();
+  await page.getByRole("heading", { name: "Is this you?" }).waitFor();
+  const name = await page.getByTestId("who-name").innerText();
+  const contact = await page.getByTestId("who-contact").innerText();
+  assert(name.length > 3, "name shown");
+  assert(/^d2\*+@students\.example\.edu$/.test(contact), `contact must be partly hidden, got ${contact}`);
+  assert(!(await page.locator("main").innerText()).includes("d28011@"), "full email must never be shown");
+  await page.screenshot({ path: `${OUT}/portal-1b-confirm.png` });
+  await page.getByRole("button", { name: /Not me/ }).click();
+  await page.getByLabel("Roll number").waitFor();
   await ctx.close();
 });
 
@@ -84,7 +100,7 @@ await check("locks out after 5 wrong codes", async () => {
   const roll = "D28011";
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill(roll);
-  await page.getByRole("button", { name: /Send verification code/ }).click();
+  await confirmAndSend(page);
   await page.getByLabel("6-digit code").waitFor();
   const code = await otpFor(ctx.request, mail(roll));
   const wrong = code === "000000" ? "111111" : "000000";
@@ -104,7 +120,7 @@ await check("resend button is on cooldown right after sending", async () => {
   const ctx = await phone(); const page = await ctx.newPage();
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill("D28012");
-  await page.getByRole("button", { name: /Send verification code/ }).click();
+  await confirmAndSend(page);
   await page.getByLabel("6-digit code").waitFor();
   assert(await page.getByRole("button", { name: /Resend in \d+s/ }).isDisabled(), "resend should be disabled during cooldown");
   await ctx.close();
@@ -125,9 +141,18 @@ await check("two-vote ballot: one boy then one girl; review shows both; submit n
   assert((await page.locator("label", { hasText: "Rakib Hossain" }).count()) === 0, "a boy is never listed in the Girls' race");
   assert((await page.getByRole("button", { name: "Review choices" }).count()) === 0, "Review is not offered until BOTH races are chosen");
   // Switching back and forth keeps the boy's choice.
-  await page.getByRole("tab", { name: /Boys' CR/ }).click();
-  assert(await page.locator('input[type=radio]:checked').count() === 1, "boy choice kept");
-  await page.getByRole("tab", { name: /Girls' CR/ }).click();
+  assert((await page.getByRole("tab").count()) === 0, "races are two pages, not free-switching tabs");
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("heading", { name: /Select one candidate for Boys' Class Representative/ }).waitFor();
+  assert(await page.locator('input[type=radio]:checked').count() === 1, "boy choice kept after going back");
+  assert((await page.locator("label", { hasText: "Lamia Rahman" }).count()) === 0, "a girl is never listed on the Boys' page");
+  await page.locator("label", { hasText: "Arif Rahman" }).first().click();
+  assert(await page.locator('input[type=radio]:checked').count() === 1, "choosing a second boy replaces the first (only one can be selected)");
+  await page.locator("label", { hasText: "Rakib Hossain" }).first().click();
+  await page.getByRole("button", { name: /Next: Girls' CR/ }).click();
+  await page.locator("label", { hasText: "Lamia Rahman" }).first().click();
+  await page.locator("label", { hasText: "Sadia Akter" }).first().click();
+  assert(await page.locator('input[type=radio]:checked').count() === 1, "only one girl can be selected");
   await page.locator("label", { hasText: "Lamia Rahman" }).first().click();
   await page.screenshot({ path: `${OUT}/portal-3b-girls.png` });
   const review = page.getByRole("button", { name: "Review choices" });
@@ -165,7 +190,7 @@ await check("a voter who already voted can sign in again but is sent to the rece
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("Roll number").fill("D28020");
   // new request may hit the per-roll cooldown; wait for it by retrying once after the cooldown window
-  await page.getByRole("button", { name: /Send verification code/ }).click();
+  await confirmAndSend(page);
   const cooling = await page.getByText(/Please wait \d+ seconds/).waitFor({ timeout: 2500 }).then(() => true).catch(() => false);
   assert(cooling, "second request inside the cooldown must be rate-limited");
   await ctx.close();
@@ -197,7 +222,8 @@ await check("STRICT RULE over the API: one vote only, two boys or two girls are 
   await loginAs(page, ctx, "D28040");
   await page.waitForURL("**/vote/ballot");
   const boyIds = await page.locator('input[type=radio]').evaluateAll((els) => els.map((e) => e.value));
-  await page.getByRole("tab", { name: /Girls' CR/ }).click();
+  await page.locator("input[type=radio]").first().check({ force: true });
+  await page.getByRole("button", { name: /Next: Girls' CR/ }).click();
   const girlIds = await page.locator('input[type=radio]').evaluateAll((els) => els.map((e) => e.value));
   assert(boyIds.length >= 2 && girlIds.length >= 2, `need 2+ candidates per race (boys ${boyIds.length}, girls ${girlIds.length})`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;

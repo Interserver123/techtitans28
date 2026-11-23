@@ -43,8 +43,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
   const byId = useMemo(() => new Map(candidates.map((c) => [c.id, c])), [candidates]);
   const choiceFor = (p: Pos) => (selected[p.id] ? byId.get(selected[p.id]) ?? null : null);
   const allChosen = positions.length > 0 && positions.every((p) => selected[p.id]);
-  const nextUnchosen = positions.findIndex((p) => !selected[p.id]);
-
+  
   const list = useMemo(() => {
     const inPos = candidates.filter((c) => c.position_id === pos?.id);
     const needle = q.trim().toLowerCase();
@@ -103,24 +102,24 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
 
       {stage === "choose" ? (
         <>
-          {/* One tab per race, showing progress */}
+          {/* Page indicator: one page per race, in order (not clickable: use Back / Next) */}
           {positions.length > 1 && (
-            <div role="tablist" aria-label={B.legend} className="mb-4 grid grid-cols-2 gap-2">
+            <ol aria-label={B.legend} className="mb-4 grid grid-cols-2 gap-2">
               {positions.map((p, i) => {
                 const c = choiceFor(p);
                 return (
-                  <button key={p.id} type="button" role="tab" aria-selected={i === active} onClick={() => { setActive(i); setQ(""); }}
-                    className={cn("rounded-2xl border p-3 text-left transition", i === active ? "border-emerald bg-emerald-50/70 shadow-card ring-2 ring-emerald/15" : "border-line bg-surface hover:border-slate-300")}>
+                  <li key={p.id} aria-current={i === active ? "step" : undefined}
+                    className={cn("rounded-2xl border p-3 transition", i === active ? "border-emerald bg-emerald-50/70 shadow-card ring-2 ring-emerald/15" : "border-line bg-surface")}>
                     <span className="flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
                       {B.stepOf(num(i + 1, lang), num(positions.length, lang))}
                       {c ? <span className="flex size-5 items-center justify-center rounded-full bg-success text-white"><Check className="size-3" strokeWidth={3} /></span> : <span className="size-5 rounded-full border-2 border-slate-300" />}
                     </span>
                     <span className="font-display mt-1 block text-base font-bold leading-tight text-ink">{posLabel(p.gender, lang)}</span>
                     <span className="mt-0.5 block truncate text-xs text-slate-500">{c ? c.display_name : B.notChosen}</span>
-                  </button>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           )}
 
           <h2 className="font-display mb-3 text-lg font-bold">{B.chooseFor(posLabel(pos?.gender ?? null, lang, true))}</h2>
@@ -197,26 +196,20 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
         <div className="mx-auto max-w-3xl">
           {stage === "choose" ? (
             <div className="flex items-center gap-3">
-              <div className="min-w-0 flex-1 space-y-0.5 text-xs">
-                {positions.map((p) => {
-                  const c = choiceFor(p);
-                  return (
-                    <p key={p.id} className="flex items-center gap-1.5 truncate">
-                      <span className={cn("size-2 shrink-0 rounded-full", c ? "bg-success" : "bg-slate-300")} />
-                      <span className="font-semibold text-ink">{posLabel(p.gender, lang)}:</span>
-                      <span className={cn("truncate", c ? "text-ink" : "text-muted")}>{c ? c.display_name : B.notChosen}</span>
-                    </p>
-                  );
-                })}
-              </div>
-              {allChosen ? (
-                <Button size="lg" disabled={expired} onClick={() => { setStage("review"); setConfirmed(false); window.scrollTo({ top: 0 }); }}>{B.review}</Button>
-              ) : (
-                <Button size="lg" variant={selected[pos?.id ?? ""] ? "default" : "outline"} disabled={expired || !selected[pos?.id ?? ""] || nextUnchosen < 0}
-                  onClick={() => { setActive(nextUnchosen); setQ(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-                  {nextUnchosen >= 0 && selected[pos?.id ?? ""] ? <>{B.next(posLabel(positions[nextUnchosen].gender, lang))} <ArrowRight /></> : B.selectOne}
-                </Button>
+              {active > 0 && (
+                <Button size="lg" variant="outline" onClick={() => { setActive(active - 1); setQ(""); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={expired}><ArrowLeft /> {B.back}</Button>
               )}
+              <div className="hidden min-w-0 flex-1 truncate text-xs sm:block">
+                <span className="font-semibold text-ink">{pos ? posLabel(pos.gender, lang) : ""}:</span>{" "}
+                <span className={selected[pos?.id ?? ""] ? "text-ink" : "text-muted"}>{choiceFor(pos!)?.display_name ?? B.notChosen}</span>
+              </div>
+              <Button size="lg" className="ml-auto flex-1 sm:flex-none" disabled={expired || !selected[pos?.id ?? ""]}
+                onClick={() => {
+                  if (active < positions.length - 1) { setActive(active + 1); setQ(""); window.scrollTo({ top: 0, behavior: "smooth" }); }
+                  else { setStage("review"); setConfirmed(false); window.scrollTo({ top: 0 }); }
+                }}>
+                {!selected[pos?.id ?? ""] ? B.selectOne : active < positions.length - 1 ? <>{B.next(posLabel(positions[active + 1].gender, lang))} <ArrowRight /></> : B.review}
+              </Button>
             </div>
           ) : (
             <div className="flex items-center gap-3">

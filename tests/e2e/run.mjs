@@ -96,7 +96,9 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const roll = process.env.E2E_ROLL ?? "D28041";
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
   await page.getByLabel("রোল নম্বর").fill(roll);
-  await page.getByRole("button", { name: /যাচাই কোড পাঠান/ }).click();
+  await page.getByRole("button", { name: "আমার তথ্য দেখুন" }).click();
+  await page.getByRole("heading", { name: "এটি কি আপনি?" }).waitFor();
+  await page.getByRole("button", { name: /হ্যাঁ, কোড পাঠান/ }).click();
   await page.getByLabel("৬ অঙ্কের কোড").waitFor();
   await page.screenshot({ path: `${OUT}/vote-otp-mobile.png` });
   const code = await latestOtp(ctx.request, `${roll.toLowerCase()}@students.example.edu`);
