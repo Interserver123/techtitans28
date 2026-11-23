@@ -9,6 +9,12 @@ export async function GET() {
   const problems = configProblems();
   const report: Record<string, unknown> = {
     ok: false,
+    // Set automatically by Vercel for Git deployments; shows which commit is live.
+    deployment: {
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+      branch: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+      environment: process.env.VERCEL_ENV ?? null,
+    },
     config: problems.length ? { ok: false, problems } : { ok: true },
   };
   if (problems.some((p) => p.variable === "DATABASE_URL")) {
