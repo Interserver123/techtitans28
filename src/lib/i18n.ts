@@ -202,7 +202,7 @@ const en = {
   },
   pos: { male: "Boys' CR", female: "Girls' CR", maleLong: "Boys' Class Representative", femaleLong: "Girls' Class Representative", neutral: "Class Representative" },
   rule: {
-    title: "Two votes: one for a boy, one for a girl",
+    title: "🗳️ No more than 2 votes, and no same-gender combo! 🙅‍♂️🙅‍♀️😜",
     body: "Every student casts exactly two votes — one for the Boys' CR and one for the Girls' CR. Both choices are submitted together and cannot be changed.",
   },
   errors: {} as Record<string, string>,
@@ -400,7 +400,7 @@ const bn: Dict = {
   },
   pos: { male: "ছাত্র সিআর", female: "ছাত্রী সিআর", maleLong: "ছাত্র ক্লাস প্রতিনিধি (সিআর)", femaleLong: "ছাত্রী ক্লাস প্রতিনিধি (সিআর)", neutral: "ক্লাস প্রতিনিধি (সিআর)" },
   rule: {
-    title: "দুটি ভোট: একটি ছাত্রকে, একটি ছাত্রীকে",
+    title: "🗳️ ২ টি ভোটের বেশি নয়, একই জেন্ডার যেন না হয়! 🙅‍♂️🙅‍♀️😜",
     body: "প্রত্যেক শিক্ষার্থী ঠিক দুটি ভোট দেবেন — একটি ছাত্র সিআর পদে, একটি ছাত্রী সিআর পদে। দুটি পছন্দ একসাথে জমা হয় এবং পরে বদলানো যায় না।",
   },
   errors: {

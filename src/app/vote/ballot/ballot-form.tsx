@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Clock, Search, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Clock, Search, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -95,9 +95,11 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
       {expired && <Alert tone="warning" title={B.expiredTitle} className="mb-4">{B.expiredBody1} <a className="underline" href="/vote">{B.expiredLink}</a>{B.expiredBody2}</Alert>}
 
       {positions.length > 1 && (
-        <div className="mb-5 flex gap-3 rounded-2xl border border-gold/40 bg-gradient-to-br from-amber-50 to-white p-4 text-sm">
-          <Users className="mt-0.5 size-5 shrink-0 text-emerald-900" aria-hidden />
-          <div><p className="font-semibold text-emerald-900">{rule.title}</p><p className="mt-0.5 text-slate-600">{rule.body}</p></div>
+        <div className="mb-5 overflow-hidden rounded-2xl border-2 border-gold bg-gradient-to-br from-amber-100 via-amber-50 to-white p-4 text-sm shadow-card">
+          <p className="font-display text-center text-lg font-extrabold leading-snug text-emerald-900 sm:text-xl">
+            <mark className="rounded-lg bg-gold/40 px-2 py-0.5 text-emerald-900 [box-decoration-break:clone]">{rule.title}</mark>
+          </p>
+          <p className="mt-2 text-center leading-relaxed text-slate-700">{rule.body}</p>
         </div>
       )}
 
