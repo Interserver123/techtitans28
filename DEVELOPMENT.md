@@ -348,6 +348,18 @@ Later schema changes: add a migration file, run `npm run supabase:bundle`, and p
 5. Checklist: `/api/dev/outbox` returns 404; a test OTP reaches a real committee phone/mailbox; a dry-run election on real
    Android/iOS phones succeeds; Audit page shows "hash chain intact"; a backup is taken (Supabase dashboard → Backups).
 
+### Troubleshooting a deployment ("This page couldn't load" / server error)
+
+Open **`https://<your-domain>/api/health`**. It reports, without revealing any secret values:
+
+- `config.problems` — each environment variable that is missing or invalid, and why. Fix them in Vercel →
+  Settings → Environment Variables, then **Redeploy** (Vercel only applies new variables to new deployments).
+- `database.hint` — e.g. wrong pooler username format (`techtitans_app_user.<project-ref>`), wrong password, TLS problem,
+  "schema missing" (run `supabase/deploy.sql`), or connected as the wrong role.
+
+It returns HTTP 200 with `"ok": true` when the deployment is healthy. Defaults that reduce setup: `APP_URL` falls back to the
+Vercel production URL, and `DATABASE_SSL` defaults to `require` for any non-local database host.
+
 ### CLI alternative
 
 `MIGRATION_DATABASE_URL='postgresql://postgres:<owner-pw>@db.<ref>.supabase.co:5432/postgres' npm run db:migrate`, create the
