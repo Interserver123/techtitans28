@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, AtSign, KeyRound, MessageSquareText, Phone, UserRound } from "lucide-react";
 import { api } from "@/lib/client";
@@ -96,7 +95,6 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
             {error && <VoterError message={error} lang={lang} />}
             <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>{V.find} <ArrowRight /></Button>
             <UrgentContact lang={lang} />
-            <Alert tone="warning"><span lang="en">{dict("en").openBallot.notice} <Link href="/terms" className="font-semibold underline">{dict("en").openBallot.terms}</Link></span></Alert>
           </form>
         ) : step === "confirm" && who ? (
           <div className="space-y-5">
