@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import { configProblems, env } from "@/lib/env";
+import { otpStatus } from "@/lib/otp/provider";
 
 /**
  * Deployment self-check. Reports WHICH setting or step is wrong — never secret values.
@@ -16,6 +17,8 @@ export async function GET() {
       environment: process.env.VERCEL_ENV ?? null,
     },
     config: problems.length ? { ok: false, problems } : { ok: true },
+    // Which verification-code channels are on ("dev" means codes are not sent to anyone).
+    otp: otpStatus(),
   };
   if (problems.some((p) => p.variable === "DATABASE_URL")) {
     report.database = { ok: false, hint: "Set DATABASE_URL first." };
