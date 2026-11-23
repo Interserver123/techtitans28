@@ -19,6 +19,13 @@ import { CandidateGrid } from "@/components/site/candidate-grid";
 import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
+/** Proctorial Body members (photos in public/committee). */
+const PROCTORIAL = [
+  { key: "afrajur", photo: "/committee/afrajur-rahman.webp" },
+  { key: "limon", photo: "/committee/limon-sarkar.webp" },
+  { key: "ratul", photo: "/committee/ratul-roy.webp" },
+] as const;
+
 export default async function HomePage() {
   const [{ election, settings, turnout, candidates, votingOpen, serverNow }, lang] = await Promise.all([getPublicState(), getLang()]);
   const t = dict(lang);
@@ -299,8 +306,37 @@ export default async function HomePage() {
       </section>
 
       {/* ───────────── COMMITTEE + HELP ───────────── */}
-      <section id="committee" className="scroll-mt-24 border-t border-line bg-surface py-20 sm:py-24">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <section id="committee" className="scroll-mt-24 border-t border-line bg-surface pb-20 sm:pb-24">
+        {/* ── Proctorial Body ── */}
+        <div className="noise relative isolate overflow-hidden bg-emerald-900 py-16 text-white sm:py-20">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_70%_at_50%_0%,rgb(201_162_74/0.22),transparent_70%)]" aria-hidden />
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-gold-300">
+                <ShieldCheck className="size-4" aria-hidden /> {t.proctorial.eyebrow}
+              </p>
+              <h2 className="font-display mt-5 text-4xl font-bold sm:text-5xl"><span className="text-gold-gradient">{t.proctorial.title}</span></h2>
+              <p className="mt-3 text-slate-300">{t.proctorial.sub}</p>
+            </div>
+            <ul className="mx-auto mt-12 grid max-w-4xl gap-6 sm:grid-cols-3">
+              {PROCTORIAL.map((p, i) => (
+                <li key={p.key} className={cn("reveal group mx-auto w-full max-w-[260px] sm:max-w-none", `reveal-delay-${i}`)}>
+                  <div className="relative rounded-[1.75rem] bg-gradient-to-b from-gold via-gold/60 to-gold/20 p-[2px] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)]">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-[1.65rem] bg-navy">
+                      <Image src={p.photo} alt={t.proctorial.names[p.key]} fill sizes="(min-width:640px) 300px, 90vw" className="object-cover transition duration-700 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/10 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 p-5 text-center">
+                        <p className="font-display text-2xl font-bold">{t.proctorial.names[p.key]}</p>
+                        <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-gold/90 px-3 py-1 text-[11px] font-semibold text-navy"><ShieldCheck className="size-3.5" aria-hidden /> {t.proctorial.member}</p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 pt-20 sm:px-6 sm:pt-24 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
             <Heading align="left" eyebrow={t.committee.eyebrow} title={t.committee.title} />
             {settings.committee.length ? (
