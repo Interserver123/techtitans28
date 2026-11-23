@@ -5,6 +5,7 @@ import {
   Phone, ReceiptText, ShieldCheck, Smartphone, Trophy, Users, Vote, Zap,
 } from "lucide-react";
 import { getPublicState } from "@/lib/services/public";
+import { UrgentContact } from "@/components/site/urgent-contact";
 import { Countdown } from "@/components/site/countdown";
 import { LiveTurnout } from "@/components/site/live-turnout";
 import { SpotlightCard } from "@/components/site/spotlight-card";
@@ -393,6 +394,7 @@ export default async function HomePage() {
                 <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-slate-400" />{t.committee.anyPhone}</li>
               </ul>
               <Button asChild className="mt-7 w-full bg-white text-navy hover:bg-slate-100"><Link href="/help">{t.committee.report}</Link></Button>
+              <UrgentContact lang={lang} tone="dark" className="mt-4" />
             </div>
           </div>
         </div>

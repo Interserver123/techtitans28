@@ -106,6 +106,7 @@ const en = {
     anyPhone: "Works on any modern phone browser", report: "Report a problem",
   },
   cta: { a: "Make your vote ", b: "count", c: ".", live: "Voting is live. It takes under two minutes.", notLive: "Open the voter portal when the election goes live.", cast: "Cast your vote", watermark: "ভোট" },
+  urgent: { title: "Urgent inquiry or problem?", body: "Can't vote, code not arriving, or anything else that cannot wait — message us directly.", cta: "Message us on Facebook" },
   footer: {
     about: (dept: string, inst: string) => `The official Class Representative election portal of TechTitans-28, ${dept}, ${inst}.`,
     election: "Election", support: "Support",
@@ -300,6 +301,7 @@ const bn: Dict = {
     anyPhone: "যেকোনো আধুনিক মোবাইল ব্রাউজারে চলে", report: "সমস্যা জানান",
   },
   cta: { a: "আপনার ভোট, আপনার ", b: "অধিকার", c: "।", live: "ভোটগ্রহণ চলছে। সময় লাগবে দুই মিনিটেরও কম।", notLive: "নির্বাচন শুরু হলে ভোটার পোর্টাল খুলুন।", cast: "ভোট দিন", watermark: "ভোট" },
+  urgent: { title: "জরুরি জিজ্ঞাসা বা সমস্যা?", body: "ভোট দিতে পারছেন না, কোড আসছে না, বা অন্য কোনো জরুরি বিষয় — সরাসরি আমাদের জানান।", cta: "ফেসবুকে মেসেজ করুন" },
   footer: {
     about: () => "টেকটাইটানস-২৮, তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ, ইসলামী বিশ্ববিদ্যালয়ের ক্লাস প্রতিনিধি নির্বাচনের অফিসিয়াল পোর্টাল।",
     election: "নির্বাচন", support: "সহায়তা",
