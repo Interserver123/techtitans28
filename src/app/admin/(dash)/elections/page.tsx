@@ -18,8 +18,8 @@ export default async function ElectionsPage() {
   const canControl = admin.permissions.has("elections.control");
   return (
     <div>
-      <PageHeader title="Elections" description="Configure the schedule and control the election lifecycle. Every status change is enforced in the database and audited." actions={canConfigure && <ElectionForm />} />
-      {elections.length === 0 ? <Empty>No elections yet.{canConfigure && " Create the CR election to get started."}</Empty> : (
+      <PageHeader title="নির্বাচন" description="সময়সূচি নির্ধারণ করুন এবং নির্বাচনের প্রতিটি ধাপ নিয়ন্ত্রণ করুন। প্রতিটি অবস্থা-পরিবর্তন ডেটাবেসে কার্যকর ও অডিট করা হয়।" actions={canConfigure && <ElectionForm />} />
+      {elections.length === 0 ? <Empty>এখনো কোনো নির্বাচন নেই।{canConfigure && " শুরু করতে সিআর নির্বাচন তৈরি করুন।"}</Empty> : (
         <div className="grid gap-4">
           {elections.map((e) => (
             <ElectionCard key={e.id} canConfigure={canConfigure} canControl={canControl}

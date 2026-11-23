@@ -12,7 +12,7 @@ export const POST = adminRoute("students.import", async (req, { admin, c }) => {
   const form = await readForm(req, 3 * 1024 * 1024);
   const file = form.get("file");
   const bytes = await fileBytes(file);
-  if (!bytes || typeof file === "string" || !file) throw new AppError("VALIDATION", "Choose a .csv or .xlsx file.");
+  if (!bytes || typeof file === "string" || !file) throw new AppError("VALIDATION", "একটি .csv বা .xlsx ফাইল বেছে নিন।");
   const mode = form.get("mode") === "upsert" ? "upsert" : "insert_only";
   const records = await parseImportFile(file.name, bytes);
   const { batch } = await getPublicSettings();

@@ -64,7 +64,7 @@ export function BulkPhotoUpload({ candidates }: { candidates: Cand[] }) {
       const c = roll ? byRoll.get(roll) ?? null : null;
       if (!c || seen.has(c.id)) { bad.push(f.name); continue; }
       seen.add(c.id);
-      next.push({ roll: roll!, file: f, candidate: c, status: f.size > MAX ? "error" : "ready", error: f.size > MAX ? "Larger than 3 MB" : undefined });
+      next.push({ roll: roll!, file: f, candidate: c, status: f.size > MAX ? "error" : "ready", error: f.size > MAX ? "৩ MB-এর বেশি" : undefined });
     }
     next.sort((a, b) => a.roll.localeCompare(b.roll));
     setItems(next);
@@ -89,55 +89,55 @@ export function BulkPhotoUpload({ candidates }: { candidates: Cand[] }) {
       if (!r.ok && (r.error.code === "UNAUTHENTICATED" || r.error.code === "MFA_REQUIRED" || r.error.code === "CANDIDATES_LOCKED")) break;
     }
     setBusy(false);
-    toast(ok === queue.length ? "success" : "error", `${ok} of ${queue.length} photos uploaded`);
+    toast(ok === queue.length ? "success" : "error", `${queue.length}টির মধ্যে ${ok}টি ছবি আপলোড হয়েছে`);
     router.refresh();
   }
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!busy) { setOpen(o); if (!o) { setItems([]); setUnmatched([]); } } }}>
-      <DialogTrigger asChild><Button variant="outline"><ImagePlus /> Bulk photos</Button></DialogTrigger>
-      <DialogContent wide title="Upload candidate photos in bulk"
-        description={<>Select a <code>.zip</code> or several JPEG/PNG/WebP files named by roll number, e.g. <code>2518011.jpg</code>. Each photo is validated, re-encoded and cropped on the server.</>}>
+      <DialogTrigger asChild><Button variant="outline"><ImagePlus /> একসাথে ছবি</Button></DialogTrigger>
+      <DialogContent wide title="একসাথে প্রার্থীদের ছবি আপলোড"
+        description={<>একটি <code>.zip</code> অথবা রোল নম্বর দিয়ে নাম দেওয়া একাধিক JPEG/PNG/WebP ফাইল বেছে নিন, যেমন <code>2518011.jpg</code>। প্রতিটি ছবি সার্ভারে যাচাই, পুনঃএনকোড ও ক্রপ করা হয়।</>}>
         <div className="space-y-4">
           <Input type="file" multiple accept=".zip,image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => void choose(e.target.files)}
             className="h-auto py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-electric file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
           {items.length > 0 && (
             <>
               <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-300">
-                <span><strong className="text-white">{items.length}</strong> matched</span>
-                <span><strong className="text-white">{items.filter((i) => i.candidate!.hasPhoto).length}</strong> already have a photo</span>
-                {unmatched.length > 0 && <span className="text-amber-300">{unmatched.length} file(s) not matched</span>}
-                {noPhoto.length > 0 && <span className="text-slate-400">{noPhoto.length} candidate(s) without a file</span>}
+                <span><strong className="text-white">{items.length}</strong>টি মিলেছে</span>
+                <span><strong className="text-white">{items.filter((i) => i.candidate!.hasPhoto).length}</strong> জনের আগে থেকেই ছবি আছে</span>
+                {unmatched.length > 0 && <span className="text-amber-300">{unmatched.length}টি ফাইল মেলেনি</span>}
+                {noPhoto.length > 0 && <span className="text-slate-400">{noPhoto.length} জন প্রার্থীর ফাইল নেই</span>}
               </div>
               <label className="flex items-center gap-2 text-sm text-slate-200">
                 <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} disabled={busy} className="size-4 accent-[#0f7a4f]" />
-                Replace existing photos
+                বিদ্যমান ছবি প্রতিস্থাপন করুন
               </label>
-              {busy || done > 0 ? <Progress value={(done / Math.max(1, queue.length)) * 100} label="Upload progress" /> : null}
+              {busy || done > 0 ? <Progress value={(done / Math.max(1, queue.length)) * 100} label="আপলোডের অগ্রগতি" /> : null}
               <div className="max-h-72 overflow-y-auto rounded-xl border border-white/10">
                 <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-navy-700 text-left text-slate-400"><tr><th className="px-3 py-2">Roll</th><th className="px-3 py-2">Candidate</th><th className="px-3 py-2">Status</th></tr></thead>
+                  <thead className="sticky top-0 bg-navy-700 text-left text-slate-400"><tr><th className="px-3 py-2">রোল</th><th className="px-3 py-2">প্রার্থী</th><th className="px-3 py-2">অবস্থা</th></tr></thead>
                   <tbody className="divide-y divide-white/5">
                     {items.map((i) => (
                       <tr key={i.file.name}>
                         <td className="px-3 py-1.5 font-mono text-slate-300">{i.roll}</td>
                         <td className="px-3 py-1.5 text-slate-200">{i.candidate!.displayName}</td>
                         <td className="px-3 py-1.5">
-                          {i.status === "done" ? <span className="inline-flex items-center gap-1 text-green-400"><CheckCircle2 className="size-3.5" /> uploaded</span>
+                          {i.status === "done" ? <span className="inline-flex items-center gap-1 text-green-400"><CheckCircle2 className="size-3.5" /> আপলোড হয়েছে</span>
                             : i.status === "error" ? <span className="inline-flex items-center gap-1 text-red-300"><XCircle className="size-3.5" /> {i.error}</span>
-                            : i.status === "uploading" ? <span className="text-blue-300">uploading…</span>
-                            : !replace && i.candidate!.hasPhoto ? <span className="text-slate-500">keeps current photo</span>
-                            : <span className="text-slate-400">ready</span>}
+                            : i.status === "uploading" ? <span className="text-blue-300">আপলোড হচ্ছে…</span>
+                            : !replace && i.candidate!.hasPhoto ? <span className="text-slate-500">বর্তমান ছবি থাকবে</span>
+                            : <span className="text-slate-400">প্রস্তুত</span>}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              {unmatched.length > 0 && <Alert tone="warning" title="Not matched to a candidate">{unmatched.slice(0, 8).join(", ")}{unmatched.length > 8 ? "…" : ""}. File names must be the candidate&apos;s roll number.</Alert>}
-              {noPhoto.length > 0 && <p className="text-xs text-slate-500">Still without a photo: {noPhoto.map((c) => `${c.displayName} (${c.rollNumber})`).join(", ")}</p>}
+              {unmatched.length > 0 && <Alert tone="warning" title="কোনো প্রার্থীর সাথে মেলেনি">{unmatched.slice(0, 8).join(", ")}{unmatched.length > 8 ? "…" : ""}। ফাইলের নাম অবশ্যই প্রার্থীর রোল নম্বর হতে হবে।</Alert>}
+              {noPhoto.length > 0 && <p className="text-xs text-slate-500">এখনও ছবি নেই: {noPhoto.map((c) => `${c.displayName} (${c.rollNumber})`).join(", ")}</p>}
               <Button className="w-full" loading={busy} disabled={queue.length === 0} onClick={upload}>
-                {busy ? `Uploading ${done} / ${queue.length}…` : `Upload ${queue.length} photo${queue.length === 1 ? "" : "s"}`}
+                {busy ? `আপলোড হচ্ছে ${done} / ${queue.length}…` : `${queue.length}টি ছবি আপলোড করুন`}
               </Button>
             </>
           )}

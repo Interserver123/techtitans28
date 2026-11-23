@@ -163,6 +163,17 @@ const en = {
     } as Record<string, string>,
   },
   candidatePage: { all: "All candidates", eyebrow: "Candidate · Class Representative", roll: "University roll", go: "Go to voter portal", manifesto: "Manifesto", none: "The candidate has not published a manifesto yet." },
+  ui: {
+    heroL1: "Your batch,", heroL2a: "Your ", heroL2b: "voice", heroL2c: ".",
+    heroSub: "CR Election 2026 · TechTitans-28",
+    candidatesN: (n: string) => `${n} candidates`, seeAll: "Meet them all →", sealedAfter: "Results only after voting closes",
+    archAlt: "An arched academic building of Islamic University",
+    menuOpen: "Open menu", menuClose: "Close menu", mainMenu: "Main menu", mobileMenu: "Site menu",
+    verifyReceipt: "Verify a receipt", menuFoot: "Islamic University · Department of ICT",
+    searchPh: "Search by name or roll number…", searchLabel: "Search candidates by name or roll number", clear: "Clear search",
+    countShort: (n: string) => n, noMatch: (q: string) => `No candidate matches “${q}”.`,
+    showAll: "Show all candidates", more: (n: string) => `${n} more`, manifesto: "Manifesto", roll: "Roll",
+  },
   errors: {} as Record<string, string>,
 };
 
@@ -319,6 +330,17 @@ const bn: Dict = {
     },
   },
   candidatePage: { all: "সকল প্রার্থী", eyebrow: "প্রার্থী · ক্লাস প্রতিনিধি", roll: "বিশ্ববিদ্যালয় রোল", go: "ভোটার পোর্টালে যান", manifesto: "ইশতেহার", none: "প্রার্থী এখনও ইশতেহার প্রকাশ করেননি।" },
+  ui: {
+    heroL1: "আপনার ব্যাচ,", heroL2a: "আপনার ", heroL2b: "কণ্ঠ", heroL2c: "।",
+    heroSub: "সিআর নির্বাচন ২০২৬ · টেকটাইটানস-২৮",
+    candidatesN: (n) => `${n} জন প্রার্থী`, seeAll: "সবার পরিচিতি দেখুন →", sealedAfter: "ভোট শেষে ফলাফল",
+    archAlt: "ইসলামী বিশ্ববিদ্যালয়ের খিলানযুক্ত একাডেমিক ভবন",
+    menuOpen: "মেনু খুলুন", menuClose: "মেনু বন্ধ করুন", mainMenu: "প্রধান মেনু", mobileMenu: "সাইটের মেনু",
+    verifyReceipt: "রসিদ যাচাই করুন", menuFoot: "ইসলামী বিশ্ববিদ্যালয় · তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ",
+    searchPh: "নাম বা রোল নম্বর দিয়ে খুঁজুন…", searchLabel: "নাম বা রোল নম্বর দিয়ে প্রার্থী খুঁজুন", clear: "খোঁজা মুছুন",
+    countShort: (n) => `${n} জন`, noMatch: (q) => `“${q}” নামে বা রোলে কোনো প্রার্থী পাওয়া যায়নি।`,
+    showAll: "সব প্রার্থী দেখুন", more: (n) => `আরও ${n} জন`, manifesto: "ইশতেহার", roll: "রোল",
+  },
   errors: {
     VALIDATION: "তথ্যে ভুল আছে। আবার দেখে নিন।",
     INVALID_OTP: "কোডটি ভুল অথবা মেয়াদোত্তীর্ণ।",
@@ -335,13 +357,36 @@ const bn: Dict = {
     NETWORK: "নেটওয়ার্ক সমস্যা — সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
     CSRF: "নিরাপত্তা যাচাই ব্যর্থ হয়েছে। পাতাটি রিফ্রেশ করে আবার চেষ্টা করুন।",
     INTERNAL: "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+    BAD_REQUEST: "অনুরোধটি প্রক্রিয়া করা যায়নি।",
+    UNAUTHENTICATED: "চালিয়ে যেতে লগইন করুন।",
+    MFA_REQUIRED: "দুই-ধাপের যাচাই প্রয়োজন।",
+    INVALID_CREDENTIALS: "ইমেইল বা পাসওয়ার্ড সঠিক নয়।",
+    FORBIDDEN: "এই কাজটি করার অনুমতি আপনার নেই।",
+    NOT_FOUND: "চাওয়া রেকর্ডটি পাওয়া যায়নি।",
+    CONFLICT: "এই পরিবর্তন বর্তমান অবস্থার সাথে সাংঘর্ষিক।",
+    INVALID_TRANSITION: "নির্বাচনের অবস্থার এই পরিবর্তন অনুমোদিত নয়।",
+    ELECTION_LOCKED: "এই নির্বাচনে এখন আর এভাবে পরিবর্তন করা যাবে না।",
+    CANDIDATES_LOCKED: "ভোটগ্রহণ শুরু হলে প্রার্থী তালিকা লক হয়ে যায়।",
+    RESULTS_SEALED: "নির্বাচন শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক ফলাফল সিলগালা।",
+    SECOND_PERSON_REQUIRED: "এই অনুরোধটি ভিন্ন একজন অনুমোদিত অ্যাডমিনকে পর্যালোচনা করতে হবে।",
+    INVALID_STATE: "বর্তমান অবস্থায় এই কাজটি সম্ভব নয়।",
+    RECONCILIATION_FAILED: "ব্যালট ও অংশগ্রহণের সংখ্যা মিলছে না।",
+    TIE_NOTE_REQUIRED: "ফলাফলে সমান ভোট। কমিটির সমতা নিষ্পত্তির নোট লিপিবদ্ধ করুন।",
+    PAYLOAD_TOO_LARGE: "আপলোড করা ফাইলটি খুব বড়।",
+    UNSUPPORTED_MEDIA: "এই ধরনের ফাইল সমর্থিত নয়।",
   },
 };
 
 export const DICT: Record<Lang, Dict> = { en, bn };
 export const dict = (lang: Lang) => DICT[lang];
 
-/** User-facing message for an API error, translated when a Bengali string exists. */
+const BENGALI = /[\u0980-\u09FF]/;
+
+/**
+ * User-facing message for an API error. In Bengali, a message the server already wrote in Bengali
+ * (the admin-only services do) is kept because it is more specific; otherwise the code's Bengali text is used.
+ */
 export function errorText(lang: Lang, err: { code: string; message: string }) {
-  return (lang === "bn" && DICT.bn.errors[err.code]) || err.message;
+  if (lang !== "bn" || BENGALI.test(err.message)) return err.message;
+  return DICT.bn.errors[err.code] || err.message;
 }

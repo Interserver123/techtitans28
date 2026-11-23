@@ -8,9 +8,9 @@ import { ROLE_CODES } from "../permissions";
 
 export const passwordPolicy = z
   .string()
-  .min(12, "Passwords must be at least 12 characters.")
+  .min(12, "পাসওয়ার্ড অন্তত ১২ অক্ষরের হতে হবে।")
   .max(200)
-  .refine((p) => /[a-z]/.test(p) && /[A-Z]/.test(p) && /[0-9]/.test(p), "Use upper- and lower-case letters and digits.");
+  .refine((p) => /[a-z]/.test(p) && /[A-Z]/.test(p) && /[0-9]/.test(p), "বড় ও ছোট হাতের ইংরেজি অক্ষর এবং অঙ্ক ব্যবহার করুন।");
 
 export const adminCreateSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -56,7 +56,7 @@ export async function createAdmin(input: z.input<typeof adminCreateSchema>, acto
     });
   } catch (e) {
     const mapped = fromDbError(e);
-    if (mapped?.code === "CONFLICT") throw new AppError("CONFLICT", "An administrator with this email already exists.");
+    if (mapped?.code === "CONFLICT") throw new AppError("CONFLICT", "এই ইমেইলে ইতিমধ্যে একজন অ্যাডমিন আছেন।");
     throw mapped ?? e;
   }
 }
@@ -68,12 +68,12 @@ export async function updateAdmin(id: string, input: z.input<typeof adminUpdateS
       `select role_code, is_active, can_publish_results from election_admins where id = $1 for update`, [id], c);
     if (!before) throw new AppError("NOT_FOUND");
     if (id === actorId && (v.role !== "SUPER_ADMIN" || !v.isActive)) {
-      throw new AppError("INVALID_STATE", "You cannot demote or deactivate your own account.");
+      throw new AppError("INVALID_STATE", "নিজের অ্যাকাউন্টের ভূমিকা কমানো বা নিষ্ক্রিয় করা যায় না।");
     }
     if (before.role_code === "SUPER_ADMIN" && (v.role !== "SUPER_ADMIN" || !v.isActive)) {
       const others = await one<{ n: number }>(
         `select count(*)::int as n from election_admins where role_code = 'SUPER_ADMIN' and is_active and id <> $1`, [id], c);
-      if ((others?.n ?? 0) < 1) throw new AppError("INVALID_STATE", "At least one active Super Admin must remain.");
+      if ((others?.n ?? 0) < 1) throw new AppError("INVALID_STATE", "অন্তত একজন সক্রিয় সুপার অ্যাডমিন থাকতেই হবে।");
     }
     await query(
       `update election_admins set full_name = $2, designation = nullif($3, ''), role_code = $4, can_publish_results = $5, is_active = $6 where id = $1`,
@@ -92,7 +92,7 @@ export async function updateAdmin(id: string, input: z.input<typeof adminUpdateS
 
 /** Resets a lost authenticator. The admin must enrol again at next sign-in. */
 export async function resetAdminMfa(id: string, actorId: string, ipHash: string | null) {
-  if (id === actorId) throw new AppError("INVALID_STATE", "Ask another Super Admin to reset your MFA.");
+  if (id === actorId) throw new AppError("INVALID_STATE", "আপনার দুই-ধাপের যাচাই রিসেট করতে অন্য একজন সুপার অ্যাডমিনকে বলুন।");
   await tx(async (c) => {
     const r = await one(`update election_admins set mfa_enabled = false, mfa_secret_enc = null, mfa_pending_secret_enc = null, mfa_last_step = null where id = $1 returning id`, [id], c);
     if (!r) throw new AppError("NOT_FOUND");

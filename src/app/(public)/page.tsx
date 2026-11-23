@@ -1,14 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight, ArrowUpRight, BadgeCheck, ChevronDown, EyeOff, FileClock, Fingerprint, Gavel, KeyRound, LifeBuoy, Lock, Mail, MapPin,
+  ArrowRight, BadgeCheck, ChevronDown, EyeOff, FileClock, Fingerprint, Gavel, KeyRound, LifeBuoy, Lock, Mail, MapPin,
   Phone, ReceiptText, ShieldCheck, Smartphone, Trophy, Users, Vote, Zap,
 } from "lucide-react";
 import { getPublicState } from "@/lib/services/public";
 import { Countdown } from "@/components/site/countdown";
 import { LiveTurnout } from "@/components/site/live-turnout";
-import { StatusPill } from "@/components/site/status-pill";
-import { CandidateAvatar } from "@/components/site/candidate-avatar";
 import { SpotlightCard } from "@/components/site/spotlight-card";
 import { AnimatedNumber } from "@/components/site/animated-number";
 import { Marquee } from "@/components/site/marquee";
@@ -17,7 +15,8 @@ import { fmtDateTime } from "@/lib/format";
 import { getLang } from "@/lib/i18n-server";
 import { dict, num } from "@/lib/i18n";
 import { Alpana } from "@/components/site/alpana";
-import { CandidateRoster } from "@/components/site/candidate-roster";
+import { CandidateGrid } from "@/components/site/candidate-grid";
+import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -50,79 +49,96 @@ export default async function HomePage() {
     <>
       {/* ───────────── HERO ───────────── */}
       <section className="noise relative isolate overflow-hidden bg-navy text-white">
-        <Image src="/campus/aerial.jpg" alt="Aerial view of the Islamic University campus" fill priority sizes="100vw" className="ken-burns -z-20 object-cover" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-900/95 via-navy/85 to-navy/70" aria-hidden />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_0%,rgb(201_162_74/0.22),transparent_55%)]" aria-hidden />
-        <div className="relative mx-auto grid max-w-6xl gap-14 px-4 pb-20 pt-12 sm:px-6 md:pb-28 md:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <Image src="/campus/building.jpg" alt="" fill priority sizes="100vw" className="-z-30 scale-110 object-cover blur-[2px]" aria-hidden />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-r from-navy via-navy/90 to-emerald-900/70" aria-hidden />
+        <div className="absolute inset-0 -z-20 bg-[radial-gradient(60%_60%_at_78%_35%,rgb(201_162_74/0.25),transparent_70%)]" aria-hidden />
+        {/* Oversized outlined batch number as a watermark */}
+        <span className="font-display pointer-events-none absolute -bottom-16 -left-6 -z-10 select-none text-[16rem] font-bold leading-none text-transparent [-webkit-text-stroke:1px_rgb(201_162_74/0.18)] sm:text-[22rem]" aria-hidden>{num(28, lang)}</span>
+
+        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-24 pt-28 sm:px-6 sm:pt-32 lg:grid-cols-[1.1fr_0.9fr] lg:pb-28 lg:pt-36">
           <div className="animate-fade-up">
-            <div className="border-shimmer inline-flex items-center gap-2.5 rounded-full py-1.5 pl-2 pr-4 text-xs font-medium text-slate-200">
-              <StatusPill status={status} lang={lang} className="bg-white/10 py-0.5 text-white ring-white/15" />
-              <span className="text-slate-300">{t.institution}</span>
-            </div>
-            <Image src="/campus/logo.png" alt="" width={72} height={68} className="mt-7 size-16 rounded-2xl shadow-2xl ring-2 ring-gold/70" aria-hidden />
-            <h1 className={cn("font-display mt-6 font-bold leading-[1.02]", lang === "bn" ? "text-[2.6rem] sm:text-6xl md:text-[4.25rem]" : "text-[2.75rem] sm:text-6xl md:text-7xl")}>
-              {t.hero.l1}<br />
-              {t.hero.l2}<br />
-              <span className="text-gold-gradient italic">{t.hero.l3}</span>
-            </h1>
-            <p lang={lang === "bn" ? "en" : "bn"} className={cn("mt-4 flex items-center gap-3 text-lg text-gold-300/90", lang === "en" && "font-bangla-display")}>
-              <span className="h-px w-10 bg-gold/70" aria-hidden />{t.hero.alt}
+            <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">
+              <span className="h-px w-8 bg-gold" /> {t.institution}
             </p>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            <h1 className={cn("font-display mt-6 text-[2.6rem] font-bold sm:text-6xl lg:text-[4.2rem]", lang === "bn" ? "leading-[1.12]" : "leading-[1.04]")}>
+              {t.ui.heroL1}
+              <br />
+              {t.ui.heroL2a}<span className="relative inline-block text-gold-gradient">{t.ui.heroL2b}<svg className="absolute -bottom-2 left-0 h-3 w-full text-gold/70" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden><path d="M2 9 Q 50 1 98 7" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg></span>{t.ui.heroL2c}
+            </h1>
+            <p className="font-display mt-5 text-xl text-gold-300/95 sm:text-2xl">{t.ui.heroSub}</p>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-slate-300 sm:text-base">
               {(lang === "en" && election?.description?.trim()) || t.hero.lead(settings.batch)}
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="xl" className="group relative overflow-hidden bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
+              <Button asChild size="xl" className="group bg-gold text-navy shadow-[0_14px_40px_-14px_rgb(201_162_74/0.9)] hover:bg-gold-300">
                 <Link href="/vote">
                   <Vote /> {votingOpen ? t.hero.start : t.hero.open}
                   <ArrowRight className="transition group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild size="xl" variant="outline" className="border-white/15 bg-white/5 text-white backdrop-blur hover:bg-white/10">
+              <Button asChild size="xl" variant="outline" className="border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/10">
                 <Link href={status === "RESULTS_PUBLISHED" ? "/results" : "#candidates"}>
                   {status === "RESULTS_PUBLISHED" ? <><Trophy /> {t.hero.official}</> : <><Users /> {t.hero.meet}</>}
                 </Link>
               </Button>
             </div>
-            <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-medium text-slate-400">
-              {[[ShieldCheck, t.hero.trust[0]], [EyeOff, t.hero.trust[1]], [FileClock, t.hero.trust[2]]].map(([Icon, label]) => {
-                const I = Icon as typeof ShieldCheck;
-                return <li key={label as string} className="flex items-center gap-2"><I className="size-4 text-gold-300" />{label as string}</li>;
-              })}
-            </ul>
+
+            {candidates.length > 0 && (
+              <Link href="#candidates" className="group mt-10 inline-flex items-center gap-4 rounded-full bg-white/[0.06] py-2 pl-2 pr-5 ring-1 ring-white/10 backdrop-blur transition hover:bg-white/10">
+                <span className="flex -space-x-2.5" aria-hidden>
+                  {candidates.slice(0, 5).map((c, i) => (
+                    <span key={c.id} className={cn("flex size-9 items-center justify-center rounded-full border-2 border-navy text-[11px] font-bold", ["bg-emerald text-white", "bg-gold text-navy", "bg-[#173126] text-gold-300", "bg-white text-navy", "bg-[#0b6040] text-white"][i])}>
+                      {initials(c.display_name)}
+                    </span>
+                  ))}
+                  {candidates.length > 5 && <span className="flex size-9 items-center justify-center rounded-full border-2 border-navy bg-white/15 text-[11px] font-bold text-white">+{num(candidates.length - 5, lang)}</span>}
+                </span>
+                <span className="text-sm leading-tight">
+                  <span className="block font-semibold text-white">{t.ui.candidatesN(num(candidates.length, lang))}</span>
+                  <span className="block text-xs text-slate-400 transition group-hover:text-gold-300">{t.ui.seeAll}</span>
+                </span>
+              </Link>
+            )}
           </div>
 
-          <div className="relative animate-fade-up [animation-delay:150ms]">
-            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-gold/25 via-emerald/10 to-transparent blur-2xl" aria-hidden />
-            <div className="glass rounded-3xl p-6 sm:p-7">
+          {/* Arched window onto the campus — after the arches of the university gate */}
+          <div className="relative mx-auto w-full max-w-[420px] animate-fade-up [animation-delay:150ms] lg:mr-0">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-b-[2rem] rounded-t-[999px] border border-gold/50 p-2 shadow-[0_40px_80px_-30px_rgb(0_0_0/0.7)]">
+              <div className="relative size-full overflow-hidden rounded-b-[1.6rem] rounded-t-[999px]">
+                <Image src="/campus/academic-building.webp" alt={t.ui.archAlt} fill priority sizes="(min-width:1024px) 420px, 90vw" className="ken-burns object-cover object-[62%_center]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/20 to-transparent" />
+              </div>
+            </div>
+            <Image src="/campus/logo.png" alt="" width={72} height={68} className="absolute left-1/2 top-0 size-16 -translate-x-1/2 -translate-y-1/2 rounded-2xl shadow-2xl ring-4 ring-navy" aria-hidden />
+
+            <div className="glass relative -mt-28 mx-3 rounded-3xl p-5 sm:mx-6 sm:p-6">
               {countdown ? (
                 <Countdown target={countdown.target} serverNow={serverNow} label={countdown.label} dark lang={lang} />
               ) : (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">{t.hero.statusLabel}</p>
-                  <p className="mt-3 text-3xl font-bold tracking-tight">{status ? t.status[status] : t.hero.notAnnounced}</p>
-                  <p className="mt-1.5 text-sm text-slate-400">
+                  <p className="font-display mt-2 text-2xl font-bold">{status ? t.status[status] : t.hero.notAnnounced}</p>
+                  <p className="mt-1 text-sm text-slate-300">
                     {status === "RESULTS_PUBLISHED" ? t.hero.publishedMsg : status === "CLOSED" ? t.hero.closedMsg : t.hero.scheduleMsg}
                   </p>
                 </div>
               )}
               {status === "PAUSED" && <p className="mt-4 rounded-xl bg-amber-500/15 px-3 py-2 text-sm text-amber-200">{t.hero.pausedMsg}</p>}
               {turnout && (
-                <div className="mt-6 border-t border-white/10 pt-5">
+                <div className="mt-5 border-t border-white/10 pt-4">
                   <LiveTurnout initial={turnout} live={status === "LIVE"} dark lang={lang} />
                 </div>
               )}
             </div>
-            <div className="glass absolute -bottom-9 -left-4 hidden animate-float items-center gap-2.5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-200 sm:flex">
-              <span className="flex size-8 items-center justify-center rounded-full bg-green-500/20"><BadgeCheck className="size-4 text-green-400" /></span>
-              {t.hero.chipOne}
-            </div>
-            <div className="glass absolute -right-3 -top-5 hidden animate-float-slow items-center gap-2.5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-200 sm:flex">
-              <span className="flex size-8 items-center justify-center rounded-full bg-gold/20"><Lock className="size-4 text-gold-300" /></span>
-              {t.hero.chipSealed}
-            </div>
           </div>
         </div>
+
+        <ul className="relative mx-auto -mt-6 flex max-w-6xl flex-wrap justify-center gap-x-8 gap-y-3 px-4 pb-14 text-xs font-medium text-slate-400 sm:px-6 lg:justify-start">
+          {[[ShieldCheck, t.hero.trust[0]], [EyeOff, t.hero.trust[1]], [Lock, t.ui.sealedAfter], [FileClock, t.hero.trust[2]]].map(([Icon, label]) => {
+            const I = Icon as typeof ShieldCheck;
+            return <li key={label as string} className="flex items-center gap-2"><I className="size-4 text-gold-300" />{label as string}</li>;
+          })}
+        </ul>
         <Alpana className="absolute inset-x-0 bottom-0 opacity-70" />
       </section>
 
@@ -182,35 +198,10 @@ export default async function HomePage() {
       <section id="candidates" className="relative scroll-mt-24 overflow-hidden py-20 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Heading eyebrow={t.cand.eyebrow} title={t.cand.title} subtitle={t.cand.sub} />
-          {candidates.length > 9 ? (
-            <CandidateRoster lang={lang} candidates={candidates.map((c) => ({ id: c.id, display_name: c.display_name, roll_number: c.roll_number, photo_url: c.photo_url }))} />
-          ) : candidates.length === 0 ? (
+          {candidates.length === 0 ? (
             <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">{t.cand.empty}</div>
           ) : (
-            <div className="mt-14 flex flex-wrap justify-center gap-6">
-              {candidates.map((c, i) => (
-                <SpotlightCard key={c.id} className="reveal group w-full overflow-hidden rounded-3xl border border-line bg-surface shadow-card transition duration-500 hover:-translate-y-1.5 hover:shadow-lift sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]" style={{ animationDelay: `${i * 60}ms` }}>
-                  <div className="relative aspect-[4/4.4] overflow-hidden bg-navy">
-                    <CandidateAvatar name={c.display_name} url={c.photo_url} className="size-full text-5xl transition duration-700 group-hover:scale-[1.06]" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
-                    <span className="absolute right-4 top-4 flex size-16 flex-col items-center justify-center rounded-full border-2 border-gold/80 bg-emerald-900/70 text-gold-300 shadow-lg shadow-black/30 ring-4 ring-gold/15 backdrop-blur" aria-label={`${t.cand.no} ${i + 1}`}>
-                      <span className="text-[10px] font-semibold leading-none">{t.cand.no}</span>
-                      <span className="font-display text-xl font-bold leading-tight">{num(String(i + 1).padStart(2, "0"), lang)}</span>
-                    </span>
-                    <div className="absolute inset-x-0 bottom-0 p-5">
-                      <h3 className="font-display text-2xl font-bold text-white">{c.display_name}</h3>
-                      <p className="mt-0.5 text-sm text-slate-300">{t.cand.roll} {c.roll_number}</p>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <p className="line-clamp-3 min-h-[3.9rem] text-sm leading-relaxed text-slate-600">{c.introduction || t.cand.introSoon}</p>
-                    <Link href={`/candidates/${c.id}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-electric-600 transition hover:gap-2.5">
-                      {t.cand.read} <ArrowUpRight className="size-4" />
-                    </Link>
-                  </div>
-                </SpotlightCard>
-              ))}
-            </div>
+            <CandidateGrid lang={lang} candidates={candidates.map((c) => ({ id: c.id, display_name: c.display_name, roll_number: c.roll_number, introduction: c.introduction, photo_url: c.photo_url }))} />
           )}
         </div>
       </section>

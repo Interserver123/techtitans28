@@ -24,13 +24,24 @@ export async function getNumberSetting(key: string, fallback: number) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-export async function getPublicSettings(): Promise<PublicSettings> {
+/** The schema seeds these names in English; the site is Bengali, so the seeded values are shown in Bengali. Any other value an operator stores is shown as written. */
+const BN_NAMES: Record<string, string> = {
+  "Department of Information and Communication Technology": "তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ",
+  "Islamic University, Bangladesh": "ইসলামী বিশ্ববিদ্যালয়, বাংলাদেশ",
+};
+/** Settings as stored, without the Bengali display names (used by the English PDF report). */
+export async function getPublicSettingsRaw(): Promise<PublicSettings> {
+  return getPublicSettings(false);
+}
+
+export async function getPublicSettings(bengali = true): Promise<PublicSettings> {
   const s = await getSettingsMap();
+  const bnName = (v: string) => (bengali ? BN_NAMES[v] ?? v : v);
   const contact = (s["committee.contact"] ?? {}) as Partial<PublicSettings["contact"]>;
   return {
     batch: String(s["election.batch"] ?? "TechTitans-28"),
-    department: String(s["election.department"] ?? "Department of Information and Communication Technology"),
-    institution: String(s["election.institution"] ?? "Islamic University, Bangladesh"),
+    department: bnName(String(s["election.department"] ?? "Department of Information and Communication Technology")),
+    institution: bnName(String(s["election.institution"] ?? "Islamic University, Bangladesh")),
     committee: Array.isArray(s["committee.members"]) ? (s["committee.members"] as CommitteeMember[]) : [],
     contact: { email: contact.email ?? "", phone: contact.phone ?? "", office: contact.office ?? "" },
   };

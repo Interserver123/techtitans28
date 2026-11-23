@@ -3,6 +3,7 @@ import { z } from "zod";
 import { query, one, tx } from "../db";
 import { audit } from "../audit";
 import { AppError, fromDbError } from "../errors";
+import { STATUS_LABEL } from "../format";
 
 export type ElectionStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "PAUSED" | "CLOSED" | "RESULTS_PUBLISHED";
 
@@ -99,7 +100,7 @@ export const electionInputSchema = z
     opensAt: z.coerce.date(),
     closesAt: z.coerce.date(),
   })
-  .refine((v) => v.closesAt > v.opensAt, { message: "Closing time must be after opening time", path: ["closesAt"] });
+  .refine((v) => v.closesAt > v.opensAt, { message: "শেষের সময় অবশ্যই শুরুর সময়ের পরে হতে হবে", path: ["closesAt"] });
 
 export async function createElection(input: z.input<typeof electionInputSchema>, adminId: string, ipHash: string | null) {
   const v = electionInputSchema.parse(input);
@@ -138,7 +139,7 @@ export async function deleteDraftElection(id: string, adminId: string, ipHash: s
     await tx(async (c) => {
       const e = await one<{ status: string; title: string }>("select status, title from elections where id = $1 for update", [id], c);
       if (!e) throw new AppError("NOT_FOUND");
-      if (e.status !== "DRAFT") throw new AppError("INVALID_STATE", "Only draft elections can be deleted.");
+      if (e.status !== "DRAFT") throw new AppError("INVALID_STATE", "শুধু খসড়া নির্বাচনই মুছে ফেলা যায়।");
       await query("delete from candidates where election_id = $1", [id], c);
       await query("delete from election_positions where election_id = $1", [id], c);
       await query("delete from elections where id = $1", [id], c);
@@ -169,12 +170,12 @@ export async function transitionElection(id: string, action: ElectionAction, adm
       const e = await one<Election>(`select ${ELECTION_COLS} from elections where id = $1 for update`, [id], c);
       if (!e) throw new AppError("NOT_FOUND");
       if (!t.from.includes(e.status)) {
-        throw new AppError("INVALID_TRANSITION", `Cannot ${action} an election that is ${e.status.replace("_", " ").toLowerCase()}.`);
+        throw new AppError("INVALID_TRANSITION", `“${STATUS_LABEL[e.status] ?? e.status}” অবস্থার নির্বাচনে এই কাজটি করা যায় না।`);
       }
       if (action === "schedule") {
         const cands = await one<{ n: number }>(`select count(*)::int as n from candidates where election_id = $1 and status = 'APPROVED'`, [id], c);
-        if ((cands?.n ?? 0) < 1) throw new AppError("INVALID_STATE", "Approve at least one candidate before scheduling.");
-        if (new Date(e.closes_at) <= new Date()) throw new AppError("INVALID_STATE", "The closing time is in the past.");
+        if ((cands?.n ?? 0) < 1) throw new AppError("INVALID_STATE", "সময়সূচি নির্ধারণের আগে অন্তত একজন প্রার্থীকে অনুমোদন দিন।");
+        if (new Date(e.closes_at) <= new Date()) throw new AppError("INVALID_STATE", "শেষের সময় ইতিমধ্যে পেরিয়ে গেছে।");
       }
       if ((action === "pause" || action === "close") && (!reason || reason.trim().length < 5)) {
         throw new AppError("VALIDATION", "A reason (at least 5 characters) is required.");
@@ -194,6 +195,6 @@ export async function transitionElection(id: string, action: ElectionAction, adm
 
 export async function getPositionId(electionId: string) {
   const p = await one<{ id: string }>(`select id from election_positions where election_id = $1 and code = 'CR'`, [electionId]);
-  if (!p) throw new AppError("NOT_FOUND", "Election position missing.");
+  if (!p) throw new AppError("NOT_FOUND", "নির্বাচনের পদ পাওয়া যায়নি।");
   return p.id;
 }

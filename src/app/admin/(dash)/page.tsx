@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ParticipationChart, ResultsBarChart } from "@/components/charts";
 import { Progress } from "@/components/ui/progress";
 import { Alert } from "@/components/ui/alert";
-import { fmtDateTime } from "@/lib/format";
+import { bnNum, fmtDateTime } from "@/lib/format";
 
 export default async function Overview({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const admin = await adminPage(null);
@@ -40,39 +40,39 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
   return (
     <div>
-      {denied && <Alert tone="warning" className="mb-6" title="Access denied">Your role does not include that section. The attempt was recorded in the audit log.</Alert>}
+      {denied && <Alert tone="warning" className="mb-6" title="প্রবেশাধিকার নেই">আপনার ভূমিকায় ওই অংশে প্রবেশের অনুমতি নেই। চেষ্টাটি অডিট লগে লিপিবদ্ধ হয়েছে।</Alert>}
       <PageHeader
-        title={`Welcome, ${admin.fullName.split(" ")[0]}`}
-        description={e ? <span className="inline-flex flex-wrap items-center gap-2">{e.title} <ElectionStatusBadge status={e.status} /> · {fmtDateTime(e.opens_at)} – {fmtDateTime(e.closes_at)}</span> : "No election configured yet."}
+        title={`স্বাগতম, ${admin.fullName.split(" ")[0]}`}
+        description={e ? <span className="inline-flex flex-wrap items-center gap-2">{e.title} <ElectionStatusBadge status={e.status} /> · {fmtDateTime(e.opens_at)} – {fmtDateTime(e.closes_at)}</span> : "এখনো কোনো নির্বাচন কনফিগার করা হয়নি।"}
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Stat label="Registered" value={counts?.total ?? 0} icon={GraduationCap} tone="slate" hint="Students on register" />
-        <Stat label="Eligible" value={turnout?.eligible ?? counts?.eligible ?? 0} icon={Users} hint="Active, eligible, batch" />
-        <Stat label="Votes" value={turnout?.voted ?? 0} icon={UserCheck} tone="green" hint="Ballots submitted" />
-        <Stat label="Remaining" value={Math.max(0, (turnout?.eligible ?? 0) - (turnout?.voted ?? 0))} icon={Hourglass} tone="amber" hint="Yet to vote" />
-        <Stat label="Turnout" value={`${turnout?.turnoutPct ?? 0}%`} icon={Percent} hint={<Progress value={turnout?.turnoutPct ?? 0} className="mt-2 h-1.5" />} />
-        <Stat label="Verification failures" value={failures} icon={AlertOctagon} tone="red" hint="Wrong/undelivered OTPs" />
+        <Stat label="নিবন্ধিত" value={counts?.total ?? 0} icon={GraduationCap} tone="slate" hint="তালিকাভুক্ত শিক্ষার্থী" />
+        <Stat label="যোগ্য" value={turnout?.eligible ?? counts?.eligible ?? 0} icon={Users} hint="সক্রিয়, যোগ্য, এই ব্যাচের" />
+        <Stat label="ভোট" value={turnout?.voted ?? 0} icon={UserCheck} tone="green" hint="জমা পড়া ব্যালট" />
+        <Stat label="বাকি" value={Math.max(0, (turnout?.eligible ?? 0) - (turnout?.voted ?? 0))} icon={Hourglass} tone="amber" hint="এখনো ভোট দেননি" />
+        <Stat label="ভোটার উপস্থিতি" value={`${bnNum(turnout?.turnoutPct ?? 0, (turnout?.turnoutPct ?? 0) % 1 ? 1 : 0)}%`} icon={Percent} hint={<Progress value={turnout?.turnoutPct ?? 0} className="mt-2 h-1.5" />} />
+        <Stat label="যাচাই ব্যর্থ" value={failures} icon={AlertOctagon} tone="red" hint="ভুল বা না-পৌঁছানো ওটিপি" />
       </div>
 
       {!e ? <div className="mt-6"><NoElection /></div> : (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
           <Card>
-            <CardHeader><CardTitle className="text-white">Voting participation over time</CardTitle><CardDescription>Cumulative ballots by hour (Asia/Dhaka)</CardDescription></CardHeader>
+            <CardHeader><CardTitle className="text-white">সময়ের সাথে ভোটে অংশগ্রহণ</CardTitle><CardDescription>ঘণ্টাভিত্তিক মোট ব্যালট (বাংলাদেশ সময়)</CardDescription></CardHeader>
             <CardContent><ParticipationChart dark data={timeline.map((t) => ({ bucket: new Date(t.bucket).toISOString(), votes: t.votes, cumulative: t.cumulative }))} /></CardContent>
           </Card>
           {results ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-white">Candidate results {results.official ? "(official)" : "(provisional)"}</CardTitle>
-                <CardDescription>{results.totals.valid_ballots} valid ballots · {results.reconciled ? "reconciled" : "NOT reconciled"}</CardDescription>
+                <CardTitle className="text-white">প্রার্থীভিত্তিক ফলাফল {results.official ? "(অফিসিয়াল)" : "(অস্থায়ী)"}</CardTitle>
+                <CardDescription>{bnNum(results.totals.valid_ballots)}টি বৈধ ব্যালট · {results.reconciled ? "হিসাব মিলেছে" : "হিসাব মেলেনি"}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResultsBarChart dark data={results.tally.map((t) => ({ name: t.display_name, votes: t.votes, lead: t.rank === 1 && t.votes > 0 }))} />
               </CardContent>
             </Card>
           ) : (
-            <Sealed title={canResults ? "Candidate results sealed" : "Results not available for your role"}>
-              {canResults ? "Turnout is visible while voting is open. Candidate-wise counts become computable only after the election is closed." : undefined}
+            <Sealed title={canResults ? "প্রার্থীভিত্তিক ফলাফল সিলগালা" : "আপনার ভূমিকার জন্য ফলাফল উন্মুক্ত নয়"}>
+              {canResults ? "ভোটগ্রহণ চলাকালীন শুধু ভোটার উপস্থিতি দেখা যায়। নির্বাচন শেষ হওয়ার পরই প্রার্থীভিত্তিক গণনা সম্ভব।" : undefined}
             </Sealed>
           )}
         </div>
@@ -80,15 +80,15 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-gold" /> Recent administrative activity</CardTitle>
-          <CardDescription>{admin.permissions.has("audit.read") ? "Latest audit log entries" : "Your recent actions"}</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-gold" /> সাম্প্রতিক প্রশাসনিক কার্যক্রম</CardTitle>
+          <CardDescription>{admin.permissions.has("audit.read") ? "অডিট লগের সর্বশেষ এন্ট্রি" : "আপনার সাম্প্রতিক কাজ"}</CardDescription>
         </CardHeader>
         <CardContent>
-          {activity.length === 0 ? <p className="text-sm text-slate-500">No activity yet.</p> : (
+          {activity.length === 0 ? <p className="text-sm text-slate-500">এখনো কোনো কার্যক্রম নেই।</p> : (
             <ul className="divide-y divide-white/[0.06]">
               {activity.map((a) => (
                 <li key={a.id} className="flex flex-col gap-0.5 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <span className="flex items-center gap-2 text-slate-200"><CheckCheck className="size-3.5 text-slate-500" /> <code className="text-xs text-gold-300">{a.action}</code> <span className="text-slate-500">{a.actor_label ?? "system"}</span></span>
+                  <span className="flex items-center gap-2 text-slate-200"><CheckCheck className="size-3.5 text-slate-500" /> <code className="text-xs text-gold-300">{a.action}</code> <span className="text-slate-500">{a.actor_label ?? "সিস্টেম"}</span></span>
                   <span className="text-xs text-slate-500">{fmtDateTime(a.occurred_at)}</span>
                 </li>
               ))}

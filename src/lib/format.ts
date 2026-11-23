@@ -1,22 +1,36 @@
 export const TZ = "Asia/Dhaka";
 
-const locale = (lang?: "en" | "bn") => (lang === "bn" ? "bn-BD" : "en-GB");
+// Bengali is the default: the admin dashboard is Bengali-only, and public pages pass the visitor's language explicitly.
+type L = "en" | "bn";
+const locale = (lang: L = "bn") => (lang === "bn" ? "bn-BD" : "en-GB");
 
-export function fmtDateTime(d: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = {}, lang?: "en" | "bn") {
+export const LOCALE = "bn-BD";
+const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
+/** Writes every ASCII digit in Bengali numerals (১২৩). */
+export function bn(v: number | string | null | undefined): string {
+  if (v === null || v === undefined) return "—";
+  return String(v).replace(/[0-9]/g, (d) => BN_DIGITS[Number(d)]);
+}
+/** Formats a number with Bengali digits and grouping. */
+export function bnNum(n: number, decimals = 0): string {
+  return new Intl.NumberFormat(LOCALE, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n);
+}
+
+export function fmtDateTime(d: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = {}, lang: L = "bn") {
   if (!d) return "—";
   return new Intl.DateTimeFormat(locale(lang), {
     timeZone: TZ, day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: lang !== "bn", ...opts,
   }).format(new Date(d));
 }
 
-export function fmtDate(d: Date | string | null | undefined, lang?: "en" | "bn") {
+export function fmtDate(d: Date | string | null | undefined, lang: L = "bn") {
   if (!d) return "—";
   return new Intl.DateTimeFormat(locale(lang), { timeZone: TZ, day: "2-digit", month: "long", year: "numeric" }).format(new Date(d));
 }
 
-export function fmtTime(d: Date | string | null | undefined) {
+export function fmtTime(d: Date | string | null | undefined, lang: L = "bn") {
   if (!d) return "—";
-  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: true }).format(new Date(d));
+  return new Intl.DateTimeFormat(locale(lang), { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: lang !== "bn" }).format(new Date(d));
 }
 
 /** Converts a Date to the value of an <input type="datetime-local"> in Asia/Dhaka. */
@@ -33,7 +47,22 @@ export function fromDhakaLocalInput(v: string) {
   return new Date(`${v}:00+06:00`);
 }
 
+/** Bengali status names (admin dashboard and server messages). Public pages use the i18n dictionary. */
 export const STATUS_LABEL: Record<string, string> = {
+  DRAFT: "খসড়া",
+  SCHEDULED: "আসন্ন",
+  LIVE: "চলমান",
+  PAUSED: "সাময়িক স্থগিত",
+  CLOSED: "সমাপ্ত",
+  RESULTS_PUBLISHED: "ফলাফল প্রকাশিত",
+};
+
+/** English formatting for the PDF report: pdf-lib's standard fonts cannot draw Bengali script. */
+export function fmtDateTimeEn(d: Date | string | null | undefined) {
+  return fmtDateTime(d, { hour12: true }, "en");
+}
+
+export const STATUS_LABEL_EN: Record<string, string> = {
   DRAFT: "Draft",
   SCHEDULED: "Upcoming",
   LIVE: "Live",

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { STATUS_LABEL } from "@/lib/format";
+import { bnNum, STATUS_LABEL } from "@/lib/format";
 import { EyeOff, Lock } from "lucide-react";
 
 export function PageHeader({ title, description, actions }: { title: string; description?: React.ReactNode; actions?: React.ReactNode }) {
@@ -23,7 +23,7 @@ export function Stat({ label, value, hint, icon: Icon, tone = "blue" }: { label:
         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
         {Icon && <span className={cn("rounded-lg p-1.5", tones[tone])}><Icon className="size-4" /></span>}
       </div>
-      <p className="mt-3 text-2xl font-bold tabular-nums text-white">{value}</p>
+      <p className="mt-3 text-2xl font-bold tabular-nums text-white">{typeof value === "number" ? bnNum(value) : value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </div>
   );
@@ -38,17 +38,17 @@ export function Empty({ children }: { children: React.ReactNode }) {
   return <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-slate-400">{children}</div>;
 }
 
-export function Sealed({ title = "Results are sealed", children }: { title?: string; children?: React.ReactNode }) {
+export function Sealed({ title = "ফলাফল সিলগালা", children }: { title?: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-2xl border border-white/[0.07] bg-navy-800 p-10 text-center">
       <span className="flex size-12 items-center justify-center rounded-full bg-white/5"><Lock className="size-5 text-slate-300" /></span>
       <p className="mt-4 font-semibold text-white">{title}</p>
-      <p className="mt-1 max-w-md text-sm text-slate-400">{children ?? "Candidate-wise counts cannot be computed until the election is closed. This is enforced by the database itself."}</p>
+      <p className="mt-1 max-w-md text-sm text-slate-400">{children ?? "নির্বাচন শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক গণনা করা যায় না। এটি সরাসরি ডেটাবেস থেকেই নিয়ন্ত্রিত।"}</p>
       <EyeOff className="mt-4 size-4 text-slate-600" />
     </div>
   );
 }
 
 export function NoElection() {
-  return <Empty>No election selected. Create one on the <a className="text-gold underline" href="/admin/elections">Elections</a> page.</Empty>;
+  return <Empty>কোনো নির্বাচন বেছে নেওয়া হয়নি। <a className="text-gold underline" href="/admin/elections">নির্বাচন</a> পাতা থেকে একটি তৈরি করুন।</Empty>;
 }

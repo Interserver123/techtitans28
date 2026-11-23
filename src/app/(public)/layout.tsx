@@ -6,7 +6,8 @@ import { getPublicSettings } from "@/lib/services/settings";
 import { getLang } from "@/lib/i18n-server";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [election, settings, lang] = await Promise.all([getCurrentElection(), getPublicSettings(), getLang()]);
+  const [election, lang] = await Promise.all([getCurrentElection(), getLang()]);
+  const settings = await getPublicSettings(lang === "bn");
   return (
     <div className="flex min-h-dvh flex-col">
       <RevealObserver />

@@ -26,7 +26,9 @@ async function otpFor(request, to, skip = 0) {
   throw new Error("no OTP delivered");
 }
 const browser = await chromium.launch();
-const phone = () => browser.newContext({ ...devices["Pixel 7"] });
+// The site defaults to Bengali; this suite checks the English mode (tests/e2e/run.mjs covers Bengali).
+const english = async (ctx) => { await ctx.addCookies([{ name: "tt_lang", value: "en", url: BASE }]); return ctx; };
+const phone = async () => english(await browser.newContext({ ...devices["Pixel 7"] }));
 
 async function loginAs(page, ctx, roll) {
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
@@ -191,7 +193,7 @@ await check("two phones voting at the same time for the same voter: only one bal
 });
 
 await check("desktop layout of the voter portal also works", async () => {
-  const ctx = await browser.newContext({ viewport: { width: 1366, height: 800 } }); const page = await ctx.newPage();
+  const ctx = await english(await browser.newContext({ viewport: { width: 1366, height: 800 } })); const page = await ctx.newPage();
   await loginAs(page, ctx, "D28050");
   await page.waitForURL("**/vote/ballot");
   await page.screenshot({ path: `${OUT}/portal-6-desktop-ballot.png`, fullPage: true });

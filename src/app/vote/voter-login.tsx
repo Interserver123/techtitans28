@@ -9,6 +9,9 @@ import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { dict, errorText, num, type Lang } from "@/lib/i18n";
 
+/** Bengali keyboards type ০-৯; roll numbers and codes are stored with ASCII digits. */
+const latinDigits = (v: string) => v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)));
+
 export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
   const V = dict(lang).vote;
   const router = useRouter();
@@ -74,7 +77,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
               <p className="mt-1 text-sm text-muted">{V.rollSub}</p>
             </div>
             <Field label={V.rollLabel} htmlFor="roll">
-              <Input id="roll" value={roll} onChange={(e) => setRoll(e.target.value.toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
+              <Input id="roll" value={roll} onChange={(e) => setRoll(latinDigits(e.target.value).toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
             <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>{V.send} <ArrowRight /></Button>
@@ -91,7 +94,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
             <Field label={V.codeLabel} htmlFor="otp" hint={V.codeHint}>
               <Input
                 id="otp" ref={otpRef} value={code}
-                onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setCode(v); }}
+                onChange={(e) => { const v = latinDigits(e.target.value).replace(/\D/g, "").slice(0, 6); setCode(v); }}
                 inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="••••••"
                 className="h-14 text-center font-mono text-2xl font-bold tracking-[0.5em]" required
               />

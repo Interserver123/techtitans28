@@ -1,14 +1,11 @@
 import "server-only";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { LANG_COOKIE, dict, type Lang } from "./i18n";
 
-/** Visitor's language: explicit choice (cookie) first, then the browser's preference. Default English. */
+/** Visitor's language: explicit choice (cookie) first, otherwise Bengali. English is one tap away on the language switch. */
 export async function getLang(): Promise<Lang> {
   const c = (await cookies()).get(LANG_COOKIE)?.value;
-  if (c === "bn" || c === "en") return c;
-  const accept = (await headers()).get("accept-language") ?? "";
-  const first = accept.split(",")[0]?.trim().toLowerCase() ?? "";
-  return first.startsWith("bn") ? "bn" : "en";
+  return c === "en" ? "en" : "bn";
 }
 
 export async function getDict() {

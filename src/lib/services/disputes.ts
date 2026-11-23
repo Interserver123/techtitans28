@@ -5,12 +5,13 @@ import { AppError } from "../errors";
 import { audit } from "../audit";
 import { enforceRateLimit } from "../rate-limit";
 
+/** Category names for the (Bengali-only) admin dashboard; the public form takes them from the i18n dictionary. */
 export const DISPUTE_CATEGORIES = {
-  IDENTITY_MISUSE: "Someone else may have voted using my identity",
-  OTP_NOT_RECEIVED: "I did not receive my verification code",
-  NOT_ON_REGISTER: "My roll number is not accepted",
-  TECHNICAL: "Technical problem while voting",
-  OTHER: "Other",
+  IDENTITY_MISUSE: "আমার পরিচয় ব্যবহার করে অন্য কেউ ভোট দিয়ে থাকতে পারে",
+  OTP_NOT_RECEIVED: "আমি যাচাই কোড পাইনি",
+  NOT_ON_REGISTER: "আমার রোল নম্বর গ্রহণ করছে না",
+  TECHNICAL: "ভোট দেওয়ার সময় কারিগরি সমস্যা",
+  OTHER: "অন্যান্য",
 } as const;
 
 export const disputeSchema = z.object({

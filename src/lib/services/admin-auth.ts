@@ -18,10 +18,10 @@ const LOCK_MINUTES = 15;
 export const adminTokenHash = (token: string) => hmac("admin-session", token);
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
-  password: z.string().min(1, "Enter your password.").max(200),
+  email: z.string().trim().toLowerCase().email("সঠিক ইমেইল ঠিকানা লিখুন।").max(254),
+  password: z.string().min(1, "আপনার পাসওয়ার্ড লিখুন।").max(200),
 });
-export const totpSchema = z.object({ code: z.string().trim().regex(/^[0-9]{6}$/, "Enter the 6-digit code.") });
+export const totpSchema = z.object({ code: z.string().trim().regex(/^[0-9]{6}$/, "৬ অঙ্কের কোডটি লিখুন।") });
 
 export type AdminIdentity = {
   sessionId: string;
@@ -168,11 +168,11 @@ export async function completeMfa(token: string, code: string, ctx: RequestConte
     if (!a) throw new AppError("UNAUTHENTICATED");
     const enrolling = !a.mfa_enabled;
     const secret = enrolling ? a.mfa_pending_secret_enc : a.mfa_secret_enc;
-    if (!secret) throw new AppError("INVALID_STATE", "Start MFA enrolment first.");
+    if (!secret) throw new AppError("INVALID_STATE", "আগে দুই-ধাপের যাচাই চালু করা শুরু করুন।");
     const okCode = await checkTotp(id.adminId, secret, a.email, code, a.mfa_last_step, c);
     if (!okCode) {
       await audit({ actorType: "ADMIN", adminId: id.adminId, action: "ADMIN.MFA_FAILED", entityType: "election_admin", entityId: id.adminId, ipHash: ctx.ipHash }, c);
-      throw new AppError("INVALID_OTP", "The authentication code is not valid.");
+      throw new AppError("INVALID_OTP", "যাচাই কোডটি সঠিক নয়।");
     }
     if (enrolling) {
       await query(

@@ -9,6 +9,8 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/components/admin/use-action";
 import { api } from "@/lib/client";
+import { errorText } from "@/lib/i18n";
+import { bnNum } from "@/lib/format";
 import { useToast } from "@/components/admin/toast";
 
 type S = { id?: string; rollNumber: string; fullName: string; contactType: "EMAIL" | "PHONE"; contactValue: string; batch: string; isEligible: boolean; isActive: boolean; notes: string };
@@ -27,15 +29,15 @@ export function StudentFilters({ initial }: { initial: { q?: string; voted: stri
     <form className="flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); apply(); }}>
       <div className="relative flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-        <Input placeholder="Search name or roll…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} className="h-10 pl-9" aria-label="Search students" />
+        <Input placeholder="নাম বা রোল দিয়ে খুঁজুন…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} className="h-10 pl-9" aria-label="শিক্ষার্থী খুঁজুন" />
       </div>
-      <Select className="h-10 sm:w-40" value={f.voted} aria-label="Voting status" onChange={(e) => { const n = { ...f, voted: e.target.value }; setF(n); apply(n); }}>
-        <option value="">Any voting status</option><option value="yes">Voted</option><option value="no">Not voted</option>
+      <Select className="h-10 sm:w-40" value={f.voted} aria-label="ভোটের অবস্থা" onChange={(e) => { const n = { ...f, voted: e.target.value }; setF(n); apply(n); }}>
+        <option value="">ভোটের সব অবস্থা</option><option value="yes">ভোট দিয়েছেন</option><option value="no">ভোট দেননি</option>
       </Select>
-      <Select className="h-10 sm:w-40" value={f.status} aria-label="Account status" onChange={(e) => { const n = { ...f, status: e.target.value }; setF(n); apply(n); }}>
-        <option value="">Any status</option><option value="active">Active &amp; eligible</option><option value="inactive">Deactivated</option><option value="ineligible">Ineligible</option>
+      <Select className="h-10 sm:w-40" value={f.status} aria-label="অ্যাকাউন্টের অবস্থা" onChange={(e) => { const n = { ...f, status: e.target.value }; setF(n); apply(n); }}>
+        <option value="">সব অবস্থা</option><option value="active">সক্রিয় ও যোগ্য</option><option value="inactive">নিষ্ক্রিয়</option><option value="ineligible">অযোগ্য</option>
       </Select>
-      <Button type="submit" size="default" variant="subtle" className="h-10">Search</Button>
+      <Button type="submit" size="default" variant="subtle" className="h-10">খুঁজুন</Button>
     </form>
   );
 }
@@ -46,29 +48,29 @@ export function StudentDialog({ student, batch }: { student?: S; batch: string }
   const [f, setF] = useState<S>(student ?? { rollNumber: "", fullName: "", contactType: "EMAIL", contactValue: "", batch, isEligible: true, isActive: true, notes: "" });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{student ? <Button size="icon" variant="ghost" aria-label={`Edit ${student.fullName}`}><Pencil /></Button> : <Button size="sm"><UserPlus /> Add student</Button>}</DialogTrigger>
-      <DialogContent title={student ? "Edit student" : "Add student"} description="Changes are recorded in the audit log.">
+      <DialogTrigger asChild>{student ? <Button size="icon" variant="ghost" aria-label={`${student.fullName} সম্পাদনা`}><Pencil /></Button> : <Button size="sm"><UserPlus /> শিক্ষার্থী যোগ করুন</Button>}</DialogTrigger>
+      <DialogContent title={student ? "শিক্ষার্থীর তথ্য সম্পাদনা" : "শিক্ষার্থী যোগ করুন"} description="পরিবর্তনগুলো অডিট লগে লিপিবদ্ধ হয়।">
         <form className="space-y-4" onSubmit={async (e) => {
           e.preventDefault();
-          const r = student ? await run(`/api/admin/students/${student.id}`, { method: "PATCH", json: f }, "Student updated") : await run("/api/admin/students", { json: f }, "Student added");
+          const r = student ? await run(`/api/admin/students/${student.id}`, { method: "PATCH", json: f }, "শিক্ষার্থীর তথ্য হালনাগাদ হয়েছে") : await run("/api/admin/students", { json: f }, "শিক্ষার্থী যোগ হয়েছে");
           if (r) setOpen(false);
         }}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Roll number" htmlFor="sr"><Input id="sr" value={f.rollNumber} onChange={(e) => setF({ ...f, rollNumber: e.target.value.toUpperCase() })} required maxLength={20} /></Field>
-            <Field label="Batch" htmlFor="sb"><Input id="sb" value={f.batch} onChange={(e) => setF({ ...f, batch: e.target.value })} required maxLength={40} /></Field>
+            <Field label="রোল নম্বর" htmlFor="sr"><Input id="sr" value={f.rollNumber} onChange={(e) => setF({ ...f, rollNumber: e.target.value.toUpperCase() })} required maxLength={20} /></Field>
+            <Field label="ব্যাচ" htmlFor="sb"><Input id="sb" value={f.batch} onChange={(e) => setF({ ...f, batch: e.target.value })} required maxLength={40} /></Field>
           </div>
-          <Field label="Full name" htmlFor="sn"><Input id="sn" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} required maxLength={120} /></Field>
+          <Field label="পূর্ণ নাম" htmlFor="sn"><Input id="sn" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} required maxLength={120} /></Field>
           <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
-            <Field label="Contact type" htmlFor="sct"><Select id="sct" value={f.contactType} onChange={(e) => setF({ ...f, contactType: e.target.value as S["contactType"] })}><option value="EMAIL">Email</option><option value="PHONE">Phone</option></Select></Field>
-            <Field label="Registered contact" htmlFor="sc" hint="OTP codes are sent here."><Input id="sc" value={f.contactValue} onChange={(e) => setF({ ...f, contactValue: e.target.value })} required maxLength={254} /></Field>
+            <Field label="যোগাযোগের ধরন" htmlFor="sct"><Select id="sct" value={f.contactType} onChange={(e) => setF({ ...f, contactType: e.target.value as S["contactType"] })}><option value="EMAIL">ইমেইল</option><option value="PHONE">ফোন</option></Select></Field>
+            <Field label="নিবন্ধিত যোগাযোগ" htmlFor="sc" hint="এখানেই ওটিপি কোড পাঠানো হবে।"><Input id="sc" value={f.contactValue} onChange={(e) => setF({ ...f, contactValue: e.target.value })} required maxLength={254} /></Field>
           </div>
           <div className="flex flex-wrap gap-6 text-sm text-slate-200">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={f.isEligible} onChange={(e) => setF({ ...f, isEligible: e.target.checked })} className="size-4 accent-[#3B82F6]" /> Eligible to vote</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={f.isActive} onChange={(e) => setF({ ...f, isActive: e.target.checked })} className="size-4 accent-[#3B82F6]" /> Account active</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={f.isEligible} onChange={(e) => setF({ ...f, isEligible: e.target.checked })} className="size-4 accent-[#0f7a4f]" /> ভোট দেওয়ার যোগ্য</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={f.isActive} onChange={(e) => setF({ ...f, isActive: e.target.checked })} className="size-4 accent-[#0f7a4f]" /> অ্যাকাউন্ট সক্রিয়</label>
           </div>
-          <Field label="Notes" htmlFor="snotes"><Textarea id="snotes" rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} maxLength={500} /></Field>
+          <Field label="মন্তব্য" htmlFor="snotes"><Textarea id="snotes" rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} maxLength={500} /></Field>
           {error && <Alert tone="error">{error}</Alert>}
-          <Button type="submit" className="w-full" loading={busy}>{student ? "Save" : "Add student"}</Button>
+          <Button type="submit" className="w-full" loading={busy}>{student ? "সংরক্ষণ করুন" : "শিক্ষার্থী যোগ করুন"}</Button>
         </form>
       </DialogContent>
     </Dialog>
@@ -78,8 +80,8 @@ export function StudentDialog({ student, batch }: { student?: S; batch: string }
 export function ActiveToggle({ id, active }: { id: string; active: boolean }) {
   const { run, busy } = useAction();
   return (
-    <Button size="icon" variant="ghost" loading={busy} aria-label={active ? "Deactivate" : "Reactivate"} title={active ? "Deactivate" : "Reactivate"}
-      onClick={() => { if (confirm(active ? "Deactivate this student? They will not be able to vote." : "Reactivate this student?")) void run(`/api/admin/students/${id}/active`, { json: { active: !active } }, active ? "Student deactivated" : "Student reactivated"); }}>
+    <Button size="icon" variant="ghost" loading={busy} aria-label={active ? "নিষ্ক্রিয় করুন" : "আবার সক্রিয় করুন"} title={active ? "নিষ্ক্রিয় করুন" : "আবার সক্রিয় করুন"}
+      onClick={() => { if (confirm(active ? "এই শিক্ষার্থীকে নিষ্ক্রিয় করবেন? তিনি আর ভোট দিতে পারবেন না।" : "এই শিক্ষার্থীকে আবার সক্রিয় করবেন?")) void run(`/api/admin/students/${id}/active`, { json: { active: !active } }, active ? "শিক্ষার্থী নিষ্ক্রিয় করা হয়েছে" : "শিক্ষার্থী আবার সক্রিয় করা হয়েছে"); }}>
       <Power className={active ? "text-slate-400" : "text-green-400"} />
     </Button>
   );
@@ -104,10 +106,10 @@ export function ImportDialog({ batch }: { batch: string }) {
     fd.set("file", file); fd.set("mode", mode); fd.set("commit", String(commit));
     const r = await api<Preview>("/api/admin/students/import", { form: fd });
     setBusy(false);
-    if (!r.ok) return setError(r.error.message);
+    if (!r.ok) return setError(errorText("bn", r.error));
     setPreview(r);
     if (commit && r.committed) {
-      toast("success", `Imported: ${r.committed.inserted} added, ${r.committed.updated} updated, ${r.committed.skipped} skipped`);
+      toast("success", `ইমপোর্ট সম্পন্ন: ${bnNum(r.committed.inserted)} জন যোগ, ${bnNum(r.committed.updated)} জন হালনাগাদ, ${bnNum(r.committed.skipped)} জন বাদ`);
       router.refresh();
       setOpen(false);
       setPreview(null); setFile(null);
@@ -116,26 +118,26 @@ export function ImportDialog({ batch }: { batch: string }) {
   const problems = preview?.rows.filter((r) => r.errors.length || r.warnings.length) ?? [];
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPreview(null); setError(null); } }}>
-      <DialogTrigger asChild><Button size="sm" variant="outline"><FileUp /> Import</Button></DialogTrigger>
-      <DialogContent wide title="Import students" description={<>Upload CSV or Excel (.xlsx). Columns: <code>roll_number, full_name, contact</code> (email or phone), optional <code>batch</code> (default {batch}), <code>eligible</code>, <code>active</code>, <code>notes</code>.</>}>
+      <DialogTrigger asChild><Button size="sm" variant="outline"><FileUp /> ইমপোর্ট</Button></DialogTrigger>
+      <DialogContent wide title="শিক্ষার্থী ইমপোর্ট" description={<>CSV বা Excel (.xlsx) ফাইল আপলোড করুন। কলাম: <code>roll_number, full_name, contact</code> (ইমেইল বা ফোন); ঐচ্ছিক: <code>batch</code> (ডিফল্ট {batch}), <code>eligible</code>, <code>active</code>, <code>notes</code>।</>}>
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_200px]">
             <Input type="file" accept=".csv,.xlsx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setPreview(null); }} className="h-auto py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-electric file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
-            <Select value={mode} onChange={(e) => { setMode(e.target.value as typeof mode); setPreview(null); }} aria-label="Import mode">
-              <option value="insert_only">Add new only</option><option value="upsert">Add &amp; update existing</option>
+            <Select value={mode} onChange={(e) => { setMode(e.target.value as typeof mode); setPreview(null); }} aria-label="ইমপোর্টের ধরন">
+              <option value="insert_only">শুধু নতুন যোগ</option><option value="upsert">নতুন যোগ ও পুরোনো হালনাগাদ</option>
             </Select>
           </div>
-          <Button onClick={() => send(false)} disabled={!file} loading={busy && !preview} variant="subtle" className="w-full">Validate file</Button>
+          <Button onClick={() => send(false)} disabled={!file} loading={busy && !preview} variant="subtle" className="w-full">ফাইল যাচাই করুন</Button>
           {error && <Alert tone="error">{error}</Alert>}
           {preview && (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2 text-xs">
-                <Badge>{preview.summary.total} rows</Badge><Badge tone="green">{preview.summary.inserts} new</Badge><Badge tone="blue">{preview.summary.updates} updates</Badge>
-                <Badge tone="neutral">{preview.summary.skips} skipped</Badge><Badge tone={preview.summary.invalid ? "red" : "green"}>{preview.summary.invalid} invalid</Badge>
+                <Badge>{bnNum(preview.summary.total)}টি সারি</Badge><Badge tone="green">{bnNum(preview.summary.inserts)}টি নতুন</Badge><Badge tone="blue">{bnNum(preview.summary.updates)}টি হালনাগাদ</Badge>
+                <Badge tone="neutral">{bnNum(preview.summary.skips)}টি বাদ</Badge><Badge tone={preview.summary.invalid ? "red" : "green"}>{bnNum(preview.summary.invalid)}টি ত্রুটিপূর্ণ</Badge>
               </div>
               {problems.length > 0 && (
                 <div className="max-h-64 overflow-y-auto rounded-xl border border-white/10">
-                  <table className="w-full text-xs"><thead className="sticky top-0 bg-navy-700 text-left text-slate-400"><tr><th className="px-3 py-2">Row</th><th className="px-3 py-2">Roll</th><th className="px-3 py-2">Issue</th></tr></thead>
+                  <table className="w-full text-xs"><thead className="sticky top-0 bg-navy-700 text-left text-slate-400"><tr><th className="px-3 py-2">সারি</th><th className="px-3 py-2">রোল</th><th className="px-3 py-2">সমস্যা</th></tr></thead>
                     <tbody className="divide-y divide-white/5">
                       {problems.map((r) => (
                         <tr key={r.row}><td className="px-3 py-2 font-mono text-slate-300">{r.row}</td><td className="px-3 py-2 font-mono text-slate-300">{r.rollNumber ?? "—"}</td>
@@ -145,8 +147,8 @@ export function ImportDialog({ batch }: { batch: string }) {
                 </div>
               )}
               {preview.summary.invalid > 0
-                ? <Alert tone="error">Fix the invalid rows and validate again. Nothing has been imported.</Alert>
-                : <Button className="w-full" onClick={() => send(true)} loading={busy}>Import {preview.summary.inserts + preview.summary.updates} record(s)</Button>}
+                ? <Alert tone="error">ত্রুটিপূর্ণ সারিগুলো ঠিক করে আবার যাচাই করুন। কিছুই ইমপোর্ট করা হয়নি।</Alert>
+                : <Button className="w-full" onClick={() => send(true)} loading={busy}>{bnNum(preview.summary.inserts + preview.summary.updates)}টি রেকর্ড ইমপোর্ট করুন</Button>}
             </div>
           )}
         </div>

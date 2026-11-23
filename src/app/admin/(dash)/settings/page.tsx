@@ -8,7 +8,7 @@ export default async function SettingsPage() {
   const s = await getPublicSettings();
   return (
     <div>
-      <PageHeader title="Settings" description={`Public Election Committee information. Eligible batch: ${s.batch}.`} />
+      <PageHeader title="সেটিংস" description={`নির্বাচন কমিটির পাবলিক তথ্য। যোগ্য ব্যাচ: ${s.batch}।`} />
       <SettingsForm initial={{ committee: s.committee.map((m) => ({ name: m.name, designation: m.designation, contact: m.contact ?? "" })), contact: s.contact }} />
     </div>
   );

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client";
+import { errorText } from "@/lib/i18n";
 import { useToast } from "./toast";
 
 /** Calls an admin API, shows a toast, refreshes server data on success. */
@@ -16,8 +17,8 @@ export function useAction() {
     const r = await api<T>(url, init);
     setBusy(false);
     if (!r.ok) {
-      setError(r.error.message);
-      toast("error", r.error.message);
+      setError(errorText("bn", r.error));
+      toast("error", errorText("bn", r.error));
       if (r.error.code === "UNAUTHENTICATED" || r.error.code === "MFA_REQUIRED") router.replace("/admin/login");
       return null;
     }

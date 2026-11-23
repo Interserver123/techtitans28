@@ -1,8 +1,8 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb, degrees, type PDFFont, type PDFPage } from "pdf-lib";
 import { getResultSummary } from "./results";
-import { getPublicSettings } from "./settings";
-import { fmtDateTime, pct, STATUS_LABEL } from "../format";
+import { getPublicSettingsRaw } from "./settings";
+import { fmtDateTimeEn as fmtDateTime, pct, STATUS_LABEL_EN as STATUS_LABEL } from "../format";
 import { one } from "../db";
 
 const NAVY = rgb(11 / 255, 18 / 255, 32 / 255);
@@ -15,7 +15,7 @@ const safe = (s: string) => s.replace(/[^\x20-\x7E -ÿ]/g, "?");
 
 export async function buildResultReport(electionId: string) {
   const r = await getResultSummary(electionId);
-  const settings = await getPublicSettings();
+  const settings = await getPublicSettingsRaw();
   const publisher = r.election.results_published_by
     ? await one<{ full_name: string; designation: string | null }>(`select full_name, designation from election_admins where id = $1`, [r.election.results_published_by])
     : null;

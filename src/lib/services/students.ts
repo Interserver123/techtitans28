@@ -41,10 +41,10 @@ export function inferContactType(value: string): "EMAIL" | "PHONE" {
 
 export const studentSchema = z
   .object({
-    rollNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "Roll number must be 3–20 letters, digits or hyphens."),
-    fullName: z.string().trim().min(2, "Name is too short.").max(120, "Name is too long."),
+    rollNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "রোল নম্বরে ৩–২০টি ইংরেজি অক্ষর, অঙ্ক বা হাইফেন থাকতে হবে।"),
+    fullName: z.string().trim().min(2, "নাম খুব ছোট।").max(120, "নাম খুব বড়।"),
     contactType: z.enum(["EMAIL", "PHONE"]).optional(),
-    contactValue: z.string().trim().min(5, "Contact is required.").max(254),
+    contactValue: z.string().trim().min(5, "যোগাযোগের তথ্য আবশ্যক।").max(254),
     batch: z.string().trim().min(2).max(40),
     isEligible: z.boolean().default(true),
     isActive: z.boolean().default(true),
@@ -55,8 +55,8 @@ export const studentSchema = z
     return { ...v, contactType, contactValue: normalizeContact(contactType, v.contactValue) };
   })
   .superRefine((v, ctx) => {
-    if (v.contactType === "EMAIL" && !email.test(v.contactValue)) ctx.addIssue({ code: "custom", path: ["contactValue"], message: "Invalid email address." });
-    if (v.contactType === "PHONE" && !phone.test(v.contactValue)) ctx.addIssue({ code: "custom", path: ["contactValue"], message: "Invalid phone number." });
+    if (v.contactType === "EMAIL" && !email.test(v.contactValue)) ctx.addIssue({ code: "custom", path: ["contactValue"], message: "ইমেইল ঠিকানা সঠিক নয়।" });
+    if (v.contactType === "PHONE" && !phone.test(v.contactValue)) ctx.addIssue({ code: "custom", path: ["contactValue"], message: "ফোন নম্বর সঠিক নয়।" });
   });
 export type StudentInput = z.input<typeof studentSchema>;
 
@@ -140,7 +140,7 @@ export async function updateStudent(id: string, input: StudentInput, adminId: st
     });
   } catch (e) {
     const m = fromDbError(e);
-    if (m?.code === "CONFLICT") throw new AppError("CONFLICT", "Another student already has this roll number.");
+    if (m?.code === "CONFLICT") throw new AppError("CONFLICT", "অন্য একজন শিক্ষার্থীর এই রোল নম্বর আছে।");
     throw m ?? e;
   }
 }
@@ -182,28 +182,28 @@ function toBool(v: unknown, dflt: boolean) {
 }
 
 export async function parseImportFile(filename: string, bytes: Buffer): Promise<Record<string, unknown>[]> {
-  if (bytes.length > 2 * 1024 * 1024) throw new AppError("PAYLOAD_TOO_LARGE", "Import files must be 2 MB or smaller.");
+  if (bytes.length > 2 * 1024 * 1024) throw new AppError("PAYLOAD_TOO_LARGE", "ইমপোর্ট ফাইল সর্বোচ্চ ২ MB হতে পারে।");
   const lower = filename.toLowerCase();
   let table: unknown[][];
   if (lower.endsWith(".xlsx")) {
-    if (bytes.subarray(0, 2).toString("ascii") !== "PK") throw new AppError("UNSUPPORTED_MEDIA", "The file is not a valid .xlsx workbook.");
+    if (bytes.subarray(0, 2).toString("ascii") !== "PK") throw new AppError("UNSUPPORTED_MEDIA", "ফাইলটি সঠিক .xlsx ওয়ার্কবুক নয়।");
     try {
       table = (await readSheet(bytes)) as unknown[][];
     } catch {
-      throw new AppError("UNSUPPORTED_MEDIA", "The workbook could not be read.");
+      throw new AppError("UNSUPPORTED_MEDIA", "ওয়ার্কবুকটি পড়া যায়নি।");
     }
   } else if (lower.endsWith(".csv")) {
     const text = bytes.toString("utf8").replace(/^﻿/, "");
     const parsed = Papa.parse<string[]>(text, { skipEmptyLines: "greedy" });
     table = parsed.data;
   } else {
-    throw new AppError("UNSUPPORTED_MEDIA", "Upload a .csv or .xlsx file.");
+    throw new AppError("UNSUPPORTED_MEDIA", ".csv বা .xlsx ফাইল আপলোড করুন।");
   }
-  if (table.length < 2) throw new AppError("VALIDATION", "The file has no data rows.");
+  if (table.length < 2) throw new AppError("VALIDATION", "ফাইলে কোনো তথ্যের সারি নেই।");
   if (table.length - 1 > MAX_IMPORT_ROWS) throw new AppError("VALIDATION", `A single import may contain at most ${MAX_IMPORT_ROWS} rows.`);
   const headers = table[0].map((h) => HEADER_ALIASES[String(h ?? "").trim().toLowerCase()] ?? null);
   if (!headers.includes("rollNumber") || !headers.includes("fullName") || !headers.includes("contactValue")) {
-    throw new AppError("VALIDATION", "Required columns: roll_number, full_name, contact (email or phone). Optional: batch, eligible, active, notes.");
+    throw new AppError("VALIDATION", "আবশ্যক কলাম: roll_number, full_name, contact (ইমেইল বা ফোন)। ঐচ্ছিক: batch, eligible, active, notes।");
   }
   return table.slice(1).map((cells) => {
     const obj: Record<string, unknown> = {};
@@ -224,8 +224,8 @@ export async function previewImport(records: Record<string, unknown>[], defaultB
     const warnings: string[] = [];
     const isEligible = toBool(rec.isEligible, true);
     const isActive = toBool(rec.isActive, true);
-    if (isEligible === undefined) errors.push(`Unrecognised eligibility value "${String(rec.isEligible)}".`);
-    if (isActive === undefined) errors.push(`Unrecognised status value "${String(rec.isActive)}".`);
+    if (isEligible === undefined) errors.push(`যোগ্যতার মান "${String(rec.isEligible)}" বোঝা যায়নি।`);
+    if (isActive === undefined) errors.push(`অবস্থার মান "${String(rec.isActive)}" বোঝা যায়নি।`);
     const ct = String(rec.contactType ?? "").trim().toUpperCase();
     const parsed = studentSchema.safeParse({
       rollNumber: String(rec.rollNumber ?? ""),
@@ -241,12 +241,12 @@ export async function previewImport(records: Record<string, unknown>[], defaultB
     const data = parsed.success ? parsed.data : undefined;
     if (data) {
       const prevRoll = seenRoll.get(data.rollNumber);
-      if (prevRoll) errors.push(`Duplicate roll number (also on row ${prevRoll}).`);
+      if (prevRoll) errors.push(`রোল নম্বর পুনরাবৃত্ত (${prevRoll} নম্বর সারিতেও আছে)।`);
       else seenRoll.set(data.rollNumber, rowNo);
       const prevContact = seenContact.get(data.contactValue);
-      if (prevContact) errors.push(`Duplicate contact (also on row ${prevContact}).`);
+      if (prevContact) errors.push(`যোগাযোগ পুনরাবৃত্ত (${prevContact} নম্বর সারিতেও আছে)।`);
       else seenContact.set(data.contactValue, rowNo);
-      if (data.batch !== defaultBatch) warnings.push(`Batch "${data.batch}" is not ${defaultBatch}; the student will not be eligible to vote.`);
+      if (data.batch !== defaultBatch) warnings.push(`ব্যাচ "${data.batch}" ${defaultBatch} নয়; এই শিক্ষার্থী ভোট দিতে পারবেন না।`);
     }
     rows.push({ row: rowNo, data, errors, warnings });
   });
@@ -265,12 +265,12 @@ export async function previewImport(records: Record<string, unknown>[], defaultB
       const d = r.data!;
       const owner = contactOwner.get(d.contactValue.toLowerCase());
       if (owner && owner !== d.rollNumber) {
-        r.errors.push(`Contact is already registered to roll ${owner}.`);
+        r.errors.push(`এই যোগাযোগ ইতিমধ্যে রোল ${owner}-এ নিবন্ধিত।`);
         continue;
       }
       if (existingRoll.has(d.rollNumber)) {
         r.action = mode === "upsert" ? "update" : "skip";
-        if (mode !== "upsert") r.warnings.push("Roll number already exists; row will be skipped.");
+        if (mode !== "upsert") r.warnings.push("রোল নম্বরটি আগে থেকেই আছে; সারিটি বাদ দেওয়া হবে।");
       } else r.action = "insert";
     }
   }
@@ -290,7 +290,7 @@ export async function previewImport(records: Record<string, unknown>[], defaultB
 
 /** Commits an import atomically. Refuses if ANY row is invalid (all-or-nothing). */
 export async function commitImport(preview: ImportPreview, adminId: string, ipHash: string | null, source: string) {
-  if (preview.summary.invalid > 0) throw new AppError("VALIDATION", "Fix all invalid rows before importing.");
+  if (preview.summary.invalid > 0) throw new AppError("VALIDATION", "ইমপোর্টের আগে সব ত্রুটিপূর্ণ সারি ঠিক করুন।");
   try {
     return await tx(async (c) => {
       let inserted = 0;

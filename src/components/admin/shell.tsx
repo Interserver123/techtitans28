@@ -13,16 +13,16 @@ import { STATUS_LABEL } from "@/lib/format";
 import { ToastProvider } from "./toast";
 
 const NAV = [
-  { href: "/admin", label: "Overview", icon: Gauge, perm: null },
-  { href: "/admin/elections", label: "Elections", icon: Vote, perm: "elections.read" },
-  { href: "/admin/students", label: "Students", icon: GraduationCap, perm: "students.read" },
-  { href: "/admin/candidates", label: "Candidates", icon: Users, perm: "candidates.read" },
-  { href: "/admin/results", label: "Results", icon: BarChart3, perm: "results.view" },
-  { href: "/admin/corrections", label: "Corrections", icon: ClipboardCheck, perm: "corrections.read" },
-  { href: "/admin/disputes", label: "Disputes", icon: LifeBuoy, perm: "disputes.read" },
-  { href: "/admin/audit", label: "Audit log", icon: FileClock, perm: "audit.read" },
-  { href: "/admin/admins", label: "Administrators", icon: UserCog, perm: "admins.manage" },
-  { href: "/admin/settings", label: "Settings", icon: Settings, perm: "settings.manage" },
+  { href: "/admin", label: "সারসংক্ষেপ", icon: Gauge, perm: null },
+  { href: "/admin/elections", label: "নির্বাচন", icon: Vote, perm: "elections.read" },
+  { href: "/admin/students", label: "শিক্ষার্থী", icon: GraduationCap, perm: "students.read" },
+  { href: "/admin/candidates", label: "প্রার্থী", icon: Users, perm: "candidates.read" },
+  { href: "/admin/results", label: "ফলাফল", icon: BarChart3, perm: "results.view" },
+  { href: "/admin/corrections", label: "সংশোধন", icon: ClipboardCheck, perm: "corrections.read" },
+  { href: "/admin/disputes", label: "অভিযোগ", icon: LifeBuoy, perm: "disputes.read" },
+  { href: "/admin/audit", label: "অডিট লগ", icon: FileClock, perm: "audit.read" },
+  { href: "/admin/admins", label: "অ্যাডমিন", icon: UserCog, perm: "admins.manage" },
+  { href: "/admin/settings", label: "সেটিংস", icon: Settings, perm: "settings.manage" },
 ] as const;
 
 type Props = {
@@ -45,9 +45,9 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
       <div className="gold-rule absolute inset-x-0 top-16" />
       <div className="relative flex h-16 items-center justify-between px-5">
         <Brand dark href="/admin" />
-        <button className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X className="size-5" /></button>
+        <button className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 lg:hidden" onClick={() => setOpen(false)} aria-label="মেনু বন্ধ করুন"><X className="size-5" /></button>
       </div>
-      <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-3" aria-label="Admin">
+      <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-3" aria-label="অ্যাডমিন মেনু">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} onClick={() => setOpen(false)}
             className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
@@ -65,7 +65,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
             <p className="truncate text-sm font-semibold text-white">{admin.name}</p>
             <p className="flex items-center gap-1 truncate text-xs text-slate-500"><ShieldHalf className="size-3" /> {admin.role}</p>
           </div>
-          <button aria-label="Sign out" title="Sign out" className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white"
+          <button aria-label="লগআউট" title="লগআউট" className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white"
             onClick={async () => { await api("/api/admin/auth/logout", { method: "POST" }); router.replace("/admin/login"); router.refresh(); }}>
             <LogOut className="size-4" />
           </button>
@@ -86,17 +86,17 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
         )}
         <div className="lg:pl-64">
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gold/20 bg-navy/85 px-4 backdrop-blur-xl sm:px-6">
-            <button className="rounded-lg p-2 text-slate-300 hover:bg-white/10 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="size-5" /></button>
+            <button className="rounded-lg p-2 text-slate-300 hover:bg-white/10 lg:hidden" onClick={() => setOpen(true)} aria-label="মেনু খুলুন"><Menu className="size-5" /></button>
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <label htmlFor="election-select" className="hidden text-xs font-medium uppercase tracking-wider text-slate-500 sm:block">Election</label>
+              <label htmlFor="election-select" className="hidden text-xs font-medium uppercase tracking-wider text-slate-500 sm:block">নির্বাচন</label>
               <select id="election-select" value={selectedId ?? ""} disabled={!elections.length}
                 onChange={(e) => { document.cookie = `tt_admin_election=${e.target.value}; path=/admin; samesite=strict`; router.refresh(); }}
                 className="h-9 min-w-0 max-w-full truncate rounded-lg border border-white/10 bg-navy-800 px-3 text-sm text-slate-100 outline-none focus:border-electric">
-                {!elections.length && <option value="">No elections yet</option>}
+                {!elections.length && <option value="">এখনো কোনো নির্বাচন নেই</option>}
                 {elections.map((e) => <option key={e.id} value={e.id}>{e.title} — {STATUS_LABEL[e.status]}</option>)}
               </select>
             </div>
-            <Link href="/" target="_blank" className="hidden rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-white/10 hover:text-white sm:block">View public site ↗</Link>
+            <Link href="/" target="_blank" className="hidden rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-white/10 hover:text-white sm:block">পাবলিক সাইট দেখুন ↗</Link>
           </header>
           <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
         </div>

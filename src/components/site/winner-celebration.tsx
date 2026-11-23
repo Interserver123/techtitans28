@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const COLORS = ["#3B82F6", "#60A5FA", "#16A34A", "#F59E0B", "#ffffff", "#A78BFA"];
+const COLORS = ["#0f7a4f", "#c9a24a", "#e6cd8a", "#16A34A", "#ffffff", "#f3dfa2"];
 
 /** Lightweight confetti burst (CSS only, respects prefers-reduced-motion). */
 export function WinnerCelebration() {

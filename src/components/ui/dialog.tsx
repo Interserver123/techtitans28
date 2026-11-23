@@ -25,7 +25,7 @@ export function DialogContent({ className, children, title, description, wide }:
             <D.Title className="text-lg font-semibold tracking-tight">{title}</D.Title>
             {description ? <D.Description className="mt-1 text-sm text-muted dark:text-slate-400">{description}</D.Description> : <D.Description className="sr-only">{title}</D.Description>}
           </div>
-          <D.Close className="rounded-lg p-1.5 text-muted hover:bg-slate-100 dark:hover:bg-white/10" aria-label="Close">
+          <D.Close className="rounded-lg p-1.5 text-muted hover:bg-slate-100 dark:hover:bg-white/10" aria-label="বন্ধ করুন">
             <X className="size-4" />
           </D.Close>
         </div>

@@ -67,8 +67,8 @@ await check("public landing page renders (desktop) without console errors", asyn
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: /CR Election/ }).waitFor();
-  await page.getByText("Meet the candidates").first().waitFor();
+  await page.getByRole("heading", { name: /আপনার কণ্ঠ/ }).waitFor();
+  await page.getByText("প্রার্থীদের সাথে পরিচিত হোন").first().waitFor();
   await page.screenshot({ path: `${OUT}/landing-desktop.png`, fullPage: true });
   assert(errors.length === 0, `console errors: ${errors.join(" | ")}`);
   const html = await page.content();
@@ -95,20 +95,20 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const page = await ctx.newPage();
   const roll = process.env.E2E_ROLL ?? "D28041";
   await page.goto(`${BASE}/vote`, { waitUntil: "networkidle" });
-  await page.getByLabel("Roll number").fill(roll);
-  await page.getByRole("button", { name: /Send verification code/ }).click();
-  await page.getByLabel("6-digit code").waitFor();
+  await page.getByLabel("রোল নম্বর").fill(roll);
+  await page.getByRole("button", { name: /যাচাই কোড পাঠান/ }).click();
+  await page.getByLabel("৬ অঙ্কের কোড").waitFor();
   await page.screenshot({ path: `${OUT}/vote-otp-mobile.png` });
   const code = await latestOtp(ctx.request, `${roll.toLowerCase()}@students.example.edu`);
-  await page.getByLabel("6-digit code").fill(code);
-  await page.getByRole("button", { name: /Verify/ }).click();
+  await page.getByLabel("৬ অঙ্কের কোড").fill(code);
+  await page.getByRole("button", { name: /যাচাই করে এগিয়ে যান/ }).click();
   await page.waitForURL("**/vote/ballot");
-  await page.getByText("Choose one candidate").waitFor();
+  await page.getByText("একজন প্রার্থী বেছে নিন", { exact: true }).first().waitFor();
   await page.locator("label", { hasText: "Sadia Akter" }).first().click();
   await page.screenshot({ path: `${OUT}/vote-ballot-mobile.png`, fullPage: true });
-  await page.getByRole("button", { name: "Review choice" }).click();
-  await page.getByText("Review your ballot").waitFor();
-  const submit = page.getByRole("button", { name: "Submit final ballot" });
+  await page.getByRole("button", { name: "পছন্দ পর্যালোচনা" }).click();
+  await page.getByText("আপনার ব্যালট পর্যালোচনা করুন").waitFor();
+  const submit = page.getByRole("button", { name: "চূড়ান্ত ব্যালট জমা দিন" });
   assert(await submit.isDisabled(), "submit must be disabled until confirmation is ticked");
   await page.getByRole("checkbox").check();
   await page.screenshot({ path: `${OUT}/vote-review-mobile.png` });
@@ -172,18 +172,18 @@ await check("admin sign-in: password, mandatory MFA enrolment, dashboard", async
   adminCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await adminCtx.newPage();
   await page.goto(`${BASE}/admin/login`);
-  await page.getByLabel("Email").fill(process.env.E2E_ADMIN_EMAIL ?? "superadmin@dev.local");
-  await page.getByLabel("Password").fill(process.env.E2E_ADMIN_PASSWORD ?? "DevOnly-Passw0rd!");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("ইমেইল").fill(process.env.E2E_ADMIN_EMAIL ?? "superadmin@dev.local");
+  await page.getByLabel("পাসওয়ার্ড").fill(process.env.E2E_ADMIN_PASSWORD ?? "DevOnly-Passw0rd!");
+  await page.getByRole("button", { name: "এগিয়ে যান" }).click();
   const secretEl = page.locator("code").first();
   const enrolling = await secretEl.waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
   assert(enrolling, "expected MFA enrolment for a fresh dev admin (re-seed the DB if it was already enrolled)");
   await page.screenshot({ path: `${OUT}/admin-mfa-enrol.png` });
   const secret = (await secretEl.innerText()).trim();
-  await page.getByLabel("Authentication code").fill(totp(secret));
-  await page.getByRole("button", { name: "Verify" }).click();
+  await page.getByLabel("যাচাই কোড").fill(totp(secret));
+  await page.getByRole("button", { name: "যাচাই করুন" }).click();
   await page.waitForURL(`${BASE}/admin`);
-  await page.getByText(/Welcome,/).waitFor();
+  await page.getByText(/স্বাগতম,/).waitFor();
   await page.screenshot({ path: `${OUT}/admin-overview.png`, fullPage: true });
   for (const p of ["students", "candidates", "elections", "results", "corrections", "audit", "admins", "disputes", "settings"]) {
     const res = await page.goto(`${BASE}/admin/${p}`);
@@ -193,7 +193,7 @@ await check("admin sign-in: password, mandatory MFA enrolment, dashboard", async
   }
   // results are sealed during a live election
   await page.goto(`${BASE}/admin/results`);
-  await page.getByText("Results are sealed").waitFor();
+  await page.getByText("ফলাফল সিলগালা").waitFor();
 });
 
 await check("audit log hash chain is intact", async () => {
