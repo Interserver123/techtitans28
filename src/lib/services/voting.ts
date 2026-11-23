@@ -39,7 +39,7 @@ export async function getPublicCandidate(id: string) {
   return row ? { ...row, photo_url: photoUrl(row.photo_path) } : null;
 }
 
-export const castSchema = z.object({ candidateId: z.string().uuid("একজন প্রার্থী বেছে নিন।") });
+export const castSchema = z.object({ candidateId: z.string().uuid("Select a candidate.") });
 
 /**
  * Submits the ballot through cast_ballot(): authentication, election status,

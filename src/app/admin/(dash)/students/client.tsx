@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/components/admin/use-action";
 import { api } from "@/lib/client";
+import { errorText } from "@/lib/i18n";
 import { bnNum } from "@/lib/format";
 import { useToast } from "@/components/admin/toast";
 
@@ -105,7 +106,7 @@ export function ImportDialog({ batch }: { batch: string }) {
     fd.set("file", file); fd.set("mode", mode); fd.set("commit", String(commit));
     const r = await api<Preview>("/api/admin/students/import", { form: fd });
     setBusy(false);
-    if (!r.ok) return setError(r.error.message);
+    if (!r.ok) return setError(errorText("bn", r.error));
     setPreview(r);
     if (commit && r.committed) {
       toast("success", `ইমপোর্ট সম্পন্ন: ${bnNum(r.committed.inserted)} জন যোগ, ${bnNum(r.committed.updated)} জন হালনাগাদ, ${bnNum(r.committed.skipped)} জন বাদ`);

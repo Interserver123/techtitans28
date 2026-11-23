@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, QrCode } from "lucide-react";
 import { api } from "@/lib/client";
+import { errorText } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -22,12 +23,12 @@ export function AdminLogin() {
     setBusy(true); setError(null);
     const r = await api<{ next: "verify" | "enroll" }>("/api/admin/auth/login", { json: { email, password } });
     setBusy(false);
-    if (!r.ok) return setError(r.error.message);
+    if (!r.ok) return setError(errorText("bn", r.error));
     setPassword("");
     setStep(r.next);
     if (r.next === "enroll") {
       const s = await api<{ qrDataUrl: string; secret: string }>("/api/admin/auth/mfa-setup", { method: "POST" });
-      if (s.ok) setEnroll(s); else setError(s.error.message);
+      if (s.ok) setEnroll(s); else setError(errorText("bn", s.error));
     }
   }
 
@@ -35,7 +36,7 @@ export function AdminLogin() {
     e.preventDefault();
     setBusy(true); setError(null);
     const r = await api<{ next: string }>("/api/admin/auth/mfa", { json: { code } });
-    if (!r.ok) { setBusy(false); setCode(""); return setError(r.error.code === "UNAUTHENTICATED" ? "আপনার লগইনের মেয়াদ শেষ হয়েছে। আবার শুরু করুন।" : r.error.message); }
+    if (!r.ok) { setBusy(false); setCode(""); return setError(r.error.code === "UNAUTHENTICATED" ? "আপনার লগইনের মেয়াদ শেষ হয়েছে। আবার শুরু করুন।" : errorText("bn", r.error)); }
     router.replace(r.next);
     router.refresh();
   }

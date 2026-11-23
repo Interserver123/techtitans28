@@ -14,8 +14,8 @@ export const rollSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z0-9-]{3,20}$/, "সঠিক বিশ্ববিদ্যালয় রোল নম্বর লিখুন।");
-export const otpCodeSchema = z.string().trim().regex(/^[0-9]{6}$/, "৬ অঙ্কের কোডটি লিখুন।");
+  .regex(/^[A-Z0-9-]{3,20}$/, "Enter a valid university roll number.");
+export const otpCodeSchema = z.string().trim().regex(/^[0-9]{6}$/, "Enter the 6-digit code.");
 
 const challengeHash = (challengeId: string) => hmac("otp-challenge", challengeId);
 const codeHash = (challengeId: string, code: string) => hmac("otp-code", `${challengeId}:${code}`);
@@ -47,7 +47,7 @@ export async function requestOtp(rollInput: string, ctx: RequestContext) {
   const cooldown = await getNumberSetting("otp.resend_cooldown_seconds", 60);
   // Cooldown keyed on the submitted roll text (independent of whether it exists).
   if (!(await rateLimit("otp-roll-cooldown", roll, 1, cooldown))) {
-    throw new AppError("RATE_LIMITED", `আরেকটি কোড চাওয়ার আগে ${String(cooldown).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)])} সেকেন্ড অপেক্ষা করুন।`);
+    throw new AppError("RATE_LIMITED", `Please wait ${cooldown} seconds before requesting another code.`);
   }
   await enforceRateLimit("otp-roll-hourly", roll, 6, 60 * 60);
 

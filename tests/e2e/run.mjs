@@ -106,8 +106,8 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   await page.getByText("একজন প্রার্থী বেছে নিন", { exact: true }).first().waitFor();
   await page.locator("label", { hasText: "Sadia Akter" }).first().click();
   await page.screenshot({ path: `${OUT}/vote-ballot-mobile.png`, fullPage: true });
-  await page.getByRole("button", { name: "পছন্দ যাচাই করুন" }).click();
-  await page.getByText("আপনার ব্যালট আরেকবার দেখুন").waitFor();
+  await page.getByRole("button", { name: "পছন্দ পর্যালোচনা" }).click();
+  await page.getByText("আপনার ব্যালট পর্যালোচনা করুন").waitFor();
   const submit = page.getByRole("button", { name: "চূড়ান্ত ব্যালট জমা দিন" });
   assert(await submit.isDisabled(), "submit must be disabled until confirmation is ticked");
   await page.getByRole("checkbox").check();

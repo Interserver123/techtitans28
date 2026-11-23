@@ -6,7 +6,7 @@ import { AppError } from "@/lib/errors";
 /** Official PDF report — only after publication. */
 export const GET = route(async () => {
   const e = await getCurrentElection();
-  if (!e || e.status !== "RESULTS_PUBLISHED") return errorResponse(new AppError("RESULTS_SEALED", "ফলাফল প্রকাশের পর অফিসিয়াল প্রতিবেদন পাওয়া যাবে।"));
+  if (!e || e.status !== "RESULTS_PUBLISHED") return errorResponse(new AppError("RESULTS_SEALED", "The official report is available after results are published."));
   const pdf = await buildResultReport(e.id);
   return new Response(new Uint8Array(pdf), {
     headers: {

@@ -6,18 +6,19 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Menu, Vote, X } from "lucide-react";
 import { Brand } from "./brand";
 import { StatusPill } from "./status-pill";
+import { LanguageToggle } from "./language-toggle";
+import { dict, num, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { id: "candidates", href: "/#candidates", label: "প্রার্থী" },
-  { id: "how-it-works", href: "/#how-it-works", label: "ভোট দেবেন যেভাবে" },
-  { id: "guidelines", href: "/#guidelines", label: "নির্দেশিকা" },
-  { id: "results", href: "/results", label: "ফলাফল" },
-  { id: "committee", href: "/#committee", label: "কমিটি" },
-];
-const BN = "০১২৩৪৫৬৭৮৯";
-
-export function SiteHeader({ status, canVote }: { status: string | null; canVote: boolean }) {
+export function SiteHeader({ status, canVote, lang }: { status: string | null; canVote: boolean; lang: Lang }) {
+  const t = dict(lang);
+  const NAV = [
+    { id: "candidates", href: "/#candidates", label: t.nav.candidates },
+    { id: "how-it-works", href: "/#how-it-works", label: t.nav.how },
+    { id: "guidelines", href: "/#guidelines", label: t.nav.guidelines },
+    { id: "results", href: "/results", label: t.nav.results },
+    { id: "committee", href: "/#committee", label: t.nav.committee },
+  ];
   const path = usePathname();
   const home = path === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -38,7 +39,7 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
   // Highlights the homepage section currently in view.
   useEffect(() => {
     if (!home) return;
-    const els = NAV.map((n) => document.getElementById(n.id)).filter((e): e is HTMLElement => !!e);
+    const els = ["candidates", "how-it-works", "guidelines", "committee"].map((id) => document.getElementById(id)).filter((e): e is HTMLElement => !!e);
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && setSpy(e.target.id)),
       { rootMargin: "-45% 0px -50% 0px" },
@@ -68,9 +69,9 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
         )}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-[72px] sm:px-6">
-          <Brand dark={glass} />
+          <Brand dark={glass} lang={lang} />
 
-          <nav aria-label="প্রধান মেনু" className={cn("hidden items-center gap-1 rounded-full p-1 lg:flex", glass ? "bg-white/10 ring-1 ring-white/15 backdrop-blur-md" : "bg-slate-900/[0.04]")}>
+          <nav aria-label={t.ui.mainMenu} className={cn("hidden items-center gap-1 rounded-full p-1 lg:flex", glass ? "bg-white/10 ring-1 ring-white/15 backdrop-blur-md" : "bg-slate-900/[0.04]")}>
             {NAV.map((n) => {
               const on = active === n.id;
               return (
@@ -79,7 +80,7 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
                   href={n.href}
                   aria-current={on ? "true" : undefined}
                   className={cn(
-                    "relative rounded-full px-4 py-2 text-sm font-medium transition",
+                    "relative whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition",
                     on
                       ? glass ? "bg-white text-navy shadow-sm" : "bg-emerald text-white shadow-sm"
                       : glass ? "text-white/80 hover:bg-white/10 hover:text-white" : "text-slate-600 hover:bg-white hover:text-ink",
@@ -92,22 +93,23 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
           </nav>
 
           <div className="flex items-center gap-2">
-            <StatusPill status={status} className={cn("hidden sm:inline-flex", glass && "bg-white/10 text-white ring-white/20")} />
+            <StatusPill status={status} lang={lang} className={cn("hidden 2xl:inline-flex", glass && "bg-white/10 text-white ring-white/20")} />
+            <LanguageToggle lang={lang} dark={glass} />
             <Link
               href="/vote"
               className={cn(
-                "hidden items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition sm:inline-flex",
+                "hidden items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition sm:inline-flex",
                 canVote ? "bg-gold text-navy shadow-[0_8px_24px_-10px_rgb(201_162_74/0.9)] hover:bg-gold-300" : glass ? "bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20" : "bg-emerald text-white hover:bg-emerald-900",
               )}
             >
-              <Vote className="size-4" /> {canVote ? "এখনই ভোট দিন" : "ভোটার পোর্টাল"}
+              <Vote className="size-4" /> {canVote ? t.voteNow : t.voterPortal}
             </Link>
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              aria-label={open ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
+              aria-label={open ? t.ui.menuClose : t.ui.menuOpen}
               className={cn("flex size-10 items-center justify-center rounded-full transition lg:hidden", glass ? "bg-white/10 text-white ring-1 ring-white/20" : "bg-slate-900/5 text-ink")}
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -129,13 +131,13 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
         <Image src="/campus/aerial.jpg" alt="" fill sizes="100vw" className="object-cover opacity-20" aria-hidden />
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/70 via-emerald-900/95 to-navy" aria-hidden />
         <div className="relative flex min-h-full flex-col px-6 pb-10 pt-24">
-          <StatusPill status={status} className="self-start bg-white/10 text-white ring-white/20" />
-          <nav aria-label="মোবাইল মেনু" className="mt-6">
+          <StatusPill status={status} lang={lang} className="self-start bg-white/10 text-white ring-white/20" />
+          <nav aria-label={t.ui.mobileMenu} className="mt-6">
             <ul className="divide-y divide-white/10 border-y border-white/10">
               {NAV.map((n, i) => (
                 <li key={n.id} className={cn("transition duration-500", open ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0")} style={{ transitionDelay: open ? `${80 + i * 50}ms` : "0ms" }}>
                   <Link href={n.href} onClick={() => setOpen(false)} className="group flex items-center gap-4 py-4">
-                    <span className="font-display w-8 text-sm text-gold-300">{BN[0]}{BN[i + 1]}</span>
+                    <span className="font-display w-8 text-sm text-gold-300">{num(String(i + 1).padStart(2, "0"), lang)}</span>
                     <span className={cn("font-display flex-1 text-2xl", active === n.id ? "text-gold-300" : "text-white")}>{n.label}</span>
                     <ArrowUpRight className="size-5 text-white/40 transition group-hover:translate-x-0.5 group-hover:text-gold-300" />
                   </Link>
@@ -144,12 +146,12 @@ export function SiteHeader({ status, canVote }: { status: string | null; canVote
             </ul>
           </nav>
           <Link href="/vote" onClick={() => setOpen(false)} className="mt-8 flex h-14 items-center justify-center gap-2 rounded-2xl bg-gold text-base font-semibold text-navy">
-            <Vote className="size-5" /> {canVote ? "এখনই ভোট দিন" : "ভোটার পোর্টাল"}
+            <Vote className="size-5" /> {canVote ? t.voteNow : t.voterPortal}
           </Link>
           <Link href="/verify-receipt" onClick={() => setOpen(false)} className="mt-3 flex h-12 items-center justify-center rounded-2xl text-sm font-medium text-white/80 ring-1 ring-white/20">
-            রসিদ যাচাই করুন
+            {t.ui.verifyReceipt}
           </Link>
-          <p className="mt-auto pt-10 text-center text-xs text-white/50">ইসলামী বিশ্ববিদ্যালয় · তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ</p>
+          <p className="mt-auto pt-10 text-center text-xs text-white/50">{t.ui.menuFoot}</p>
         </div>
       </div>
     </>
