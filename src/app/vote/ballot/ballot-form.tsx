@@ -184,12 +184,12 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
             <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
             <span>{B.confirm1}<strong>{B.final}</strong>{B.confirm2}</span>
           </label>
-          <label className="mx-auto mt-3 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-gold/50 bg-amber-50/70 p-4 text-left text-sm">
+          <label className="mx-auto mt-3 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3 text-left text-xs text-muted">
             <input type="checkbox" checked={openAck} onChange={(e) => setOpenAck(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
-            <span>{dict(lang).openBallot.ack} <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{dict(lang).openBallot.terms}</a></span>
+            <span>{dict("en").openBallot.ack} <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{dict("en").openBallot.terms}</a></span>
           </label>
           {error && <VoterError message={error} lang={lang} className="mt-4 text-left" />}
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> {B.separate}</div>
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> {dict("en").ballot.separate}</div>
         </Card>
       )}
 
