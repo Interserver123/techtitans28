@@ -177,8 +177,8 @@ const en = {
   proctorial: {
     eyebrow: "Election oversight", title: "Proctorial Body",
     sub: "Responsible for keeping the election fair, orderly and disciplined.",
-    member: "Member · Proctorial Body",
-    names: { afrajur: "Afrajur Rahman", limon: "Limon Sarkar", ratul: "Ratul Roy" } as Record<string, string>,
+    names: { afrajur: "Afrajur Zihad", limon: "Limon Sarkar", ratul: "Ratul Roy" } as Record<string, string>,
+    roles: { afrajur: "Manager", limon: "Organizer", ratul: "Technical & System Designer" } as Record<string, string>,
   },
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
@@ -361,8 +361,8 @@ const bn: Dict = {
   proctorial: {
     eyebrow: "নির্বাচন তত্ত্বাবধান", title: "প্রক্টরিয়াল বডি",
     sub: "নির্বাচনের সুষ্ঠু, শৃঙ্খলাপূর্ণ ও নিরপেক্ষ পরিবেশ নিশ্চিত করার দায়িত্বে।",
-    member: "সদস্য · প্রক্টরিয়াল বডি",
-    names: { afrajur: "আফরাজুর রহমান", limon: "লিমন সরকার", ratul: "রতুল রায়" },
+    names: { afrajur: "আফরাজুর জিহাদ", limon: "লিমন সরকার", ratul: "রতুল রায়" },
+    roles: { afrajur: "ম্যানেজার", limon: "সংগঠক", ratul: "টেকনিক্যাল ও সিস্টেম ডিজাইনার" },
   },
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",
