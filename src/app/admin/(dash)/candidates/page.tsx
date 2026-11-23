@@ -5,6 +5,7 @@ import { listCandidates } from "@/lib/services/candidates";
 import { PageHeader, NoElection, Empty, ElectionStatusBadge } from "@/components/admin/ui";
 import { Alert } from "@/components/ui/alert";
 import { CandidateDialog, CandidateRow } from "./client";
+import { BulkPhotoUpload } from "./bulk-photos";
 
 export default async function CandidatesPage() {
   const admin = await adminPage("candidates.read");
@@ -17,7 +18,10 @@ export default async function CandidatesPage() {
       <PageHeader
         title="প্রার্থী"
         description={<span className="inline-flex flex-wrap items-center gap-2">ক্লাস রিপ্রেজেন্টেটিভ · {e.title} <ElectionStatusBadge status={e.status} /></span>}
-        actions={editable && <CandidateDialog electionId={e.id} />}
+        actions={editable && <>
+          <BulkPhotoUpload candidates={candidates.map((c) => ({ id: c.id, rollNumber: c.roll_number, displayName: c.display_name, hasPhoto: Boolean(c.photo_path) }))} />
+          <CandidateDialog electionId={e.id} />
+        </>}
       />
       {!["DRAFT", "SCHEDULED"].includes(e.status) && (
         <Alert tone="info" className="mb-4" title="প্রার্থী তালিকা লক করা"><span className="inline-flex items-center gap-1"><Lock className="size-3.5" /> ভোটগ্রহণ শুরু হলে ব্যালট আর বদলানো যায় না। এটি ডেটাবেস থেকেই নিয়ন্ত্রিত।</span></Alert>
