@@ -64,6 +64,15 @@ export async function GET() {
         .query<{ ok: boolean }>(`select has_function_privilege(current_user, 'public.cast_ballot(text, uuid[])', 'execute') as ok`)
         .then((r) => r.rows[0]?.ok === true)
         .catch(() => false);
+      // Two-person vote corrections, step-up MFA and verifiable exports need migration 9. Voting works without
+      // it, so this is reported but does not fail the check; the admin pages explain what is blocked.
+      const adminControls = await client
+        .query<{ ok: boolean }>(`select to_regprocedure('public.request_choice_change(text, uuid, uuid, uuid, uuid, text, text, text)') is not null as ok`)
+        .then((r) => r.rows[0]?.ok === true)
+        .catch(() => false);
+      if (probe && !adminControls) {
+        db.pendingUpgrade = "Admin controls (two-person vote corrections, step-up MFA, record exports) need the latest supabase/deploy.sql. Voting is unaffected.";
+      }
       if (probe && !twoRaces) {
         db.ok = false;
         db.hint = "The database is missing the two-race voting upgrade (Boys' CR + Girls' CR). Run the latest supabase/deploy.sql in the Supabase SQL Editor.";

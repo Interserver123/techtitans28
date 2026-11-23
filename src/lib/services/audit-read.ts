@@ -6,15 +6,21 @@ export type AuditEntry = {
   entity_id: string | null; details: Record<string, unknown>; entry_hash: string;
 };
 
-export async function listAudit(opts: { action?: string; limit?: number; before?: number }) {
+export async function listAudit(opts: { action?: string; actor?: string; limit?: number; before?: number }) {
   const limit = Math.min(opts.limit ?? 100, 500);
   return query<AuditEntry>(
     `select id::text, occurred_at, actor_type, actor_label, action, entity_type, entity_id, details, entry_hash
        from audit_logs
       where ($1::text is null or action like $1 || '%') and ($2::bigint is null or id < $2)
-      order by id desc limit $3`,
-    [opts.action || null, opts.before ?? null, limit],
+        and ($4::uuid is null or actor_admin_id = $4)
+      order by audit_logs.id desc limit $3`,
+    [opts.action || null, opts.before ?? null, limit, opts.actor || null],
   );
+}
+
+/** Administrators, for the activity-log filter. */
+export async function listAuditActors() {
+  return query<{ id: string; full_name: string; role_code: string }>(`select id, full_name, role_code from election_admins order by full_name`);
 }
 
 export async function verifyAuditChain() {

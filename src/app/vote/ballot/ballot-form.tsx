@@ -10,7 +10,7 @@ import { VoterError } from "@/components/site/voter-error";
 import { RuleBanner } from "@/components/site/rule-banner";
 import { CandidateAvatar } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
-import { dict, errorText, num, posLabel, type Lang } from "@/lib/i18n";
+import { dict, errorText, num, posLabel, OPEN_BALLOT_NOTICE_VERSION, type Lang } from "@/lib/i18n";
 
 type Pos = { id: string; code: string; title: string; gender: "MALE" | "FEMALE" | null };
 type C = { id: string; position_id: string; display_name: string; roll_number: string; introduction: string; manifesto: string; photo_url: string | null };
@@ -61,7 +61,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
     if (!allChosen || !confirmed || !openAck) return;
     setBusy(true); setError(null);
     const candidateIds = positions.map((p) => selected[p.id]);
-    const r = await api("/api/vote/cast", { json: { candidateIds, openBallotAck: true } });
+    const r = await api("/api/vote/cast", { json: { candidateIds, openBallotAck: OPEN_BALLOT_NOTICE_VERSION } });
     if (r.ok || (!r.ok && r.error.code === "ALREADY_VOTED")) {
       router.replace("/vote/receipt");
       router.refresh();

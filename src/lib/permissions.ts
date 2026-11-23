@@ -3,7 +3,7 @@ export const PERMISSIONS = [
   "students.read", "students.write", "students.import", "students.export",
   "candidates.read", "candidates.write",
   "elections.read", "elections.configure", "elections.control",
-  "results.view", "results.verify", "results.publish", "ballots.read",
+  "results.view", "results.verify", "results.publish", "ballots.read", "votes.read",
   "corrections.read", "corrections.create", "corrections.review",
   "disputes.read", "disputes.manage", "audit.read", "admins.manage", "settings.manage",
 ] as const;

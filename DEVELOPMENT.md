@@ -61,19 +61,25 @@ The application connects as a login role that is a member of `techtitans_app`, w
 
 ## Ballot confidentiality & trust assumptions
 
-Voter identity and selection are stored separately:
+**This is an open ballot, not a secret ballot** (since migration `0008`, announced to voters on sign-in, on the ballot page,
+which needs an explicit acknowledgement of the current notice version, and on `/terms`). Participation and ballot contents are still
+kept in separate tables, and access to each is separate:
 
-| `voter_participation` (WHO) | `ballots` (WHAT) |
-| --- | --- |
-| election, student, receipt code, timestamp | election, position, candidate, random `ballot_ref`, status |
+| Record | Contents | Who can read it |
+| --- | --- | --- |
+| `voter_participation` (WHO voted) | election, student, receipt code, timestamp | Election Admins and Super Admins (student list "voted" column, participation export) |
+| `ballots` (WHAT was chosen) | election, position, candidate, random `ballot_ref`, status, replacement link | nobody before closing; after closing only as the **anonymous** ledger (ballot ref + candidate, no voter): Results Officers, Auditors, Election/Super Admins |
+| `voter_choices` (open-ballot link) | student ↔ `ballot_ref` as cast, append-only | **Super Admins only**, through `admin_vote_records()`, which re-checks in the database a live MFA session, the Super Admin role and an authenticator code entered in the last 10 minutes, and audits every view (`VOTES.VIEWED`) |
 
-There is **no foreign key, shared identifier, or timestamp** linking the two. Ballot IDs and references are random; ballots carry
-no time. The receipt code exists only on the participation row, so a receipt proves "my ballot was recorded" but never what was chosen.
-Both rows are written in the same transaction by `cast_ballot()`, guaranteeing atomicity.
+The application role has no privileges on `ballots` or `voter_choices`. Votes cast before migration `0008` have no
+`voter_choices` row and stay anonymous. The audit log, correction records, exports and PDF reports never contain a voter's choice
+next to their identity; the only voter-linked view is the Super Admin vote-records page (and, for Super Admins, the voter named on
+a vote-change correction).
 
-**What this protects against:** administrators of every role, the application server role, Supabase `anon`/`authenticated` clients,
-exports, the audit log and PDF reports — none can map a voter to a choice. Candidate-wise counts cannot even be computed
-(`compute_tally()` / `ballot_ledger()` raise `RESULTS_SEALED`) until the election is closed.
+**No silent modification.** Nobody can edit or delete a ballot, a `voter_choices` row, a correction request after review, or an
+audit entry. Triggers refuse it even for the schema owner (unless they disable triggers, see below). A vote can only change
+through a `REPLACE_CHOICE` correction approved by a second Super Admin, which keeps the original ballot and adds a linked
+replacement (see *Corrections*).
 
 **What it does NOT protect against (documented trust assumptions):**
 
@@ -88,7 +94,10 @@ exports, the audit log and PDF reports — none can map a voter to a choice. Can
 4. **OTP channel compromise** (SIM swap, mailbox access) allows impersonation. Mitigations: short OTP lifetime, attempt limits,
    the dispute workflow and committee investigation.
 
-The system does not claim absolute anonymity; it provides strong logical separation enforced by database privileges.
+5. **Super Admins** can see who voted for whom (open ballot). Keep the number of Super Admin accounts small; every view is audited.
+
+The system does not claim ballot secrecy. It separates participation from contents, limits voter-linked access to Super Admins
+with a fresh second factor, and makes every view and correction visible in a hash-chained log that can be verified offline.
 
 ## Local setup
 
@@ -149,8 +158,11 @@ MIGRATION_DATABASE_URL=postgres://owner@host:5432/db npm run db:migrate
 | `…03_access_control.sql` | roles, grants, RLS policies (app server / public `anon` & `authenticated`), reference data (roles, settings) |
 | `…05_two_positions.sql` | Boys' CR + Girls' CR: `students.gender`, `election_positions.gender`, gender/scheduling triggers, new `cast_ballot(text, uuid[])` (one choice per position), per-position `compute_tally` / `ballot_totals_by_position` / `ballot_ledger`, per-position verification, ties and publication |
 | `…04_supabase_platform.sql` | revokes `service_role` access to election tables, blocks Supabase default grants on future objects, creates Storage buckets (no-op on plain PostgreSQL) |
+| `…06_access_links.sql`, `…07_super_admin_election_window.sql` | personal voting links; Super Admin can edit a live election's window |
+| `…08_open_ballot.sql` | `voter_choices` (open-ballot link, Super Admin only) |
+| `…09_admin_controls.sql` | removes the one-person `admin_change_vote()`; `REPLACE_CHOICE` two-person corrections with replacement ballots; append-only `voter_choices`; insert trigger on `ballots`; step-up MFA (`admin_sessions.mfa_stepup_at`, `session_admin()`); `admin_vote_records`, `request_choice_change`, `admin_correction_subjects`; reconciliation counts cast ballots only; `votes.read` permission |
 
-`supabase/deploy.sql` is the same five migrations bundled for the Supabase SQL Editor (generated by `npm run supabase:bundle`).
+`supabase/deploy.sql` is the same migrations bundled for the Supabase SQL Editor (generated by `npm run supabase:bundle`).
 
 Required entities from the specification map to: `students`, `elections`, `election_positions`, `candidates`, `voter_credentials`
 (short-lived voting sessions), `voter_participation`, `ballots`, `election_admins`, `admin_roles`, `audit_logs`, `correction_requests`,
@@ -189,7 +201,12 @@ OTP values are never logged; the audit scrubber also drops any key resembling `o
 2. First sign-in: MFA enrolment (QR + secret; secret AES-GCM encrypted at rest). Every sign-in: TOTP (±1 step, replay of a used
    step rejected).
 3. On success the pre-MFA session is revoked and a **new** session token issued (8 h absolute, 30 min idle).
-4. All admin APIs require `MFA verified + permission`; denials are audited (`ADMIN.ACCESS_DENIED`).
+4. All admin APIs require `MFA verified + permission`; denials are audited (`ADMIN.ACCESS_DENIED`). Failed codes are audited
+   (`ADMIN.MFA_FAILED`) outside the sign-in transaction so they are never rolled back.
+5. **Step-up MFA** for sensitive actions: voter-linked vote records, correction requests and reviews, record exports and the student
+   export need an authenticator code entered in the last 10 minutes (`POST /api/admin/auth/step-up`, audited as `ADMIN.STEP_UP` /
+   `ADMIN.STEP_UP_FAILED`; the sign-in code counts). The UI asks for the code and retries. The voter-linked database functions
+   check the live session and step-up time themselves, not just an admin id passed by the application.
 
 ## Voting flow
 
@@ -231,14 +248,17 @@ and the receipt is shown. A transaction interrupted before commit leaves no part
 | results.verify | ✓ | | ✓ | |
 | results.publish | ✓ | | only if `can_publish_results` | |
 | ballots.read (anonymous ledger, after close) | ✓ | ✓ | ✓ | ✓ |
+| votes.read (who voted for whom; fresh code) | ✓ | | | |
 | corrections.create | ✓ | ✓ | | |
-| corrections.review (approve/reject, never own) | ✓ | | | |
+| corrections.review (approve/reject, never own; vote changes need a second **Super Admin**) | ✓ | | | |
 | disputes.read / manage | ✓ | ✓ | | read |
 | audit.read | ✓ | | | ✓ |
 | admins.manage, settings.manage | ✓ | | | |
 
 The DB (`admin_roles.permissions`, `admin_has_permission()`) is authoritative; the review/verify/publish functions re-check
 permissions inside PostgreSQL. At least one active Super Admin must always remain; admins cannot demote themselves.
+**Corrections need at least two Super Admin accounts** (the reviewer must differ from the requester). Admin → *রেকর্ড ও রপ্তানি*
+shows these access rules in the dashboard.
 Bootstrap the first production Super Admin with `npm run admin:create` (see Deployment).
 
 ## Results, corrections & disputes
@@ -254,10 +274,33 @@ changed after verification or corrections are pending, writes an immutable `elec
 winner is declared for a tied race; publication requires a committee tie-resolution note shown publicly. PDF report: public after publication;
 admins can download a watermarked *provisional* report after closing.
 
-**Corrections (two-person rule):** after closure, an Election Admin/Super Admin files `INVALIDATE_BALLOT` or `REINSTATE_BALLOT`
-for a ballot reference (from the anonymous ledger) with a mandatory ≥20-char reason and optional evidence. A **different** Super Admin
-approves or rejects with a note. Approval flips only the ballot `status` (contents are immutable; nothing is ever deleted), clears
-any previous verification, and writes an audit entry atomically. Reviewed requests are immutable.
+**Corrections (two-person rule):** only after voting closes and before publication. Every request has a mandatory ≥20-character
+reason, an optional evidence note/file, and is approved or rejected, with a note, by a **different** administrator who holds
+`corrections.review`. Reviewed requests are immutable; approval clears any earlier result verification.
+
+| Type | Requested by | Approved by | Effect on approval |
+| --- | --- | --- | --- |
+| `INVALIDATE_BALLOT` | Election/Super Admin, by ballot ref from the anonymous ledger | another Super Admin | ballot `status → INVALIDATED` |
+| `REINSTATE_BALLOT` | same | another Super Admin | `status → VALID` (refused for a ballot that was replaced) |
+| `REPLACE_CHOICE` (vote change) | Super Admin, from *Vote records* | **another Super Admin** | original kept with `status → INVALIDATED`; a **new** ballot is inserted with `replaces_ballot_id` + `created_by_correction_id` for the requested candidate |
+
+Ballot contents are never updated and nothing is ever deleted, so the original vote and the full chain of corrections stay in the
+ledger. Reconciliation counts the ballots voters cast (`created_by_correction_id is null`) against participation; replacements are
+reported separately (`replacement_ballots`). The voter's receipt page says when their vote was corrected. Audit entries record the
+ballot ref and candidates, never the voter; the correction list shows the voter only to Super Admins.
+
+**Verifiable records:** Admin → *রেকর্ড ও রপ্তানি* exports the participation list (CSV, no choices), the full audit log (JSON,
+with the exact strings that were hashed), the corrections record (JSON: every request/decision, its audit entries and the anonymous
+ledger) and the ballot ledger (CSV). Each export needs a fresh code and is itself audited. Anyone can check them offline:
+
+```bash
+node scripts/verify-records.mjs audit-log.json corrections.json --head <hash noted earlier>
+```
+
+It recomputes the whole hash chain, checks every correction against the log and the ledger (original kept, exactly one matching
+replacement) and recounts the valid ballots. Export the corrections record first, then the audit log. The page also shows the current
+chain head: write it down at key moments (close, after corrections, publication), because a chain rewritten end to end by someone
+with owner access would no longer contain that hash.
 
 **Disputes:** public `/help` form (rate-limited) with reference numbers. Identity-misuse reports are handled manually by the committee.
 A dispute **never** re-enables voting or issues another ballot.
@@ -272,7 +315,7 @@ A dispute **never** re-enables voting or issues another ballot.
 | SQL injection | Parameterised queries only; LIKE input escaped |
 | Validation | zod schemas on every endpoint + DB CHECK constraints |
 | Uploads | Magic-byte sniffing, size limits, photos re-encoded to WebP by sharp (strips metadata/polyglots), served with `nosniff` + sandbox CSP |
-| CSV export | Formula-injection neutralised; every export audited |
+| CSV export | Formula-injection neutralised; every export audited and behind step-up MFA |
 | Secrets | Only in env vars; MFA secrets encrypted; OTPs/tokens stored as HMACs; IPs stored as keyed pseudonyms |
 | Errors | Stable error codes with safe messages; internal errors logged without request bodies |
 | Headers | HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, COOP |
@@ -281,7 +324,7 @@ A dispute **never** re-enables voting or issues another ballot.
 ## Testing
 
 ```bash
-npm test            # vitest: 48 tests against a real PostgreSQL (DB techtitans_test is recreated from migrations)
+npm test            # vitest: 73 tests against a real PostgreSQL (DB techtitans_test is recreated from migrations)
 npm run test:e2e    # Playwright against a running server: npm run build && npm start (seeded LIVE election, OTP_PROVIDER=dev)
 npm run typecheck && npm run lint
 ```
@@ -376,6 +419,12 @@ live work when needed. Vercel then deploys it, usually within about five minutes
 - `/api/health` shows the deployed commit, so you can confirm what is live.
 - Edits to `.github/workflows/*` are the exception: GitHub does not let the workflow token publish them,
   so those must be pushed to the live branches directly.
+
+### Upgrading to the admin controls (migration 0009)
+
+Run the latest `supabase/deploy.sql` in the SQL Editor. It only applies what is missing and is safe during a live election (voting is
+unaffected). Until then `/api/health` reports `pendingUpgrade`, and vote records, vote-change requests, record exports and the student
+export show "database upgrade required". The old one-person vote edit is no longer offered by the app either way.
 
 ### Upgrading an existing deployment to two races
 

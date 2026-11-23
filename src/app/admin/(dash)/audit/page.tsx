@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { adminPage } from "@/lib/session";
-import { listAudit, verifyAuditChain } from "@/lib/services/audit-read";
+import { listAudit, listAuditActors, verifyAuditChain } from "@/lib/services/audit-read";
 import { PageHeader } from "@/components/admin/ui";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,16 +9,17 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { bnNum, fmtDateTime } from "@/lib/format";
 import { AuditFilter } from "./client";
 
-export default async function AuditPage({ searchParams }: { searchParams: Promise<{ action?: string; before?: string }> }) {
+export default async function AuditPage({ searchParams }: { searchParams: Promise<{ action?: string; actor?: string; before?: string }> }) {
   await adminPage("audit.read");
   const sp = await searchParams;
   const action = sp.action && /^[A-Z][A-Z0-9_.]{0,63}$/.test(sp.action) ? sp.action : undefined;
   const before = sp.before && /^\d+$/.test(sp.before) ? Number(sp.before) : undefined;
-  const [rows, chain] = await Promise.all([listAudit({ action, before, limit: 100 }), verifyAuditChain()]);
+  const actor = sp.actor && /^[0-9a-f-]{36}$/i.test(sp.actor) ? sp.actor : undefined;
+  const [rows, chain, actors] = await Promise.all([listAudit({ action, actor, before, limit: 100 }), verifyAuditChain(), listAuditActors()]);
   const last = rows.at(-1)?.id;
   return (
     <div>
-      <PageHeader title="অডিট লগ" description="প্রতিটি বিশেষাধিকারপ্রাপ্ত কাজের শুধু-সংযোজনযোগ্য, হ্যাশ-চেইনড রেকর্ড। অ্যাপ্লিকেশন থেকে এটি সম্পাদনা বা মোছা যায় না।" />
+      <PageHeader title="অডিট লগ" description="প্রতিটি বিশেষাধিকারপ্রাপ্ত কাজের শুধু-সংযোজনযোগ্য, হ্যাশ-চেইনড রেকর্ড (প্রশাসনিক কার্যকলাপের লগ)। অ্যাপ্লিকেশন থেকে এটি সম্পাদনা বা মোছা যায় না; 'রেকর্ড ও রপ্তানি' পাতা থেকে স্বাধীন যাচাইয়ের জন্য রপ্তানি করুন।" />
       <Card className={`mb-4 flex items-center gap-3 p-4 ${chain.ok ? "border-green-500/25" : "border-red-500/40"}`}>
         {chain.ok ? <ShieldCheck className="size-5 text-green-400" /> : <ShieldAlert className="size-5 text-red-400" />}
         <p className="text-sm text-slate-200">
@@ -26,7 +27,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         </p>
       </Card>
       <Card>
-        <div className="border-b border-white/[0.06] p-4"><AuditFilter initial={action ?? ""} /></div>
+        <div className="border-b border-white/[0.06] p-4"><AuditFilter initial={action ?? ""} actor={actor ?? ""} actors={actors.map((a) => ({ id: a.id, name: a.full_name }))} /></div>
         <Table>
           <THead><tr><TH>#</TH><TH>সময়</TH><TH>কর্তা</TH><TH>কাজ</TH><TH className="hidden md:table-cell">বিষয়</TH><TH className="hidden lg:table-cell">বিস্তারিত</TH></tr></THead>
           <TBody>
@@ -43,7 +44,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           </TBody>
         </Table>
         {rows.length === 100 && last && (
-          <div className="border-t border-white/[0.06] p-3 text-right"><Button asChild size="sm" variant="outline"><Link href={`?${new URLSearchParams({ ...(action ? { action } : {}), before: last })}`}>পুরোনো এন্ট্রি</Link></Button></div>
+          <div className="border-t border-white/[0.06] p-3 text-right"><Button asChild size="sm" variant="outline"><Link href={`?${new URLSearchParams({ ...(action ? { action } : {}), ...(actor ? { actor } : {}), before: last })}`}>পুরোনো এন্ট্রি</Link></Button></div>
         )}
       </Card>
     </div>

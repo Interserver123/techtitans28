@@ -1,52 +1,66 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Pencil, Search } from "lucide-react";
+import { FilePlus2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Field, Input, Select } from "@/components/ui/input";
+import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/components/admin/use-action";
 import { fmtDateTime } from "@/lib/format";
 
-type Choice = { positionId: string; positionCode: string; gender: string | null; candidateId: string; candidateName: string; changedAt: string | null; reason: string | null; originalName: string | null };
+type Choice = {
+  positionId: string; positionCode: string; gender: string | null;
+  originalCandidateId: string; originalName: string; originalRef: string;
+  candidateId: string; candidateName: string; ballotRef: string; status: "VALID" | "INVALIDATED";
+  corrections: number; legacyChangedAt: string | null; legacyReason: string | null;
+  pending: { id: string; correction: string; candidateName: string | null; requestedBy: string } | null;
+};
 type Voter = { studentId: string; roll: string; name: string; votedAt: string; receipt: string; anonymous: boolean; choices: Choice[] };
 type Pos = { id: string; code: string; gender: string | null };
 type Cand = { id: string; positionId: string; name: string };
 
 const posName = (g: string | null) => (g === "MALE" ? "ছাত্র সিআর" : g === "FEMALE" ? "ছাত্রী সিআর" : "সিআর");
 
-function ChangeDialog({ electionId, voter, choice, candidates }: { electionId: string; voter: Voter; choice: Choice; candidates: Cand[] }) {
+function RequestDialog({ electionId, voter, choice, candidates }: { electionId: string; voter: Voter; choice: Choice; candidates: Cand[] }) {
   const [open, setOpen] = useState(false);
-  const [candidateId, setCandidateId] = useState(choice.candidateId);
+  const options = candidates.filter((c) => c.positionId === choice.positionId && c.id !== choice.candidateId);
+  const [candidateId, setCandidateId] = useState(options[0]?.id ?? "");
   const [reason, setReason] = useState("");
+  const [evidenceNote, setEvidenceNote] = useState("");
   const { run, busy, error } = useAction();
-  const options = candidates.filter((c) => c.positionId === choice.positionId);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button size="icon" variant="ghost" aria-label={`${voter.name}-এর ${posName(choice.gender)} ভোট পরিবর্তন`}><Pencil /></Button></DialogTrigger>
-      <DialogContent title={`${posName(choice.gender)} ভোট পরিবর্তন`} description={`${voter.name} (রোল ${voter.roll}) — বর্তমান: ${choice.candidateName}`}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" aria-label={`${voter.name}-এর ${posName(choice.gender)} ভোট সংশোধনের অনুরোধ`}><FilePlus2 /> সংশোধনের অনুরোধ</Button>
+      </DialogTrigger>
+      <DialogContent title={`${posName(choice.gender)} ভোট সংশোধনের অনুরোধ`} description={`${voter.name} (রোল ${voter.roll}) — বর্তমান: ${choice.candidateName} · ${choice.ballotRef}`}>
         <form className="space-y-4" onSubmit={async (e) => {
           e.preventDefault();
-          const r = await run("/api/admin/votes", { method: "PATCH", json: { electionId, studentId: voter.studentId, positionId: choice.positionId, candidateId, reason } }, "ভোট পরিবর্তন হয়েছে");
-          if (r) { setOpen(false); window.location.reload(); }
+          const r = await run("/api/admin/votes", { json: { electionId, studentId: voter.studentId, positionId: choice.positionId, candidateId, reason, evidenceNote } }, "অনুরোধ জমা হয়েছে — দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদনের অপেক্ষায়");
+          if (r) { setOpen(false); setReason(""); setEvidenceNote(""); }
         }}>
-          <Alert tone="warning">পরিবর্তনটি অডিট লগে কারণসহ লেখা হবে এবং ভোটার তার রসিদ পাতায় তা জানতে পারবেন।</Alert>
-          <Field label="নতুন প্রার্থী" htmlFor="cv-c">
-            <Select id="cv-c" value={candidateId} onChange={(e) => setCandidateId(e.target.value)}>
-              {options.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="পরিবর্তনের কারণ (বাধ্যতামূলক)" htmlFor="cv-r"><Input id="cv-r" value={reason} onChange={(e) => setReason(e.target.value)} minLength={5} maxLength={500} required /></Field>
+          <Alert tone="warning">
+            এখনই কিছু বদলাবে না। ভিন্ন একজন সুপার অ্যাডমিন অনুমোদন দিলে মূল ব্যালট বাতিল চিহ্নিত হবে (মুছে ফেলা হবে না) এবং নতুন প্রার্থীর জন্য একটি যুক্ত ব্যালট যোগ হবে। কারণটি সংশোধন তালিকা ও অডিট লগে অন্য অ্যাডমিন ও নিরীক্ষকরা দেখতে পাবেন — কারণে ভোটারের নাম বা রোল লিখবেন না।
+          </Alert>
+          {options.length === 0 ? <Alert tone="error">এই পদে অন্য কোনো অনুমোদিত প্রার্থী নেই।</Alert> : (
+            <Field label="নতুন প্রার্থী" htmlFor="cv-c">
+              <Select id="cv-c" value={candidateId} onChange={(e) => setCandidateId(e.target.value)}>
+                {options.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </Select>
+            </Field>
+          )}
+          <Field label="কারণ (বাধ্যতামূলক, অন্তত ২০ অক্ষর)" htmlFor="cv-r"><Textarea id="cv-r" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} minLength={20} maxLength={2000} required /></Field>
+          <Field label="প্রমাণের বিবরণ (ঐচ্ছিক)" htmlFor="cv-e"><Textarea id="cv-e" rows={2} value={evidenceNote} onChange={(e) => setEvidenceNote(e.target.value)} maxLength={2000} /></Field>
           {error && <Alert tone="error">{error}</Alert>}
-          <Button type="submit" className="w-full" loading={busy} disabled={candidateId === choice.candidateId || reason.trim().length < 5}>পরিবর্তন সংরক্ষণ করুন</Button>
+          <Button type="submit" className="w-full" loading={busy} disabled={!candidateId || reason.trim().length < 20}>অনুমোদনের জন্য জমা দিন</Button>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function VotesTable({ electionId, voters, positions, candidates, canChange }: { electionId: string; voters: Voter[]; positions: Pos[]; candidates: Cand[]; canChange: boolean }) {
+export function VotesTable({ electionId, voters, positions, candidates, canRequest, adminId }: { electionId: string; voters: Voter[]; positions: Pos[]; candidates: Cand[]; canRequest: boolean; adminId: string }) {
   const [q, setQ] = useState("");
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -56,13 +70,20 @@ export function VotesTable({ electionId, voters, positions, candidates, canChang
     if (v.anonymous) return <span className="text-xs text-slate-500">বেনামি (নোটিশের আগে)</span>;
     const c = v.choices.find((x) => x.positionId === p.id);
     if (!c) return <span className="text-slate-500">—</span>;
+    const changed = c.originalCandidateId !== c.candidateId || c.originalRef !== c.ballotRef;
     return (
-      <div className="flex items-center gap-1">
-        <div>
-          <p className="text-slate-100">{c.candidateName}</p>
-          {c.changedAt && <p className="text-[11px] text-amber-300">পরিবর্তিত {fmtDateTime(c.changedAt)}{c.originalName ? ` · আগে: ${c.originalName}` : ""}{c.reason ? ` · ${c.reason}` : ""}</p>}
-        </div>
-        {canChange && <ChangeDialog electionId={electionId} voter={v} choice={c} candidates={candidates} />}
+      <div className="space-y-1">
+        <p className={c.status === "INVALIDATED" ? "text-slate-500 line-through" : "text-slate-100"}>{c.candidateName}</p>
+        <p className="font-mono text-[11px] text-slate-500">{c.ballotRef}</p>
+        {c.status === "INVALIDATED" && <Badge tone="red">বাতিল</Badge>}
+        {changed && <p className="text-[11px] text-amber-300">সংশোধিত · মূল ভোট: {c.originalName} ({c.originalRef})</p>}
+        {c.legacyChangedAt && <p className="text-[11px] text-amber-300">পুরোনো সরাসরি পরিবর্তন {fmtDateTime(c.legacyChangedAt)}{c.legacyReason ? ` · ${c.legacyReason}` : ""}</p>}
+        {c.corrections > 0 && <p className="text-[11px] text-slate-400">অনুমোদিত সংশোধন: {c.corrections}</p>}
+        {c.pending ? (
+          <p className="text-[11px] text-gold-300">
+            অপেক্ষমাণ অনুরোধ{c.pending.candidateName ? ` → ${c.pending.candidateName}` : ""}{c.pending.requestedBy === adminId ? " (আপনার — অন্য সুপার অ্যাডমিনের অনুমোদন লাগবে)" : ""}
+          </p>
+        ) : canRequest && c.status === "VALID" && <RequestDialog electionId={electionId} voter={v} choice={c} candidates={candidates} />}
       </div>
     );
   };

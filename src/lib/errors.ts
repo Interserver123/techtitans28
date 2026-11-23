@@ -27,6 +27,8 @@ export const ERRORS = {
   CANDIDATES_LOCKED: [409, "The candidate list is locked once voting starts."],
   RESULTS_SEALED: [403, "Candidate-wise results are sealed until the election closes."],
   SECOND_PERSON_REQUIRED: [403, "A different authorised administrator must review this request."],
+  STEP_UP_REQUIRED: [403, "Confirm your authenticator code to continue with this sensitive action."],
+  UPGRADE_REQUIRED: [503, "The database needs the latest upgrade: run supabase/deploy.sql in the Supabase SQL Editor."],
   INVALID_STATE: [409, "This action is not possible in the current state."],
   RECONCILIATION_FAILED: [409, "Ballot and participation counts do not reconcile."],
   TIE_NOTE_REQUIRED: [400, "The result is tied. Record the committee's tie-resolution note."],
@@ -66,6 +68,8 @@ export function fromDbError(err: unknown): AppError | null {
   if (e.code === "23503") return new AppError("CONFLICT", "A related record prevents this change.", { constraint: e.constraint });
   if (e.code === "23514" || e.code === "22P02" || e.code === "22001") return new AppError("VALIDATION", undefined, { constraint: e.constraint });
   if (e.code === "42501") return new AppError("FORBIDDEN");
+  // Undefined function / column / table: the app is newer than the database schema.
+  if (e.code === "42883" || e.code === "42703" || e.code === "42P01") return new AppError("UPGRADE_REQUIRED");
   return null;
 }
 

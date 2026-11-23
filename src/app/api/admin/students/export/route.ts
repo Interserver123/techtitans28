@@ -17,4 +17,4 @@ export const GET = adminRoute("students.export", async (req, { admin, c }) => {
       "cache-control": "no-store",
     },
   });
-});
+}, { stepUp: true });

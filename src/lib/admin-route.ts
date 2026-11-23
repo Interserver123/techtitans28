@@ -3,15 +3,19 @@ import type { NextRequest } from "next/server";
 import { route, requestContext, type RequestContext } from "./http";
 import { adminApi } from "./session";
 import type { Permission } from "./permissions";
-import type { AdminIdentity } from "./services/admin-auth";
+import { requireStepUp, type AdminIdentity } from "./services/admin-auth";
 
 type Ctx<P> = { admin: AdminIdentity; c: RequestContext; params: P };
 
-/** Admin API route: CSRF + authenticated (password+MFA) session + permission check. */
-export function adminRoute<P = Record<string, string>>(permission: Permission | null, handler: (req: NextRequest, ctx: Ctx<P>) => Promise<Response>) {
+/**
+ * Admin API route: CSRF + authenticated (password+MFA) session + permission check.
+ * `stepUp: true` additionally needs an authenticator code entered in the last few minutes.
+ */
+export function adminRoute<P = Record<string, string>>(permission: Permission | null, handler: (req: NextRequest, ctx: Ctx<P>) => Promise<Response>, opts: { stepUp?: boolean } = {}) {
   return route<{ params: Promise<P> }>(async (req, ctx) => {
     const c = requestContext(req);
     const admin = await adminApi(req, permission, c);
+    if (opts.stepUp) await requireStepUp(admin);
     const params = (await ctx?.params) ?? ({} as P);
     return handler(req, { admin, c, params });
   });

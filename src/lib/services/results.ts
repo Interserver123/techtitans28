@@ -20,7 +20,8 @@ export type ResultSummary = {
   election: Election;
   positions: PositionResult[];
   /** Election-wide: ballot rows are one per voter per position. */
-  totals: { total_ballots: number; valid_ballots: number; invalidated_ballots: number; participation: number; positions: number };
+  /** total_ballots = ballots voters cast; replacement_ballots = added by approved vote corrections (absent before upgrade 0009). */
+  totals: { total_ballots: number; valid_ballots: number; invalidated_ballots: number; participation: number; positions: number; replacement_ballots?: number };
   turnout: { eligible: number; voted: number; turnoutPct: number };
   reconciled: boolean;
   appliedCorrections: number;
@@ -138,7 +139,7 @@ export async function publishResults(electionId: string, adminId: string, note: 
 
 export async function getBallotLedger(electionId: string) {
   try {
-    return await query<{ ballot_id: string; ballot_ref: string; candidate_name: string; status: string; last_correction_id: string | null; position_id: string; position_title: string; position_gender: "MALE" | "FEMALE" | null }>(
+    return await query<{ ballot_id: string; ballot_ref: string; candidate_name: string; status: string; last_correction_id: string | null; position_id: string; position_title: string; position_gender: "MALE" | "FEMALE" | null; replaces_ballot_ref?: string | null; created_by_correction_id?: string | null }>(
       `select * from ballot_ledger($1)`,
       [electionId],
     );

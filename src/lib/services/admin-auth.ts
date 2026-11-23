@@ -4,7 +4,7 @@ import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 import { query, one, tx } from "../db";
 import { DUMMY_PASSWORD_HASH, decrypt, encrypt, hashPassword, hmac, isLegacyHash, randomToken, verifyPassword } from "../crypto";
-import { AppError } from "../errors";
+import { AppError, fromDbError } from "../errors";
 import { audit } from "../audit";
 import { enforceRateLimit } from "../rate-limit";
 import { effectivePermissions, type Permission, type RoleCode } from "../permissions";
@@ -12,6 +12,8 @@ import type { RequestContext } from "../http";
 
 export const ADMIN_SESSION_HOURS = 8;
 export const ADMIN_IDLE_MINUTES = 30;
+/** Sensitive actions need an authenticator code entered within this many minutes (also enforced in the DB). */
+export const STEP_UP_MINUTES = 10;
 const MAX_FAILED_LOGINS = 5;
 const LOCK_MINUTES = 15;
 
@@ -25,6 +27,8 @@ export const totpSchema = z.object({ code: z.string().trim().regex(/^[0-9]{6}$/,
 
 export type AdminIdentity = {
   sessionId: string;
+  /** HMAC of the session cookie; voter-linked DB functions re-check the live session with it. */
+  tokenHash: string;
   adminId: string;
   email: string;
   fullName: string;
@@ -100,6 +104,7 @@ export async function getAdminIdentity(token: string | undefined | null): Promis
   if (!row) return null;
   return {
     sessionId: row.session_id,
+    tokenHash: adminTokenHash(token),
     adminId: row.admin_id,
     email: row.email,
     fullName: row.full_name,
@@ -159,7 +164,7 @@ export async function completeMfa(token: string, code: string, ctx: RequestConte
   const id = await getAdminIdentity(token);
   if (!id) throw new AppError("UNAUTHENTICATED");
   await enforceRateLimit("admin-mfa", id.adminId, 8, 10 * 60);
-  return tx(async (c) => {
+  const result = await tx(async (c) => {
     const a = await one<{ email: string; mfa_secret_enc: string | null; mfa_pending_secret_enc: string | null; mfa_enabled: boolean; mfa_last_step: number | null }>(
       `select email, mfa_secret_enc, mfa_pending_secret_enc, mfa_enabled, mfa_last_step from election_admins where id = $1 for update`,
       [id.adminId],
@@ -170,10 +175,7 @@ export async function completeMfa(token: string, code: string, ctx: RequestConte
     const secret = enrolling ? a.mfa_pending_secret_enc : a.mfa_secret_enc;
     if (!secret) throw new AppError("INVALID_STATE", "আগে দুই-ধাপের যাচাই চালু করা শুরু করুন।");
     const okCode = await checkTotp(id.adminId, secret, a.email, code, a.mfa_last_step, c);
-    if (!okCode) {
-      await audit({ actorType: "ADMIN", adminId: id.adminId, action: "ADMIN.MFA_FAILED", entityType: "election_admin", entityId: id.adminId, ipHash: ctx.ipHash }, c);
-      throw new AppError("INVALID_OTP", "যাচাই কোডটি সঠিক নয়।");
-    }
+    if (!okCode) return null;
     if (enrolling) {
       await query(
         `update election_admins set mfa_secret_enc = mfa_pending_secret_enc, mfa_pending_secret_enc = null, mfa_enabled = true where id = $1`,
@@ -190,6 +192,54 @@ export async function completeMfa(token: string, code: string, ctx: RequestConte
     }, c);
     return fresh;
   });
+  if (!result) {
+    // Outside the transaction: a failed MFA attempt must stay in the audit log.
+    await audit({ actorType: "ADMIN", adminId: id.adminId, action: "ADMIN.MFA_FAILED", entityType: "election_admin", entityId: id.adminId, ipHash: ctx.ipHash });
+    throw new AppError("INVALID_OTP", "যাচাই কোডটি সঠিক নয়।");
+  }
+  // The code just entered also counts as a fresh step-up (otherwise the next code is needed up to 30 s later).
+  // Best effort and outside the transaction, so sign-in keeps working on a database without migration 0009.
+  await query(`update admin_sessions set mfa_stepup_at = now() where token_hash = $1`, [adminTokenHash(result)]).catch(() => {});
+  return result;
+}
+
+/**
+ * Step-up MFA: re-enter a fresh authenticator code before sensitive actions
+ * (voter-linked vote records, correction requests and reviews, record exports, admin accounts).
+ */
+export async function stepUpMfa(id: AdminIdentity, code: string, ctx: RequestContext) {
+  await enforceRateLimit("admin-stepup", id.adminId, 8, 10 * 60);
+  const okCode = await tx(async (c) => {
+    const a = await one<{ email: string; mfa_secret_enc: string | null; mfa_last_step: number | null }>(
+      `select email, mfa_secret_enc, mfa_last_step from election_admins where id = $1 and mfa_enabled for update`, [id.adminId], c);
+    if (!a?.mfa_secret_enc) throw new AppError("MFA_REQUIRED");
+    if (!(await checkTotp(id.adminId, a.mfa_secret_enc, a.email, code, a.mfa_last_step, c))) return false;
+    try {
+      await query(`update admin_sessions set mfa_stepup_at = now() where id = $1`, [id.sessionId], c);
+    } catch (e) {
+      throw fromDbError(e) ?? e;
+    }
+    await audit({ actorType: "ADMIN", adminId: id.adminId, action: "ADMIN.STEP_UP", entityType: "election_admin", entityId: id.adminId, ipHash: ctx.ipHash }, c);
+    return true;
+  });
+  if (!okCode) {
+    // Recorded outside the transaction so the failed attempt is never rolled back out of the log.
+    await audit({ actorType: "ADMIN", adminId: id.adminId, action: "ADMIN.STEP_UP_FAILED", entityType: "election_admin", entityId: id.adminId, ipHash: ctx.ipHash });
+    throw new AppError("INVALID_OTP", "যাচাই কোডটি সঠিক নয়।");
+  }
+}
+
+/** Throws STEP_UP_REQUIRED unless this session entered an authenticator code in the last STEP_UP_MINUTES. */
+export async function requireStepUp(id: AdminIdentity) {
+  let row: { fresh: boolean } | null;
+  try {
+    row = await one<{ fresh: boolean }>(
+      `select coalesce(mfa_stepup_at > now() - make_interval(mins => $2), false) as fresh from admin_sessions where id = $1`,
+      [id.sessionId, STEP_UP_MINUTES]);
+  } catch (e) {
+    throw fromDbError(e) ?? e;
+  }
+  if (!row?.fresh) throw new AppError("STEP_UP_REQUIRED");
 }
 
 export async function adminLogout(token: string | undefined | null, ctx: RequestContext) {

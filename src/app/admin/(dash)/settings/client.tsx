@@ -17,7 +17,7 @@ export function EmailCheck({ status }: { status: { mode: string; email: boolean;
     <Card className="mb-6 p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-xl">
-          <p className="flex items-center gap-2 font-semibold text-white"><Mail className="size-4 text-gold" /> ইমেইলে যাচাই কোড</p>
+          <p className="flex items-center gap-2 font-semibold text-white"><Mail className="size-4 text-gold-300" /> ইমেইলে যাচাই কোড</p>
           <p className={`mt-2 flex items-center gap-2 text-sm ${ready ? "text-green-400" : "text-amber-300"}`}>
             {ready ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
             {ready ? "চালু আছে — শিক্ষার্থীরা নিবন্ধিত ইমেইলে কোড পাবেন।" : status.mode !== "live" ? "বন্ধ — OTP_PROVIDER এখনো \"live\" নয়, তাই কোনো কোড পাঠানো হচ্ছে না।" : "বন্ধ — ইমেইল সার্ভারের (SMTP) তথ্য দেওয়া হয়নি।"}

@@ -28,6 +28,9 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ✅ Correction requests with second-administrator approval, evidence attachments, immutable history
 - ✅ Hash-chained, append-only audit log with chain verification UI
 - ✅ Dispute management (never grants a ballot)
+- ✅ Privileged admin controls: one-person vote editing removed; vote changes are `REPLACE_CHOICE` corrections approved by a second Super Admin (original ballot kept, linked replacement added); step-up MFA for voter-linked records, corrections and exports (checked in the DB for voter-linked data); verifiable exports (participation, audit log, corrections record, ledger) + offline verifier `scripts/verify-records.mjs`; activity-log filter per admin; explicit access rules for admins (Records page) and voters (notice + `/terms`, re-acknowledged per notice version)
+- ⬜ Run the latest `supabase/deploy.sql` in production (migration 0009) — until then the new admin controls report "database upgrade required"
+- ⬜ Create a second Super Admin account (required to approve any correction)
 
 ## Phase 5 — Results
 - ✅ Sealed tally until closure (enforced in DB), reconciliation, verification fingerprint, publication, tie handling
@@ -35,7 +38,7 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ✅ Public results dashboard with winner announcement animation
 
 ## Phase 6 — Validation
-- ✅ 48 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
+- ✅ 73 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
 - ✅ Playwright e2e: desktop + emulated phones, full voting flow, CSRF, admin MFA
 - ✅ Typecheck, lint, production build, CI workflow
 - 🟡 Test on real phones (Android Chrome, iOS Safari) and slow networks — emulation only so far

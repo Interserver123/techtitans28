@@ -24,7 +24,7 @@ export function Stat({ label, value, hint, icon: Icon, tone = "blue" }: { label:
         {Icon && <span className={cn("rounded-lg p-1.5", tones[tone])}><Icon className="size-4" /></span>}
       </div>
       <p className="mt-3 text-2xl font-bold tabular-nums text-white">{typeof value === "number" ? bnNum(value) : value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>
   );
 }

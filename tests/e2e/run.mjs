@@ -134,7 +134,7 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const again = await ctx.request.post(`${BASE}/api/vote/cast`, {
     headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" },
-    data: { openBallotAck: true, candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
+    data: { openBallotAck: "2026-11-23.two-person-corrections", candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
   });
   assert(again.status() === 409 && (await again.json()).error.code === "ALREADY_VOTED", `expected ALREADY_VOTED, got ${again.status()}`);
 
@@ -193,7 +193,8 @@ await check("admin sign-in: password, mandatory MFA enrolment, dashboard", async
   await page.getByLabel("যাচাই কোড").fill(totp(secret));
   await page.getByRole("button", { name: "যাচাই করুন" }).click();
   await page.waitForURL(`${BASE}/admin`);
-  await page.getByText(/স্বাগতম,/).waitFor();
+  // (the heading, not Next.js's hidden route announcer, which repeats it after client navigation)
+  await page.getByRole("heading", { name: /স্বাগতম,/ }).waitFor();
   await page.screenshot({ path: `${OUT}/admin-overview.png`, fullPage: true });
   for (const p of ["students", "candidates", "elections", "results", "corrections", "audit", "admins", "disputes", "settings"]) {
     const res = await page.goto(`${BASE}/admin/${p}`);

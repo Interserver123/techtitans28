@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, MessageSquareHeart, ScrollText, Settings, ShieldHalf, UserCog, Users, Vote, X,
+  BarChart3, ClipboardCheck, FileClock, FileDown, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, MessageSquareHeart, ScrollText, Settings, ShieldHalf, UserCog, Users, Vote, X,
 } from "lucide-react";
 import Image from "next/image";
 import { Brand } from "@/components/site/brand";
@@ -11,17 +11,19 @@ import { api } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { STATUS_LABEL } from "@/lib/format";
 import { ToastProvider } from "./toast";
+import { StepUpProvider } from "./step-up";
 
 const NAV = [
   { href: "/admin", label: "সারসংক্ষেপ", icon: Gauge, perm: null },
   { href: "/admin/elections", label: "নির্বাচন", icon: Vote, perm: "elections.read" },
   { href: "/admin/students", label: "শিক্ষার্থী", icon: GraduationCap, perm: "students.read" },
   { href: "/admin/candidates", label: "প্রার্থী", icon: Users, perm: "candidates.read" },
-  { href: "/admin/votes", label: "ভোটের রেকর্ড", icon: ScrollText, perm: "admins.manage" },
+  { href: "/admin/votes", label: "ভোটের রেকর্ড", icon: ScrollText, perm: "votes.read" },
   { href: "/admin/results", label: "ফলাফল", icon: BarChart3, perm: "results.view" },
   { href: "/admin/corrections", label: "সংশোধন", icon: ClipboardCheck, perm: "corrections.read" },
   { href: "/admin/disputes", label: "অভিযোগ", icon: LifeBuoy, perm: "disputes.read" },
   { href: "/admin/audit", label: "অডিট লগ", icon: FileClock, perm: "audit.read" },
+  { href: "/admin/records", label: "রেকর্ড ও রপ্তানি", icon: FileDown, perm: "elections.read" },
   { href: "/admin/admins", label: "অ্যাডমিন", icon: UserCog, perm: "admins.manage" },
   { href: "/admin/welcome", label: "স্বাগত বার্তা", icon: MessageSquareHeart, perm: "settings.manage" },
   { href: "/admin/settings", label: "সেটিংস", icon: Settings, perm: "settings.manage" },
@@ -54,7 +56,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
           <Link key={href} href={href} onClick={() => setOpen(false)}
             className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
               isActive(href) ? "bg-gold/10 text-white ring-1 ring-inset ring-gold/30" : "text-slate-400 hover:bg-white/5 hover:text-white")}>
-            <Icon className={cn("size-4", isActive(href) && "text-gold")} /> {label}
+            <Icon className={cn("size-4", isActive(href) && "text-gold-300")} /> {label}
           </Link>
         ))}
       </nav>
@@ -78,6 +80,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
 
   return (
     <ToastProvider>
+      <StepUpProvider>
       <div className="theme-admin dark min-h-dvh">
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/5 bg-navy lg:block">{sidebar}</aside>
         {open && (
@@ -103,6 +106,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
           <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
         </div>
       </div>
+      </StepUpProvider>
     </ToastProvider>
   );
 }

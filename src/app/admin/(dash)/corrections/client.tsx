@@ -15,7 +15,7 @@ export function NewCorrection({ electionId }: { electionId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><FilePlus2 /> নতুন সংশোধনের অনুরোধ</Button></DialogTrigger>
-      <DialogContent title="সংশোধনের অনুরোধ" description="বেনামি ব্যালট লেজারে (ফলাফল → ব্যালট লেজার) ব্যালট রেফারেন্স খুঁজুন। দ্বিতীয় একজন অ্যাডমিনকে অনুমোদন দিতে হবে।">
+      <DialogContent title="সংশোধনের অনুরোধ" description="বেনামি ব্যালট লেজারে (ফলাফল → ব্যালট লেজার) ব্যালট রেফারেন্স খুঁজুন। দ্বিতীয় একজন অ্যাডমিনকে অনুমোদন দিতে হবে। (ভোটের প্রার্থী পরিবর্তনের অনুরোধ সুপার অ্যাডমিন 'ভোটের রেকর্ড' পাতা থেকে করেন।)">
         <form className="space-y-4" onSubmit={async (e) => {
           e.preventDefault();
           const fd = new FormData();
@@ -39,7 +39,7 @@ export function NewCorrection({ electionId }: { electionId: string }) {
   );
 }
 
-export function ReviewCorrection({ id }: { id: string }) {
+export function ReviewCorrection({ id, kind }: { id: string; kind?: string }) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const { run, busy, error } = useAction();
@@ -50,7 +50,9 @@ export function ReviewCorrection({ id }: { id: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button size="sm"><Gavel /> পর্যালোচনা</Button></DialogTrigger>
-      <DialogContent title="সংশোধন পর্যালোচনা" description="অনুমোদন দিলে ব্যালটের অবস্থা বদলায় (বিষয়বস্তু কখনো নয়) এবং তা অপরিবর্তনীয়ভাবে লিপিবদ্ধ হয়।">
+      <DialogContent title="সংশোধন পর্যালোচনা" description={kind === "REPLACE_CHOICE"
+        ? "অনুমোদন দিলে মূল ব্যালট বাতিল চিহ্নিত হয় (মুছে ফেলা হয় না) এবং অনুরোধ করা প্রার্থীর জন্য একটি যুক্ত নতুন ব্যালট যোগ হয়। সিদ্ধান্তটি অপরিবর্তনীয়ভাবে লিপিবদ্ধ হয় এবং ভোটার তার রসিদ পাতায় জানতে পারেন।"
+        : "অনুমোদন দিলে ব্যালটের অবস্থা বদলায় (বিষয়বস্তু কখনো নয়) এবং তা অপরিবর্তনীয়ভাবে লিপিবদ্ধ হয়।"}>
         <div className="space-y-4">
           <Field label="পর্যালোচনার নোট" htmlFor="rn"><Textarea id="rn" rows={3} value={note} onChange={(e) => setNote(e.target.value)} minLength={5} maxLength={2000} /></Field>
           {error && <Alert tone="error">{error}</Alert>}

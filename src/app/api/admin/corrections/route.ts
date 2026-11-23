@@ -18,4 +18,4 @@ export const POST = adminRoute("corrections.create", async (req, { admin, c }) =
     c.ipHash,
   );
   return ok({ id });
-});
+}, { stepUp: true });

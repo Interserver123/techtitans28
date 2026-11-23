@@ -35,7 +35,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const activity = admin.permissions.has("audit.read")
     ? await listAudit({ limit: 8 })
     : await query<{ id: string; occurred_at: Date; action: string; actor_label: string | null; entity_type: string | null }>(
-        `select id::text, occurred_at, action, actor_label, entity_type from audit_logs where actor_admin_id = $1 order by id desc limit 8`,
+        `select id::text, occurred_at, action, actor_label, entity_type from audit_logs where actor_admin_id = $1 order by audit_logs.id desc limit 8`,
         [admin.adminId],
       );
 
@@ -85,7 +85,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-gold" /> সাম্প্রতিক প্রশাসনিক কার্যক্রম</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-gold-300" /> সাম্প্রতিক প্রশাসনিক কার্যক্রম</CardTitle>
           <CardDescription>{admin.permissions.has("audit.read") ? "অডিট লগের সর্বশেষ এন্ট্রি" : "আপনার সাম্প্রতিক কাজ"}</CardDescription>
         </CardHeader>
         <CardContent>

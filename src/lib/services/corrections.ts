@@ -17,8 +17,14 @@ export type CorrectionRow = {
   election_id: string;
   ballot_ref: string;
   ballot_status: string;
-  correction: "INVALIDATE_BALLOT" | "REINSTATE_BALLOT";
+  correction: "INVALIDATE_BALLOT" | "REINSTATE_BALLOT" | "REPLACE_CHOICE";
   reason: string;
+  /** REPLACE_CHOICE: the candidate on the ballot now, and the one requested. */
+  from_candidate: string | null;
+  to_candidate: string | null;
+  /** REPLACE_CHOICE, once approved: the new ballot that replaced this one. */
+  replacement_ref: string | null;
+  replaced: boolean;
   evidence_note: string | null;
   evidence_path: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
@@ -33,18 +39,39 @@ export type CorrectionRow = {
 };
 
 export async function listCorrections(electionId: string) {
-  return query<CorrectionRow>(
-    `select r.id, r.election_id, b.ballot_ref, b.status as ballot_status, r.correction, r.reason, r.evidence_note, r.evidence_path,
-            r.status, r.requested_by, ra.full_name as requester_name, r.requested_at, r.reviewed_by, rv.full_name as reviewer_name,
-            r.reviewed_at, r.review_note, r.ballot_status_before
-       from correction_requests r
-       join election_admins ra on ra.id = r.requested_by
-       left join election_admins rv on rv.id = r.reviewed_by
-       join lateral (select l.ballot_ref, l.status from ballot_ledger(r.election_id) l where l.ballot_id = r.ballot_id) b on true
-      where r.election_id = $1
-      order by r.requested_at desc`,
-    [electionId],
-  );
+  try {
+    return await query<CorrectionRow>(
+      `with ledger as (select * from ballot_ledger($1))
+       select r.id, r.election_id, b.ballot_ref, b.status as ballot_status, r.correction, r.reason, r.evidence_note, r.evidence_path,
+              r.status, r.requested_by, ra.full_name as requester_name, r.requested_at, r.reviewed_by, rv.full_name as reviewer_name,
+              r.reviewed_at, r.review_note, r.ballot_status_before,
+              case when r.correction::text = 'REPLACE_CHOICE' then b.candidate_name end as from_candidate,
+              nc.display_name as to_candidate, rb.ballot_ref as replacement_ref,
+              exists (select 1 from ledger x where x.replaces_ballot_ref = b.ballot_ref) as replaced
+         from correction_requests r
+         join election_admins ra on ra.id = r.requested_by
+         left join election_admins rv on rv.id = r.reviewed_by
+         join ledger b on b.ballot_id = r.ballot_id
+         left join candidates nc on nc.id = r.new_candidate_id
+         left join ledger rb on rb.created_by_correction_id = r.id
+        where r.election_id = $1
+        order by r.requested_at desc`,
+      [electionId],
+    );
+  } catch (e) {
+    throw fromDbError(e) ?? e;
+  }
+}
+
+/** Which voter each correction concerns (via the open-ballot link). Super Admin session only; null if unavailable. */
+export async function correctionSubjects(sessionTokenHash: string, electionId: string) {
+  try {
+    const rows = await query<{ correction_id: string; roll_number: string; full_name: string }>(
+      `select * from admin_correction_subjects($1, $2)`, [sessionTokenHash, electionId]);
+    return new Map(rows.map((r) => [r.correction_id, { roll: r.roll_number, name: r.full_name }]));
+  } catch {
+    return null;
+  }
 }
 
 export async function createCorrection(
@@ -58,9 +85,11 @@ export async function createCorrection(
   const el = await one<{ status: string }>(`select status from elections where id = $1`, [electionId]);
   if (!el) throw new AppError("NOT_FOUND");
   if (el.status !== "CLOSED") throw new AppError("INVALID_STATE", "শুধু নির্বাচন শেষ হওয়ার পর এবং ফলাফল প্রকাশের আগে সংশোধনের অনুরোধ করা যায়।");
-  const ballot = await one<{ ballot_id: string; status: string }>(
-    `select ballot_id, status from ballot_ledger($1) where ballot_ref = $2`, [electionId, v.ballotRef]);
+  const ballot = await one<{ ballot_id: string; status: string; replaced: boolean }>(
+    `select l.ballot_id, l.status, exists (select 1 from ballot_ledger($1) x where x.replaces_ballot_ref = l.ballot_ref) as replaced
+       from ballot_ledger($1) l where l.ballot_ref = $2`, [electionId, v.ballotRef]).catch((e) => { throw fromDbError(e) ?? e; });
   if (!ballot) throw new AppError("NOT_FOUND", "এই নির্বাচনে এই রেফারেন্সের কোনো ব্যালট নেই।");
+  if (ballot.replaced) throw new AppError("INVALID_STATE", "এই ব্যালটের জায়গায় সংশোধনের মাধ্যমে নতুন ব্যালট এসেছে; নতুন (প্রতিস্থাপিত) ব্যালটটি সংশোধন করুন।");
   if (v.correction === "INVALIDATE_BALLOT" && ballot.status !== "VALID") throw new AppError("INVALID_STATE", "এই ব্যালট ইতিমধ্যে বাতিল।");
   if (v.correction === "REINSTATE_BALLOT" && ballot.status !== "INVALIDATED") throw new AppError("INVALID_STATE", "শুধু বাতিল ব্যালটই পুনর্বহাল করা যায়।");
   let evidencePath: string | null = null;

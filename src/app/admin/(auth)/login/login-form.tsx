@@ -59,7 +59,7 @@ export function AdminLogin() {
     <form onSubmit={verify} className="space-y-4">
       <div>
         <h1 className="flex items-center gap-2 text-xl font-semibold text-white">
-          {step === "enroll" ? <QrCode className="size-5 text-gold" /> : <KeyRound className="size-5 text-gold" />}
+          {step === "enroll" ? <QrCode className="size-5 text-gold-300" /> : <KeyRound className="size-5 text-gold-300" />}
           {step === "enroll" ? "দুই-ধাপের যাচাই চালু করুন" : "দুই-ধাপের যাচাই"}
         </h1>
         <p className="mt-1 text-sm text-slate-400">

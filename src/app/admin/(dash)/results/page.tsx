@@ -1,4 +1,5 @@
 import { CheckCircle2, Download, FileSpreadsheet, Fingerprint, Scale, Trophy, XCircle } from "lucide-react";
+import { DownloadButton } from "@/components/admin/step-up";
 import { adminPage } from "@/lib/session";
 import { getAdminElections } from "@/lib/admin-context";
 import { getResultSummary } from "@/lib/services/results";
@@ -38,7 +39,7 @@ export default async function ResultsAdminPage() {
         description={<span className="inline-flex flex-wrap items-center gap-2">{e.title} <ElectionStatusBadge status={e.status} /> {r.official ? `· প্রকাশিত ${fmtDateTime(e.results_published_at)}` : "· অস্থায়ী — জনসাধারণের জন্য উন্মুক্ত নয়"}</span>}
         actions={<>
           <Button asChild size="sm" variant="outline"><a href={`/api/admin/results/${e.id}/report`}><Download /> পিডিএফ প্রতিবেদন</a></Button>
-          {admin.permissions.has("ballots.read") && <Button asChild size="sm" variant="outline"><a href={`/api/admin/results/${e.id}/ledger`}><FileSpreadsheet /> ব্যালট লেজার</a></Button>}
+          {admin.permissions.has("ballots.read") && <DownloadButton size="sm" variant="outline" href={`/api/admin/results/${e.id}/ledger`} fallbackName="ballot-ledger.csv"><FileSpreadsheet /> ব্যালট লেজার</DownloadButton>}
         </>}
       />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

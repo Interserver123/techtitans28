@@ -96,3 +96,19 @@ export async function setElectionStatus(id: string, status: string) {
 export async function teardown() {
   await closePool();
 }
+
+/**
+ * A live, MFA-verified admin session (as after sign-in). `stepUp` marks a fresh authenticator code,
+ * which the voter-linked database functions require. Returns the token and its stored hash.
+ */
+export async function sessionFor(adminId: string, opts: { stepUp?: boolean } = {}) {
+  const { adminTokenHash } = await import("@/lib/services/admin-auth");
+  const token = `test-session-${uniq()}-${Math.random().toString(36).slice(2)}`;
+  const hash = adminTokenHash(token);
+  await query(
+    `insert into admin_sessions (admin_id, token_hash, mfa_verified, expires_at, mfa_stepup_at)
+     values ($1, $2, true, now() + interval '1 hour', case when $3 then now() end)`,
+    [adminId, hash, opts.stepUp ?? true],
+  );
+  return { token, hash };
+}

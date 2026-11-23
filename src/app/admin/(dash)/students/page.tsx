@@ -1,6 +1,7 @@
 import { bnNum } from "@/lib/format";
 import Link from "next/link";
 import { AlertTriangle, Download } from "lucide-react";
+import { DownloadButton } from "@/components/admin/step-up";
 import { adminPage } from "@/lib/session";
 import { getAdminElections } from "@/lib/admin-context";
 import { listStudents, dataQualityReport } from "@/lib/services/students";
@@ -32,7 +33,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         title="শিক্ষার্থী"
         description={`অফিসিয়াল রোল তালিকা। শুধু ${settings.batch}-এর সক্রিয় ও যোগ্য শিক্ষার্থীরাই ভোট দিতে পারবেন।`}
         actions={<>
-          {admin.permissions.has("students.export") && <Button asChild variant="outline" size="sm"><a href={`/api/admin/students/export?${exportQs}`}><Download /> CSV এক্সপোর্ট</a></Button>}
+          {admin.permissions.has("students.export") && <DownloadButton variant="outline" size="sm" href={`/api/admin/students/export?${exportQs}`} fallbackName="students.csv"><Download /> CSV এক্সপোর্ট</DownloadButton>}
           {admin.permissions.has("students.import") && <ImportDialog batch={settings.batch} />}
           {canWrite && <StudentDialog batch={settings.batch} />}
         </>}
