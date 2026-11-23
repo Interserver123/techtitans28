@@ -1,9 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Brand } from "./brand";
 
 export function SiteFooter({ institution, department }: { institution: string; department: string }) {
   return (
-    <footer className="bg-navy text-slate-400">
+    <footer className="relative overflow-hidden bg-emerald-900 text-slate-300">
+      <Image src="/campus/building.jpg" alt="" fill sizes="100vw" className="object-cover opacity-20 mix-blend-luminosity" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-t from-emerald-900 via-emerald-900/85 to-emerald-900/60" aria-hidden />
+      <div className="gold-rule relative" />
+      <div className="relative">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Brand dark />
@@ -33,6 +38,7 @@ export function SiteFooter({ institution, department }: { institution: string; d
           <p>© {new Date().getFullYear()} TechTitans-28 Election Committee · {institution}</p>
           <p>One student · one ballot · secret vote</p>
         </div>
+      </div>
       </div>
     </footer>
   );

@@ -13,7 +13,7 @@ const NAV = [
 
 export function SiteHeader({ status, canVote }: { status: string | null; canVote: boolean }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-gold/30 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Brand />
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">

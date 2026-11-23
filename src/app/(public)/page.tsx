@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight, BadgeCheck, CalendarClock, CalendarX2, EyeOff, Fingerprint, KeyRound, LifeBuoy, ListChecks, Lock, Mail, MapPin,
   Phone, ReceiptText, ShieldCheck, Smartphone, Trophy, UserCheck, Users, Vote,
@@ -25,30 +26,36 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative overflow-hidden bg-navy text-white">
-        <div className="bg-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" aria-hidden />
-        <div className="absolute -top-40 left-1/2 h-[480px] w-[880px] -translate-x-1/2 rounded-full bg-electric/25 blur-[120px]" aria-hidden />
-        <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-14 sm:px-6 md:pb-24 md:pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <section className="relative isolate overflow-hidden bg-emerald-900 text-white">
+        <Image src="/campus/aerial.jpg" alt="Aerial view of the Islamic University campus" fill priority sizes="100vw" className="ken-burns -z-20 object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-900/95 via-navy/85 to-navy/70" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_0%,rgb(201_162_74/0.22),transparent_55%)]" aria-hidden />
+        <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-28 pt-14 sm:px-6 md:pb-36 md:pt-24 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div className="animate-fade-up">
             <div className="flex flex-wrap items-center gap-3">
-              <StatusPill status={status} className="bg-white/10 text-white ring-white/15" />
-              <span className="text-xs font-medium text-slate-400">{settings.institution} · ICT Department</span>
+              <StatusPill status={status} className="bg-white/10 text-white ring-white/20" />
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-gold-300">{settings.institution} · ICT Department</span>
             </div>
-            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              CR Election <span className="bg-gradient-to-r from-blue-300 to-electric bg-clip-text text-transparent">2026</span>
+            <div className="mt-7 flex items-center gap-4">
+              <Image src="/campus/logo.png" alt="" width={72} height={68} className="size-16 rounded-2xl ring-2 ring-gold/70 shadow-2xl" aria-hidden />
+              <div className="gold-rule hidden h-px w-24 sm:block" />
+            </div>
+            <h1 className="font-display mt-6 text-5xl font-bold leading-[1.02] sm:text-6xl md:text-7xl">
+              Class Representative
+              <span className="text-gold-gradient block italic">Election 2026</span>
             </h1>
-            <p className="mt-3 text-lg font-medium text-slate-300 sm:text-xl">Islamic University — {settings.department.replace("Department of ", "")}</p>
-            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-slate-400">
+            <p className="mt-4 text-lg font-medium text-slate-200 sm:text-xl">Islamic University — {settings.department.replace("Department of ", "")}</p>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-slate-300">
               {election?.description?.trim() ||
                 `Choose the Class Representative who will speak for ${settings.batch}. Every registered student casts one secret ballot, verified by a one-time code sent to their registered contact.`}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="xl" className="shadow-lg shadow-electric/30">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="xl" className="bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
                 <Link href="/vote">
                   <Vote /> {votingOpen ? "Start voting" : "Open voter portal"} <ArrowRight />
                 </Link>
               </Button>
-              <Button asChild size="xl" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+              <Button asChild size="xl" variant="outline" className="border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15">
                 <Link href={status === "RESULTS_PUBLISHED" ? "/results" : "#candidates"}>
                   {status === "RESULTS_PUBLISHED" ? <><Trophy /> View official results</> : <><Users /> Meet the candidates</>}
                 </Link>
@@ -56,14 +63,14 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="animate-fade-up rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl [animation-delay:120ms] sm:p-6">
+          <div className="glass animate-fade-up rounded-3xl p-5 shadow-2xl shadow-black/30 [animation-delay:120ms] sm:p-6">
             {countdown ? (
               <Countdown target={countdown.target} serverNow={serverNow} label={countdown.label} dark />
             ) : (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300/80">Election status</p>
-                <p className="mt-3 text-2xl font-bold">{status ? STATUS_LABEL[status] : "Not yet announced"}</p>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-300">Election status</p>
+                <p className="font-display mt-3 text-3xl font-bold">{status ? STATUS_LABEL[status] : "Not yet announced"}</p>
+                <p className="mt-1 text-sm text-slate-300">
                   {status === "RESULTS_PUBLISHED" ? "The official result has been published by the Election Committee." : status === "CLOSED" ? "Voting has ended. Results will be published after verification." : "The Election Committee will announce the schedule here."}
                 </p>
               </div>
@@ -78,10 +85,11 @@ export default async function HomePage() {
             )}
           </div>
         </div>
+        <div className="gold-rule absolute inset-x-0 bottom-0" />
       </section>
 
       {/* ELECTION INFORMATION */}
-      <section className="mx-auto -mt-8 max-w-6xl px-4 sm:px-6" aria-label="Election information">
+      <section className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:px-6" aria-label="Election information">
         <div className="relative grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {[
             { icon: CalendarClock, label: "Opens", value: election ? fmtDateTime(election.opens_at) : "TBA" },
@@ -91,12 +99,34 @@ export default async function HomePage() {
             { icon: UserCheck, label: "Participation", value: turnout ? String(turnout.voted) : "—" },
             { icon: ListChecks, label: "Turnout", value: turnout ? `${turnout.turnoutPct}%` : "—" },
           ].map(({ icon: Icon, label, value }) => (
-            <Card key={label} className="p-4">
-              <Icon className="size-4 text-electric" aria-hidden />
+            <Card key={label} className="border-gold/30 p-4 shadow-lift">
+              <Icon className="size-4 text-emerald" aria-hidden />
               <p className="mt-3 text-[11px] font-medium uppercase tracking-wider text-muted">{label}</p>
               <p className="mt-0.5 text-sm font-semibold leading-snug">{value}</p>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* CAMPUS */}
+      <section className="mx-auto max-w-6xl px-4 pt-24 sm:px-6" aria-label="Our campus">
+        <SectionHeading eyebrow="Islamic University · Kushtia" title="One campus. One voice." subtitle="Under the gulmohar trees of our university, 28th-batch ICT students choose who will carry their voice." />
+        <div className="mt-12 grid gap-4 md:grid-cols-6 md:grid-rows-2">
+          <figure className="group relative min-h-64 overflow-hidden rounded-3xl md:col-span-4 md:row-span-2 md:min-h-[26rem]">
+            <Image src="/campus/aerial.jpg" alt="Campus aerial view" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-5 left-6 text-2xl text-white">The red-brick campus</figcaption>
+          </figure>
+          <figure className="group relative min-h-44 overflow-hidden rounded-3xl md:col-span-2">
+            <Image src="/campus/gate.jpg" alt="Islamic University main gate beneath a gulmohar tree" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">The gate</figcaption>
+          </figure>
+          <figure className="group relative min-h-44 overflow-hidden rounded-3xl md:col-span-2">
+            <Image src="/campus/building.jpg" alt="Academic building framed by blooming gulmohar" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">Where we learn</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -141,7 +171,7 @@ export default async function HomePage() {
               { icon: ReceiptText, t: "Keep your receipt", d: "You receive a receipt ID proving your ballot was recorded — not who you chose." },
             ].map(({ icon: Icon, t, d }, i) => (
               <li key={t} className="relative rounded-2xl border border-line bg-canvas p-5">
-                <span className="text-xs font-bold text-electric">0{i + 1}</span>
+                <span className="text-xs font-bold text-emerald">0{i + 1}</span>
                 <Icon className="mt-3 size-6 text-ink" aria-hidden />
                 <h3 className="mt-4 font-semibold">{t}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted">{d}</p>
@@ -154,8 +184,8 @@ export default async function HomePage() {
               { icon: Lock, t: "One person, one vote", d: "Enforced inside the database with locking and unique constraints — duplicates are impossible." },
               { icon: ShieldCheck, t: "Sealed results", d: "Candidate-wise counts cannot be computed until voting closes, even by administrators." },
             ].map(({ icon: Icon, t, d }) => (
-              <div key={t} className="flex gap-4 rounded-2xl bg-navy p-5 text-white">
-                <Icon className="size-5 shrink-0 text-blue-300" aria-hidden />
+              <div key={t} className="flex gap-4 rounded-2xl bg-emerald-900 p-5 text-white ring-1 ring-gold/30">
+                <Icon className="size-5 shrink-0 text-gold-300" aria-hidden />
                 <div>
                   <p className="font-semibold">{t}</p>
                   <p className="mt-1 text-sm leading-relaxed text-slate-400">{d}</p>
@@ -181,11 +211,22 @@ export default async function HomePage() {
               "If you suspect someone voted with your identity, report it immediately through the help page.",
             ].map((g, i) => (
               <li key={i} className="flex gap-3 rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed shadow-card">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-electric-50 text-xs font-bold text-electric-600">{i + 1}</span>
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald/10 text-xs font-bold text-emerald">{i + 1}</span>
                 {g}
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative isolate overflow-hidden bg-navy text-white">
+        <Image src="/campus/aerial-wide.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/95 via-emerald-900/85 to-navy/60" />
+        <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-300">Your voice · Your batch</p>
+          <h2 className="font-display mx-auto mt-4 max-w-2xl text-4xl font-bold sm:text-5xl">Every vote shapes the year ahead.</h2>
+          <Button asChild size="xl" className="mt-9 bg-gold text-navy hover:bg-gold-300"><Link href="/vote"><Vote /> Go to the voter portal <ArrowRight /></Link></Button>
         </div>
       </section>
 
@@ -213,11 +254,11 @@ export default async function HomePage() {
             )}
           </div>
           <Card className="h-fit p-6">
-            <LifeBuoy className="size-6 text-electric" aria-hidden />
+            <LifeBuoy className="size-6 text-emerald" aria-hidden />
             <h3 className="mt-4 text-lg font-semibold">Need help?</h3>
             <p className="mt-1 text-sm text-muted">Code not arriving, roll not accepted, or a suspected misuse of your identity — tell the committee.</p>
             <ul className="mt-5 space-y-2.5 text-sm">
-              {settings.contact.email && <li className="flex items-center gap-2"><Mail className="size-4 text-muted" /> <a className="hover:text-electric" href={`mailto:${settings.contact.email}`}>{settings.contact.email}</a></li>}
+              {settings.contact.email && <li className="flex items-center gap-2"><Mail className="size-4 text-muted" /> <a className="hover:text-emerald" href={`mailto:${settings.contact.email}`}>{settings.contact.email}</a></li>}
               {settings.contact.phone && <li className="flex items-center gap-2"><Phone className="size-4 text-muted" /> {settings.contact.phone}</li>}
               {settings.contact.office && <li className="flex items-center gap-2"><MapPin className="size-4 text-muted" /> {settings.contact.office}</li>}
               <li className="flex items-center gap-2"><Smartphone className="size-4 text-muted" /> Works on any modern phone browser</li>
@@ -235,8 +276,9 @@ export default async function HomePage() {
 function SectionHeading({ eyebrow, title, subtitle, align = "center" }: { eyebrow: string; title: string; subtitle?: string; align?: "center" | "left" }) {
   return (
     <div className={align === "center" ? "mx-auto max-w-2xl text-center" : ""}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-electric">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald">{eyebrow}</p>
+      <div className="gold-rule mt-3 h-px w-16" style={align === "center" ? { marginInline: "auto" } : undefined} />
+      <h2 className="font-display mt-4 text-3xl font-bold sm:text-5xl">{title}</h2>
       {subtitle && <p className="mt-3 text-[15px] leading-relaxed text-muted">{subtitle}</p>}
     </div>
   );
