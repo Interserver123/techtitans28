@@ -49,7 +49,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
     const r = await api<{ message: string }>("/api/vote/request-otp", { json: { roll } });
     setBusy(false);
     if (!r.ok) return setError(errorText(lang, r.error));
-    setNotice(who ? V.codeWillGo(who.maskedContact) : lang === "bn" ? V.sent : r.message);
+    setNotice(who ? V.codeSent(who.maskedContact, who.contactType === "EMAIL") : lang === "bn" ? V.sent : r.message);
     setStep("otp");
     setCode("");
     setCooldown(60);

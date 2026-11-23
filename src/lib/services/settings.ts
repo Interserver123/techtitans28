@@ -75,3 +75,28 @@ export async function updatePublicSettings(input: z.infer<typeof committeeSchema
   );
   await audit({ actorType: "ADMIN", adminId, action: "SETTINGS.UPDATED", entityType: "system_settings", entityId: "committee", details: { members: parsed.data.committee.length }, ipHash });
 }
+
+
+/** Message shown to every voter on the receipt page after voting. `{name}` and `{roll}` are replaced per voter. Empty = use the built-in default. */
+export const WELCOME_KEY = "voter.welcome_message";
+export const welcomeSchema = z.object({ message: z.string().trim().max(600, "বার্তা সর্বোচ্চ ৬০০ অক্ষরের হতে পারবে।") });
+
+export async function getWelcomeTemplate(): Promise<string | null> {
+  const row = await one<{ value: unknown }>("select value from system_settings where key = $1", [WELCOME_KEY]);
+  return typeof row?.value === "string" && row.value.trim() ? row.value : null;
+}
+
+export function renderWelcome(template: string, vars: { name: string; roll: string }) {
+  return template.replace(/\{name\}/gi, vars.name).replace(/\{roll\}/gi, vars.roll);
+}
+
+export async function updateWelcomeMessage(input: z.infer<typeof welcomeSchema>, adminId: string, ipHash: string | null) {
+  const parsed = welcomeSchema.safeParse(input);
+  if (!parsed.success) throw new AppError("VALIDATION", parsed.error.issues[0]?.message);
+  await query(
+    `insert into system_settings (key, value, description, updated_by) values ($1, $2::jsonb, 'Welcome message shown to voters after voting', $3)
+     on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()`,
+    [WELCOME_KEY, JSON.stringify(parsed.data.message), adminId],
+  );
+  await audit({ actorType: "ADMIN", adminId, action: "SETTINGS.UPDATED", entityType: "system_settings", entityId: "welcome_message", details: { length: parsed.data.message.length }, ipHash });
+}

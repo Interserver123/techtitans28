@@ -124,6 +124,7 @@ const en = {
     rollSub: "We’ll send a one-time code to the email or phone registered with the department.",
     rollLabel: "Roll number", rollPh: "e.g. 2128001", send: "Send verification code",
     find: "Find my details", confirmTitle: "Is this you?", confirmName: "Name", confirmEmail: "Email", confirmPhone: "Mobile",
+    codeSent: (c: string, email: boolean) => email ? `The code has been sent to the email you gave in the database (${c}).` : `The code has been sent to the number you gave in the database (${c}).`,
     codeWillGo: (c: string) => `We will send a 6-digit code to ${c}.`, sendHere: "Yes, send the code", sendHerePhone: "Yes, send the code to this number", notMe: "Not me — change roll number",
     cannotDeliver: "Your registered contact cannot receive codes yet. Please contact the Election Committee (Help page) to update it.",
     codeTitle: "Enter your code", rollShort: "Roll",
@@ -150,6 +151,7 @@ const en = {
     title: "Your vote has been recorded", thanks: (t: string) => `Thank you for taking part in ${t}.`,
     id: "Receipt ID", submitted: "Submitted", voter: "Voter", status: "Status", complete: "Voting complete",
     note1: "This receipt proves a ballot was recorded for you. It does not — and cannot — show who you voted for. Keep it to verify later at ",
+    welcomeDefault: "Thank you, {name}! Your vote has been recorded. Congratulations on taking part in a fair TechTitans-28 election.",
     verify: "Verify receipt", turnout: "See live turnout", signout: "Finish & sign out",
   },
   verify: {
@@ -190,7 +192,7 @@ const en = {
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
     sub: "Walk through the real voting steps with your roll number and the real candidate list. A real code is sent to your registered email, but no ballot is recorded.",
-    sentTo: (e: string) => `A 6-digit demo code was sent to ${e}. Check spam too.`, codeLabel: "6-digit code", verify: "Verify", other: "Use another roll number",
+    sentTo: (e: string) => `The demo code has been sent to the email you gave in the database (${e}). Check spam too.`, codeLabel: "6-digit code", verify: "Verify", other: "Use another roll number",
     choose: "Choose one candidate", review: "Review choice", back: "Back", reviewTitle: "Review your demo ballot",
     confirm: "I understand this is a demo and this choice is not counted.", submit: "Submit demo ballot",
     doneTitle: "Demo complete", done: "This was a demo. No vote was recorded and the results are unaffected.", receipt: "Demo receipt",
@@ -319,6 +321,7 @@ const bn: Dict = {
     rollSub: "বিভাগে নিবন্ধিত আপনার ইমেইল বা ফোনে আমরা একটি এককালীন কোড পাঠাব।",
     rollLabel: "রোল নম্বর", rollPh: "যেমন: 2128001", send: "যাচাই কোড পাঠান",
     find: "আমার তথ্য দেখুন", confirmTitle: "এটি কি আপনি?", confirmName: "নাম", confirmEmail: "ইমেইল", confirmPhone: "মোবাইল",
+    codeSent: (c, email) => email ? `তুমি ডাটাবেসে যে মেইল দিয়েছিলে সেটাতে কোড গেছে (${c})।` : `তুমি ডাটাবেসে যে নম্বর দিয়েছিলে সেটাতে কোড গেছে (${c})।`,
     codeWillGo: (c) => `${c} ঠিকানায় একটি ৬ অঙ্কের কোড পাঠানো হবে।`, sendHere: "হ্যাঁ, কোড পাঠান", sendHerePhone: "হ্যাঁ, এই নম্বরে কোড পাঠান", notMe: "আমি নই — রোল নম্বর বদলান",
     cannotDeliver: "আপনার নিবন্ধিত যোগাযোগে এখনও কোড পাঠানো যাচ্ছে না। অনুগ্রহ করে নির্বাচন কমিটির সাথে (সাহায্য পাতা) যোগাযোগ করে তথ্য হালনাগাদ করান।",
     codeTitle: "আপনার কোড লিখুন", rollShort: "রোল",
@@ -345,6 +348,7 @@ const bn: Dict = {
     title: "আপনার ভোট গ্রহণ করা হয়েছে", thanks: (t) => `${t}-এ অংশ নেওয়ার জন্য ধন্যবাদ।`,
     id: "রসিদ আইডি", submitted: "জমার সময়", voter: "ভোটার", status: "অবস্থা", complete: "ভোটদান সম্পন্ন",
     note1: "এই রসিদ প্রমাণ করে আপনার একটি ব্যালট জমা হয়েছে। আপনি কাকে ভোট দিয়েছেন তা এটি দেখায় না — দেখাতেও পারে না। পরে যাচাইয়ের জন্য সংরক্ষণ করুন: ",
+    welcomeDefault: "ধন্যবাদ, {name}! আপনার মূল্যবান ভোট সফলভাবে গৃহীত হয়েছে। টেকটাইটানস-২৮-এর সুষ্ঠু নির্বাচনে অংশ নেওয়ার জন্য অভিনন্দন।",
     verify: "রসিদ যাচাই", turnout: "সরাসরি উপস্থিতি দেখুন", signout: "শেষ করে বের হন",
   },
   verify: {
@@ -385,7 +389,7 @@ const bn: Dict = {
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",
     sub: "আপনার রোল নম্বর ও আসল প্রার্থী তালিকা দিয়ে ভোটদানের প্রতিটি ধাপ পরখ করুন। আপনার নিবন্ধিত ইমেইলে আসল কোড যাবে, কিন্তু কোনো ব্যালট জমা হবে না।",
-    sentTo: (e) => `${e}-এ ৬ অঙ্কের একটি ডেমো কোড পাঠানো হয়েছে। স্প্যাম ফোল্ডারও দেখুন।`, codeLabel: "৬ অঙ্কের কোড", verify: "যাচাই করুন", other: "অন্য রোল নম্বর দিন",
+    sentTo: (e) => `তুমি ডাটাবেসে যে মেইল দিয়েছিলে সেটাতে ডেমো কোড গেছে (${e})। স্প্যাম ফোল্ডারও দেখো।`, codeLabel: "৬ অঙ্কের কোড", verify: "যাচাই করুন", other: "অন্য রোল নম্বর দিন",
     choose: "একজন প্রার্থী বেছে নিন", review: "পছন্দ পর্যালোচনা", back: "ফিরে যান", reviewTitle: "আপনার ডেমো ব্যালট দেখে নিন",
     confirm: "আমি জানি এটি ডেমো, এই পছন্দ গণনা হবে না।", submit: "ডেমো ব্যালট জমা দিন",
     doneTitle: "ডেমো সম্পন্ন", done: "এটি ছিল একটি ডেমো। কোনো ভোট জমা হয়নি, ফলাফলে কোনো প্রভাব পড়বে না।", receipt: "ডেমো রসিদ",
