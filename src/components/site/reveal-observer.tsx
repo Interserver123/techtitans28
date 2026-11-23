@@ -1,11 +1,18 @@
 "use client";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Enables scroll-reveal for any element with class "reveal". Without JS (or with
  * reduced motion) everything stays visible; nothing is ever hidden permanently.
+ *
+ * This lives in the shared layout, which stays mounted across client-side navigation,
+ * so it must also pick up ".reveal" elements added later (a newly navigated page,
+ * streamed sections). Otherwise those stay invisible until a full reload.
  */
 export function RevealObserver() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
     const root = document.documentElement;
@@ -23,12 +30,24 @@ export function RevealObserver() {
     );
     const watch = () => document.querySelectorAll(".reveal:not(.in)").forEach((el) => io.observe(el));
     watch();
-    // Safety net: never leave content hidden if something is missed.
-    const t = setTimeout(() => document.querySelectorAll(".reveal").forEach((el) => {
-      const r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight) el.classList.add("in");
-    }), 1500);
-    return () => { clearTimeout(t); io.disconnect(); root.classList.remove("reveal-ready"); };
+    // New content (another page after client navigation, streamed sections): watch it too.
+    let queued = false;
+    const mo = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; watch(); });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { mo.disconnect(); io.disconnect(); root.classList.remove("reveal-ready"); };
   }, []);
+
+  // Safety net after every page change: never leave content hidden that is on or above the screen.
+  useEffect(() => {
+    const t = setTimeout(() => document.querySelectorAll(".reveal:not(.in)").forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("in");
+    }), 1500);
+    return () => clearTimeout(t);
+  }, [pathname]);
+
   return null;
 }
