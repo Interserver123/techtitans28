@@ -177,6 +177,12 @@ const en = {
     countShort: (n: string) => n, noMatch: (q: string) => `No candidate matches “${q}”.`,
     showAll: "Show all candidates", more: (n: string) => `${n} more`, manifesto: "Manifesto", roll: "Roll",
   },
+  proctorial: {
+    eyebrow: "Election oversight", title: "Proctorial Body",
+    sub: "Responsible for keeping the election fair, orderly and disciplined.",
+    names: { afrajur: "Afrajur Zihad", limon: "Limon Sarkar", ratul: "Ratul Roy" } as Record<string, string>,
+    roles: { afrajur: "Manager", limon: "Organizer", ratul: "Technical & System Designer" } as Record<string, string>,
+  },
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
     sub: "Walk through the real voting steps with the real candidate list. A real code is emailed to you, but no ballot is recorded.",
@@ -362,6 +368,12 @@ const bn: Dict = {
     searchPh: "নাম বা রোল নম্বর দিয়ে খুঁজুন…", searchLabel: "নাম বা রোল নম্বর দিয়ে প্রার্থী খুঁজুন", clear: "খোঁজা মুছুন",
     countShort: (n) => `${n} জন`, noMatch: (q) => `“${q}” নামে বা রোলে কোনো প্রার্থী পাওয়া যায়নি।`,
     showAll: "সব প্রার্থী দেখুন", more: (n) => `আরও ${n} জন`, manifesto: "ইশতেহার", roll: "রোল",
+  },
+  proctorial: {
+    eyebrow: "নির্বাচন তত্ত্বাবধান", title: "প্রক্টরিয়াল বডি",
+    sub: "নির্বাচনের সুষ্ঠু, শৃঙ্খলাপূর্ণ ও নিরপেক্ষ পরিবেশ নিশ্চিত করার দায়িত্বে।",
+    names: { afrajur: "আফরাজুর জিহাদ", limon: "লিমন সরকার", ratul: "রতুল রায়" },
+    roles: { afrajur: "ম্যানেজার", limon: "সংগঠক", ratul: "টেকনিক্যাল ও সিস্টেম ডিজাইনার" },
   },
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",
