@@ -422,8 +422,9 @@ live work when needed. Vercel then deploys it, usually within about five minutes
 
 ### Upgrading to the admin controls (migration 0009)
 
-Run the latest `supabase/deploy.sql` in the SQL Editor. It only applies what is missing and is safe during a live election (voting is
-unaffected). Until then `/api/health` reports `pendingUpgrade`, and vote records, vote-change requests, record exports and the student
+Run `supabase/upgrade-0009.sql` (29 KB, only this migration, refuses to run without 0008) or the full `supabase/deploy.sql` in the
+SQL Editor. Both use the same checksum guard, apply only what is missing, and are safe during a live election (rehearsed: a phone
+voting flow running during the upgrade completed and reconciled). Until then `/api/health` reports `pendingUpgrade`, and vote records, vote-change requests, record exports and the student
 export show "database upgrade required". The old one-person vote edit is no longer offered by the app either way.
 
 ### Upgrading an existing deployment to two races
