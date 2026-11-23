@@ -103,11 +103,19 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   await page.getByLabel("৬ অঙ্কের কোড").fill(code);
   await page.getByRole("button", { name: /যাচাই করে এগিয়ে যান/ }).click();
   await page.waitForURL("**/vote/ballot");
-  await page.getByText("একজন প্রার্থী বেছে নিন", { exact: true }).first().waitFor();
-  await page.locator("label", { hasText: "Sadia Akter" }).first().click();
+  await page.getByRole("heading", { name: "আপনার দুটি ভোট দিন" }).waitFor();
+  // Two races: pick one boy, move on, pick one girl, then review both together.
+  assert(await page.getByRole("button", { name: "একজন প্রার্থী বেছে নিন" }).isDisabled(), "cannot continue before choosing in the first race");
+  await page.locator("label", { hasText: "Rakib Hossain" }).first().click();
   await page.screenshot({ path: `${OUT}/vote-ballot-mobile.png`, fullPage: true });
-  await page.getByRole("button", { name: "পছন্দ পর্যালোচনা" }).click();
-  await page.getByText("আপনার ব্যালট পর্যালোচনা করুন").waitFor();
+  await page.getByRole("button", { name: /পরের ধাপ: ছাত্রী সিআর/ }).click();
+  assert(await page.locator("label", { hasText: "Rakib Hossain" }).count() === 0, "boys are not listed in the girls' race");
+  await page.locator("label", { hasText: "Sadia Akter" }).first().click();
+  await page.screenshot({ path: `${OUT}/vote-ballot-girls-mobile.png`, fullPage: true });
+  await page.getByRole("button", { name: "পছন্দগুলো পর্যালোচনা" }).click();
+  await page.getByText("আপনার দুটি ভোট পর্যালোচনা করুন").waitFor();
+  const reviewText = await page.locator("main").innerText();
+  assert(reviewText.includes("Rakib Hossain") && reviewText.includes("Sadia Akter"), "review shows both choices");
   const submit = page.getByRole("button", { name: "চূড়ান্ত ব্যালট জমা দিন" });
   assert(await submit.isDisabled(), "submit must be disabled until confirmation is ticked");
   await page.getByRole("checkbox").check();
@@ -117,14 +125,14 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const receipt = (await page.getByTestId("receipt-code").innerText()).trim();
   assert(/^TT28-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(receipt), `bad receipt ${receipt}`);
   const receiptText = await page.locator("main").innerText();
-  assert(!receiptText.includes("Sadia"), "receipt must not reveal the chosen candidate");
+  assert(!receiptText.includes("Sadia") && !receiptText.includes("Rakib"), "receipt must not reveal either chosen candidate");
   await page.screenshot({ path: `${OUT}/vote-receipt-mobile.png` });
 
   // A second submission with the same session is rejected.
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const again = await ctx.request.post(`${BASE}/api/vote/cast`, {
     headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" },
-    data: { candidateId: "00000000-0000-4000-8000-000000000000" },
+    data: { candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
   });
   assert(again.status() === 409 && (await again.json()).error.code === "ALREADY_VOTED", `expected ALREADY_VOTED, got ${again.status()}`);
 

@@ -11,6 +11,7 @@ import { ParticipationChart, ResultsBarChart } from "@/components/charts";
 import { Progress } from "@/components/ui/progress";
 import { Alert } from "@/components/ui/alert";
 import { bnNum, fmtDateTime } from "@/lib/format";
+import { posLabel } from "@/lib/i18n";
 
 export default async function Overview({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const admin = await adminPage(null);
@@ -61,15 +62,19 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             <CardContent><ParticipationChart dark data={timeline.map((t) => ({ bucket: new Date(t.bucket).toISOString(), votes: t.votes, cumulative: t.cumulative }))} /></CardContent>
           </Card>
           {results ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-white">প্রার্থীভিত্তিক ফলাফল {results.official ? "(অফিসিয়াল)" : "(অস্থায়ী)"}</CardTitle>
-                <CardDescription>{bnNum(results.totals.valid_ballots)}টি বৈধ ব্যালট · {results.reconciled ? "হিসাব মিলেছে" : "হিসাব মেলেনি"}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResultsBarChart dark data={results.tally.map((t) => ({ name: t.display_name, votes: t.votes, lead: t.rank === 1 && t.votes > 0 }))} />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {results.positions.map((pr) => (
+                <Card key={pr.position.id}>
+                  <CardHeader>
+                    <CardTitle className="text-white">{posLabel(pr.position.gender, "bn", true)} {results.official ? "(অফিসিয়াল)" : "(অস্থায়ী)"}</CardTitle>
+                    <CardDescription>{bnNum(pr.totals.valid_ballots)}টি বৈধ ভোট · {results.reconciled ? "হিসাব মিলেছে" : "হিসাব মেলেনি"}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResultsBarChart dark data={pr.tally.slice(0, 10).map((t) => ({ name: t.display_name, votes: t.votes, lead: t.rank === 1 && t.votes > 0 }))} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : (
             <Sealed title={canResults ? "প্রার্থীভিত্তিক ফলাফল সিলগালা" : "আপনার ভূমিকার জন্য ফলাফল উন্মুক্ত নয়"}>
               {canResults ? "ভোটগ্রহণ চলাকালীন শুধু ভোটার উপস্থিতি দেখা যায়। নির্বাচন শেষ হওয়ার পরই প্রার্থীভিত্তিক গণনা সম্ভব।" : undefined}

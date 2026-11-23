@@ -14,18 +14,28 @@ import { asOwner, ctx, makeAdmin, makeElection, makeStudent, resetVolatile, setE
 import { voterTokenHash } from "@/lib/services/voter-auth";
 import { castVote } from "@/lib/services/voting";
 
-async function vote(electionId: string, candidateId: string) {
+/** One voter casts a full ballot: one boy + one girl. */
+async function vote(electionId: string, choices: string[]) {
   const s = await makeStudent();
   const tok = `tok-${s.id}`;
   await query(`insert into voter_credentials (token_hash, student_id, election_id, expires_at) values ($1, $2, $3, now() + interval '10 minutes')`, [voterTokenHash(tok), s.id, electionId]);
-  return castVote(tok, candidateId);
+  return castVote(tok, choices);
 }
 
-async function closedElectionWithVotes(votes: number[]) {
-  const { electionId, candidateIds } = await makeElection({ candidates: votes.length });
-  for (let i = 0; i < votes.length; i++) for (let k = 0; k < votes[i]; k++) await vote(electionId, candidateIds[i]);
-  await setElectionStatus(electionId, "CLOSED");
-  return { electionId, candidateIds };
+/**
+ * Closed election where boy i gets boysVotes[i] votes and girl j gets girlsVotes[j] votes.
+ * Every voter votes in BOTH races, so both lists must add up to the same number of voters.
+ */
+async function closedElectionWithVotes(boysVotes: number[], girlsVotes: number[]) {
+  const n = boysVotes.reduce((a, b) => a + b, 0);
+  if (n !== girlsVotes.reduce((a, b) => a + b, 0)) throw new Error("boys and girls vote lists must have the same total (one vote each per voter)");
+  const e = await makeElection({ boys: boysVotes.length, girls: girlsVotes.length });
+  const pick = (dist: number[]) => dist.flatMap((count, i) => Array(count).fill(i) as number[]);
+  const b = pick(boysVotes);
+  const g = pick(girlsVotes);
+  for (let v = 0; v < n; v++) await vote(e.electionId, e.ballot(b[v], g[v]));
+  await setElectionStatus(e.electionId, "CLOSED");
+  return e;
 }
 
 async function sessionFor(admin: Awaited<ReturnType<typeof makeAdmin>>) {
@@ -118,9 +128,18 @@ describe("election lifecycle", () => {
     const id = await createElection({ title: "Lifecycle", opensAt: new Date(Date.now() + 3600e3), closesAt: new Date(Date.now() + 7200e3) }, sa.id, null);
     await expect(transitionElection(id, "open", sa.id, null)).rejects.toMatchObject({ code: "INVALID_TRANSITION" });
     await expect(transitionElection(id, "schedule", sa.id, null)).rejects.toMatchObject({ code: "INVALID_STATE" }); // no candidates
-    const s = await makeStudent();
+    const ungendered = await makeStudent({ gender: null });
+    await expect(createCandidate(id, { rollNumber: ungendered.roll, displayName: "Nobody" }, sa.id, null)).rejects.toMatchObject({ code: "VALIDATION" }); // gender needed to pick the race
+    const s = await makeStudent({ gender: "MALE" });
     const cid = await createCandidate(id, { rollNumber: s.roll, displayName: "Alpha" }, sa.id, null);
     await setCandidateStatus(cid, "APPROVED", sa.id, null);
+    // Only the Boys' race has a candidate: scheduling is refused until the Girls' race has one too.
+    await expect(transitionElection(id, "schedule", sa.id, null)).rejects.toMatchObject({ code: "INVALID_STATE" });
+    const g = await makeStudent({ gender: "FEMALE" });
+    const gid = await createCandidate(id, { rollNumber: g.roll, displayName: "Beta" }, sa.id, null);
+    await setCandidateStatus(gid, "APPROVED", sa.id, null);
+    const races = await query<{ code: string; gender: string }>(`select code, gender from election_positions where election_id = $1 order by display_order`, [id]);
+    expect(races).toEqual([{ code: "CR_BOYS", gender: "MALE" }, { code: "CR_GIRLS", gender: "FEMALE" }]);
     expect(await transitionElection(id, "schedule", sa.id, null)).toBe("SCHEDULED");
     expect(await transitionElection(id, "open", sa.id, null)).toBe("LIVE");
     await expect(transitionElection(id, "pause", sa.id, null)).rejects.toMatchObject({ code: "VALIDATION" }); // reason required
@@ -152,8 +171,9 @@ describe("results confidentiality & publication", () => {
   afterAll(teardown);
 
   it("candidate-wise results and the ballot ledger are sealed while voting is open", async () => {
-    const { electionId, candidateIds } = await makeElection();
-    await vote(electionId, candidateIds[0]);
+    const e = await makeElection();
+    const electionId = e.electionId;
+    await vote(electionId, e.ballot());
     await expect(getResultSummary(electionId)).rejects.toMatchObject({ code: "RESULTS_SEALED" });
     await expect(query(`select * from compute_tally($1)`, [electionId])).rejects.toThrow(/RESULTS_SEALED/);
     await expect(getBallotLedger(electionId)).rejects.toMatchObject({ code: "RESULTS_SEALED" });
@@ -162,7 +182,8 @@ describe("results confidentiality & publication", () => {
   });
 
   it("requires verification, rejects unauthorised publishers and publishes an immutable snapshot", async () => {
-    const { electionId, candidateIds } = await closedElectionWithVotes([3, 1, 0]);
+    const e0 = await closedElectionWithVotes([3, 1, 0], [2, 1, 1]);
+    const electionId = e0.electionId;
     const ro = await makeAdmin("RESULTS_OFFICER");
     const roPub = await makeAdmin("RESULTS_OFFICER", { canPublish: true });
     const ea = await makeAdmin("ELECTION_ADMIN");
@@ -172,13 +193,18 @@ describe("results confidentiality & publication", () => {
     await expect(publishResults(electionId, ro.id, "", null)).rejects.toMatchObject({ code: "FORBIDDEN" });
     const summary = await getResultSummary(electionId);
     expect(summary.reconciled).toBe(true);
-    expect(summary.outcome).toMatchObject({ kind: "WINNER", winner: { candidate_id: candidateIds[0], votes: 3 } });
+    expect(summary.totals).toMatchObject({ participation: 4, total_ballots: 8, positions: 2 });
+    expect(summary.positions).toHaveLength(2);
+    // each race has its own winner
+    expect(summary.positions[0].outcome).toMatchObject({ kind: "WINNER", winner: { candidate_id: e0.boys[0], votes: 3 } });
+    expect(summary.positions[1].outcome).toMatchObject({ kind: "WINNER", winner: { candidate_id: e0.girls[0], votes: 2 } });
     await publishResults(electionId, roPub.id, "", null);
     const e = await getElection(electionId);
     expect(e.status).toBe("RESULTS_PUBLISHED");
     const pub = await getPublishedResults(e);
-    expect(pub!.rows.map((r) => r.votes)).toEqual([3, 1, 0]);
-    expect(pub!.rows[0].is_winner).toBe(true);
+    expect(pub!.positions.map((p) => p.tally.map((r) => r.votes))).toEqual([[3, 1, 0], [2, 1, 1]]);
+    // rank is per race: the two girls on 1 vote tie for 2nd, not for 4th
+    expect(pub!.positions[1].tally.map((r) => r.rank)).toEqual([1, 2, 2]);
     // App role cannot rewrite the snapshot
     await expect(query(`update election_results set vote_count = 99 where election_id = $1`, [electionId])).rejects.toThrow();
     const pdf = await buildResultReport(electionId);
@@ -186,16 +212,23 @@ describe("results confidentiality & publication", () => {
   });
 
   it("handles ties explicitly: no winner declared and a committee note is required", async () => {
-    const { electionId } = await closedElectionWithVotes([2, 2, 1]);
+    // Boys' race is tied 2-2; Girls' race has a clear winner (3-2).
+    const { electionId } = await closedElectionWithVotes([2, 2, 1], [3, 2]);
     const sa = await makeAdmin("SUPER_ADMIN");
     await verifyResults(electionId, sa.id, null);
     const s = await getResultSummary(electionId);
-    expect(s.outcome.kind).toBe("TIE");
+    expect(s.positions[0].outcome.kind).toBe("TIE");
+    expect(s.positions[1].outcome.kind).toBe("WINNER");
     await expect(publishResults(electionId, sa.id, "", null)).rejects.toMatchObject({ code: "TIE_NOTE_REQUIRED" });
     await publishResults(electionId, sa.id, "Tie resolved by re-run scheduled per committee rule 7.", null);
     const pub = await getPublishedResults(await getElection(electionId));
-    expect(pub!.rows.filter((r) => r.is_winner)).toHaveLength(0);
-    expect(pub!.rows.filter((r) => r.is_tied)).toHaveLength(2);
+    expect(pub!.positions[0].tally).toHaveLength(3);
+    const flat = await query<{ position_gender: string; is_winner: boolean; is_tied: boolean }>(
+      `select p.gender as position_gender, r.is_winner, r.is_tied from election_results r join candidates c on c.id = r.candidate_id
+         join election_positions p on p.id = c.position_id where r.election_id = $1`, [electionId]);
+    expect(flat.filter((r) => r.position_gender === "MALE" && r.is_winner)).toHaveLength(0);
+    expect(flat.filter((r) => r.position_gender === "MALE" && r.is_tied)).toHaveLength(2);
+    expect(flat.filter((r) => r.position_gender === "FEMALE" && r.is_winner)).toHaveLength(1);
   });
 });
 
@@ -203,12 +236,13 @@ describe("correction workflow (two-person rule)", () => {
   afterAll(teardown);
 
   it("request → second-admin approval → ballot invalidated, original preserved, results reconciled", async () => {
-    const { electionId, candidateIds } = await closedElectionWithVotes([2, 1]);
+    const e0 = await closedElectionWithVotes([2, 1], [2, 1]);
+    const electionId = e0.electionId;
     const ea = await makeAdmin("ELECTION_ADMIN");
     const sa1 = await makeAdmin("SUPER_ADMIN");
     const sa2 = await makeAdmin("SUPER_ADMIN");
     const ledger = await getBallotLedger(electionId);
-    const target = ledger.find((b) => b.candidate_name === "Candidate 1")!;
+    const target = ledger.find((b) => b.candidate_name === "Boy 1")!;
     await expect(createCorrection(electionId, { ballotRef: target.ballot_ref, correction: "INVALIDATE_BALLOT", reason: "short" }, null, ea.id, null)).rejects.toThrow();
     const reqId = await createCorrection(
       electionId,
@@ -230,8 +264,11 @@ describe("correction workflow (two-person rule)", () => {
     expect(b.candidate_name).toBe(target.candidate_name); // original selection preserved
     expect(after).toHaveLength(ledger.length); // nothing deleted
     const s = await getResultSummary(electionId);
-    expect(s.totals).toMatchObject({ total_ballots: 3, valid_ballots: 2, invalidated_ballots: 1 });
-    expect(s.tally.find((t) => t.candidate_id === candidateIds[0])!.votes).toBe(1);
+    // 3 voters x 2 races = 6 ballots; one boys' ballot invalidated, the girls' race is untouched
+    expect(s.totals).toMatchObject({ total_ballots: 6, valid_ballots: 5, invalidated_ballots: 1, participation: 3 });
+    expect(s.positions[0].tally.find((t) => t.candidate_id === e0.boys[0])!.votes).toBe(1);
+    expect(s.positions[0].totals).toMatchObject({ total_ballots: 3, valid_ballots: 2, invalidated_ballots: 1 });
+    expect(s.positions[1].totals).toMatchObject({ total_ballots: 3, valid_ballots: 3, invalidated_ballots: 0 });
     expect(s.reconciled).toBe(true);
     // Reviewed corrections are immutable
     await expect(reviewCorrection(reqId, false, "change my mind", sa2.id, null)).rejects.toMatchObject({ code: "INVALID_STATE" });
@@ -246,7 +283,7 @@ describe("correction workflow (two-person rule)", () => {
   });
 
   it("the application role cannot modify ballots or approve corrections directly", async () => {
-    const { electionId } = await closedElectionWithVotes([1]);
+    const { electionId } = await closedElectionWithVotes([1], [1]);
     await expect(query(`select * from ballots`)).rejects.toThrow(/permission denied/);
     await expect(query(`update ballots set status = 'INVALIDATED'`)).rejects.toThrow(/permission denied/);
     await expect(query(`delete from ballots`)).rejects.toThrow(/permission denied/);
@@ -310,7 +347,7 @@ describe("public database roles (Supabase anon)", () => {
       }
       await expect(c.query(`select id, display_name from candidates limit 1`)).resolves.toBeTruthy();
       await expect(c.query(`insert into elections (title, opens_at, closes_at) values ('x', now(), now() + interval '1h')`)).rejects.toThrow(/permission denied/);
-      await expect(c.query(`select * from cast_ballot('x', gen_random_uuid())`)).rejects.toThrow(/permission denied/);
+      await expect(c.query(`select * from cast_ballot('x', array[gen_random_uuid()])`)).rejects.toThrow(/permission denied/);
       const drafts = await c.query(`select count(*)::int as n from elections where status = 'DRAFT'`);
       expect(drafts.rows[0].n).toBe(0);
       await c.query("reset role");

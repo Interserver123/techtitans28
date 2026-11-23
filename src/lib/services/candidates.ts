@@ -4,7 +4,7 @@ import { query, one, tx } from "../db";
 import { AppError, fromDbError } from "../errors";
 import { audit } from "../audit";
 import { photoUrl, processCandidatePhoto, putObject } from "../storage";
-import { getPositionId } from "./elections";
+import { getPositionIdForGender } from "./elections";
 
 export type AdminCandidate = {
   id: string;
@@ -13,6 +13,7 @@ export type AdminCandidate = {
   roll_number: string;
   student_name: string;
   student_batch: string;
+  gender: "MALE" | "FEMALE" | null;
   display_name: string;
   introduction: string;
   manifesto: string;
@@ -34,31 +35,33 @@ export const candidateSchema = z.object({
 export async function listCandidates(electionId: string): Promise<AdminCandidate[]> {
   const rows = await query<Omit<AdminCandidate, "photo_url">>(
     `select c.id, c.election_id, c.student_id, s.roll_number, s.full_name as student_name, s.batch as student_batch,
-            c.display_name, c.introduction, c.manifesto, c.photo_path, c.status, c.display_order, c.updated_at
-       from candidates c join students s on s.id = c.student_id
-      where c.election_id = $1 order by c.display_order, c.display_name`,
+            to_jsonb(s)->>'gender' as gender, c.display_name, c.introduction, c.manifesto, c.photo_path, c.status, c.display_order, c.updated_at
+       from candidates c join students s on s.id = c.student_id join election_positions p on p.id = c.position_id
+      where c.election_id = $1 order by p.display_order, c.display_order, c.display_name`,
     [electionId],
   );
   return rows.map((r) => ({ ...r, photo_url: photoUrl(r.photo_path) }));
 }
 
 async function resolveCandidateStudent(rollNumber: string, c: Parameters<typeof query>[2]) {
-  const s = await one<{ id: string; is_active: boolean; is_eligible: boolean; batch: string; ok_batch: boolean }>(
-    `select id, is_active, is_eligible, batch, batch = setting_text('election.batch', 'TechTitans-28') as ok_batch from students where roll_number = $1`,
+  const s = await one<{ id: string; is_active: boolean; is_eligible: boolean; batch: string; ok_batch: boolean; gender: "MALE" | "FEMALE" | null }>(
+    `select id, is_active, is_eligible, batch, gender, batch = setting_text('election.batch', 'TechTitans-28') as ok_batch from students where roll_number = $1`,
     [rollNumber],
     c,
   );
   if (!s) throw new AppError("VALIDATION", "তালিকায় এই রোল নম্বরের কোনো শিক্ষার্থী নেই।");
   if (!s.is_active || !s.is_eligible || !s.ok_batch) throw new AppError("VALIDATION", "প্রার্থীকে অবশ্যই এই ব্যাচের সক্রিয় ও যোগ্য সদস্য হতে হবে।");
-  return s.id;
+  if (!s.gender) throw new AppError("VALIDATION", "এই শিক্ষার্থীর লিঙ্গ (ছাত্র/ছাত্রী) নির্ধারিত নেই। আগে শিক্ষার্থী তালিকায় লিঙ্গ নির্ধারণ করুন — সেটিই ঠিক করে সে ছাত্র সিআর না ছাত্রী সিআর পদে প্রার্থী হবে।");
+  return { id: s.id, gender: s.gender };
 }
 
 export async function createCandidate(electionId: string, input: z.input<typeof candidateSchema>, adminId: string, ipHash: string | null) {
   const v = candidateSchema.parse(input);
   try {
     return await tx(async (c) => {
-      const studentId = await resolveCandidateStudent(v.rollNumber, c);
-      const positionId = await getPositionId(electionId);
+      const student = await resolveCandidateStudent(v.rollNumber, c);
+      const studentId = student.id;
+      const positionId = await getPositionIdForGender(electionId, student.gender, c);
       const row = await one<{ id: string }>(
         `insert into candidates (election_id, position_id, student_id, display_name, introduction, manifesto, display_order, created_by)
          values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`,
@@ -84,10 +87,12 @@ export async function updateCandidate(id: string, input: z.input<typeof candidat
       const before = await one<{ election_id: string; display_name: string; student_id: string }>(
         `select election_id, display_name, student_id from candidates where id = $1 for update`, [id], c);
       if (!before) throw new AppError("NOT_FOUND");
-      const studentId = await resolveCandidateStudent(v.rollNumber, c);
+      const student = await resolveCandidateStudent(v.rollNumber, c);
+      const studentId = student.id;
+      const positionId = await getPositionIdForGender(before.election_id, student.gender, c);
       await query(
-        `update candidates set student_id = $2, display_name = $3, introduction = $4, manifesto = $5, display_order = $6 where id = $1`,
-        [id, studentId, v.displayName, v.introduction, v.manifesto, v.displayOrder],
+        `update candidates set student_id = $2, position_id = $3, display_name = $4, introduction = $5, manifesto = $6, display_order = $7 where id = $1`,
+        [id, studentId, positionId, v.displayName, v.introduction, v.manifesto, v.displayOrder],
         c,
       );
       await audit({

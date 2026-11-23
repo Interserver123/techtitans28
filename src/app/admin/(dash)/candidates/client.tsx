@@ -11,7 +11,7 @@ import { CandidateAvatar } from "@/components/site/candidate-avatar";
 import { bnNum } from "@/lib/format";
 import { useAction } from "@/components/admin/use-action";
 
-type C = { id: string; electionId: string; rollNumber: string; studentName: string; displayName: string; introduction: string; manifesto: string; photoUrl: string | null; status: string; displayOrder: number };
+type C = { id: string; electionId: string; rollNumber: string; studentName: string; gender: "MALE" | "FEMALE" | null; displayName: string; introduction: string; manifesto: string; photoUrl: string | null; status: string; displayOrder: number };
 
 export function CandidateDialog({ electionId, candidate }: { electionId: string; candidate?: C }) {
   const [open, setOpen] = useState(false);
@@ -90,7 +90,7 @@ export function CandidateRow({ c, editable }: { c: C; editable: boolean }) {
     <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
       <CandidateAvatar name={c.displayName} url={c.photoUrl} className="size-16 shrink-0 rounded-xl text-lg" />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-white">{c.displayName}</p><Badge tone={tone}>{({ APPROVED: "অনুমোদিত", PENDING: "অপেক্ষমাণ", INACTIVE: "নিষ্ক্রিয়" } as Record<string, string>)[c.status] ?? c.status}</Badge></div>
+        <div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-white">{c.displayName}</p><Badge tone={c.gender === "FEMALE" ? "violet" : "blue"}>{c.gender === "FEMALE" ? "ছাত্রী সিআর" : "ছাত্র সিআর"}</Badge><Badge tone={tone}>{({ APPROVED: "অনুমোদিত", PENDING: "অপেক্ষমাণ", INACTIVE: "নিষ্ক্রিয়" } as Record<string, string>)[c.status] ?? c.status}</Badge></div>
         <p className="text-sm text-slate-400">রোল {c.rollNumber} · তালিকায় নাম: {c.studentName} · ক্রম {bnNum(c.displayOrder)}</p>
         <p className="mt-1 line-clamp-1 text-sm text-slate-500">{c.introduction || "এখনো পরিচিতি দেওয়া হয়নি।"}</p>
       </div>

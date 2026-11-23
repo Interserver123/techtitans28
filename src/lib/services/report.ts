@@ -49,7 +49,7 @@ export async function buildResultReport(electionId: string) {
   page.drawRectangle({ x: 0, y: H - 118, width: W, height: 118, color: NAVY });
   text(page, settings.institution.toUpperCase(), M, H - 44, 9, bold, rgb(0.75, 0.82, 0.95));
   text(page, settings.department, M, H - 58, 9, font, rgb(0.75, 0.82, 0.95));
-  text(page, `${settings.batch} · Class Representative Election`, M, H - 84, 18, bold, rgb(1, 1, 1));
+  text(page, `${settings.batch} · Boys' & Girls' CR Election`, M, H - 84, 18, bold, rgb(1, 1, 1));
   text(page, r.official ? "OFFICIAL RESULT REPORT" : "PROVISIONAL RESULT REPORT — NOT PUBLISHED", M, H - 104, 10, bold, r.official ? rgb(0.55, 0.75, 1) : rgb(1, 0.7, 0.4));
   y = H - 150;
 
@@ -70,7 +70,8 @@ export async function buildResultReport(electionId: string) {
 
   heading("Election information");
   kv("Election", r.election.title);
-  kv("Position", "Class Representative (CR)");
+  kv("Positions", r.positions.map((p) => (p.position.gender === "MALE" ? "Boys' CR" : p.position.gender === "FEMALE" ? "Girls' CR" : p.position.title)).join(" + "));
+  kv("Votes per voter", `${r.totals.positions} (one in each position)`);
   kv("Voting opened", fmtDateTime(r.election.opened_at ?? r.election.opens_at));
   kv("Voting closed", fmtDateTime(r.election.closed_at ?? r.election.closes_at));
   kv("Status", STATUS_LABEL[r.election.status]);
@@ -78,43 +79,47 @@ export async function buildResultReport(electionId: string) {
 
   heading("Participation");
   kv("Total eligible voters", String(r.turnout.eligible));
-  kv("Total ballots cast", String(r.totals.total_ballots));
-  kv("Valid ballots", String(r.totals.valid_ballots));
-  kv("Invalidated ballots", `${r.totals.invalidated_ballots} (approved corrections: ${r.appliedCorrections})`);
+  kv("Voters who voted", String(r.totals.participation));
+  kv("Votes cast (all positions)", String(r.totals.total_ballots));
+  kv("Valid votes", String(r.totals.valid_ballots));
+  kv("Invalidated votes", `${r.totals.invalidated_ballots} (approved corrections: ${r.appliedCorrections})`);
   kv("Voter turnout", `${r.turnout.turnoutPct}%`);
-  kv("Reconciliation", r.reconciled ? "Ballots = participation records (reconciled)" : "MISMATCH — investigate");
+  kv("Reconciliation", r.reconciled ? "Every position holds one ballot per voter (reconciled)" : "MISMATCH - investigate");
 
-  heading("Candidate-wise results");
-  ensure(24);
-  text(page, "Rank", M, y, 9, bold, MUTED);
-  text(page, "Candidate", M + 44, y, 9, bold, MUTED);
-  text(page, "Roll", M + 280, y, 9, bold, MUTED);
-  text(page, "Votes", M + 370, y, 9, bold, MUTED);
-  text(page, "Share", M + 430, y, 9, bold, MUTED);
-  y -= 8;
-  for (const t of r.tally) {
-    ensure(26);
-    y -= 12;
-    const lead = r.outcome.kind === "WINNER" ? r.outcome.winner.candidate_id === t.candidate_id : r.outcome.kind === "TIE" && r.outcome.tied.some((x) => x.candidate_id === t.candidate_id);
-    if (lead) page.drawRectangle({ x: M - 6, y: y - 6, width: W - 2 * M + 12, height: 22, color: rgb(0.93, 0.96, 1) });
-    text(page, String(t.rank), M, y, 10, bold);
-    text(page, t.display_name, M + 44, y, 10, lead ? bold : font);
-    text(page, t.roll_number, M + 280, y, 10);
-    text(page, String(t.votes), M + 370, y, 10, bold);
-    text(page, `${pct(t.votes, r.totals.valid_ballots)}%`, M + 430, y, 10);
-    y -= 10;
-    page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.5, color: LINE });
+  for (const pr of r.positions) {
+    const label = pr.position.gender === "MALE" ? "Boys' Class Representative" : pr.position.gender === "FEMALE" ? "Girls' Class Representative" : pr.position.title;
+    heading(`${label} - candidate-wise results`);
+    ensure(24);
+    text(page, "Rank", M, y, 9, bold, MUTED);
+    text(page, "Candidate", M + 44, y, 9, bold, MUTED);
+    text(page, "Roll", M + 280, y, 9, bold, MUTED);
+    text(page, "Votes", M + 370, y, 9, bold, MUTED);
+    text(page, "Share", M + 430, y, 9, bold, MUTED);
+    y -= 8;
+    for (const t of pr.tally) {
+      ensure(26);
+      y -= 12;
+      const lead = pr.outcome.kind === "WINNER" ? pr.outcome.winner.candidate_id === t.candidate_id : pr.outcome.kind === "TIE" && pr.outcome.tied.some((x) => x.candidate_id === t.candidate_id);
+      if (lead) page.drawRectangle({ x: M - 6, y: y - 6, width: W - 2 * M + 12, height: 22, color: rgb(0.93, 0.96, 1) });
+      text(page, String(t.rank), M, y, 10, bold);
+      text(page, t.display_name, M + 44, y, 10, lead ? bold : font);
+      text(page, t.roll_number, M + 280, y, 10);
+      text(page, String(t.votes), M + 370, y, 10, bold);
+      text(page, `${pct(t.votes, pr.totals.valid_ballots)}%`, M + 430, y, 10);
+      y -= 10;
+      page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.5, color: LINE });
+    }
+    y -= 18;
+    ensure(40);
+    const outcome =
+      pr.outcome.kind === "WINNER"
+        ? `Elected ${label}: ${pr.outcome.winner.display_name} (${pr.outcome.winner.roll_number}) with ${pr.outcome.winner.votes} votes.`
+        : pr.outcome.kind === "TIE"
+          ? `TIED RESULT between ${pr.outcome.tied.map((t) => t.display_name).join(", ")} (${pr.outcome.tied[0].votes} votes each).`
+          : "No valid votes were cast.";
+    text(page, outcome, M, y, 11, bold, pr.outcome.kind === "TIE" ? rgb(0.75, 0.35, 0.05) : NAVY);
+    y -= 18;
   }
-  y -= 18;
-  ensure(40);
-  const outcome =
-    r.outcome.kind === "WINNER"
-      ? `Elected Class Representative: ${r.outcome.winner.display_name} (${r.outcome.winner.roll_number}) with ${r.outcome.winner.votes} votes.`
-      : r.outcome.kind === "TIE"
-        ? `TIED RESULT between ${r.outcome.tied.map((t) => t.display_name).join(", ")} (${r.outcome.tied[0].votes} votes each).`
-        : "No valid votes were cast.";
-  text(page, outcome, M, y, 11, bold, r.outcome.kind === "TIE" ? rgb(0.75, 0.35, 0.05) : NAVY);
-  y -= 18;
   if (r.election.result_note) {
     for (const line of wrap(`Committee note: ${r.election.result_note}`, 95)) {
       ensure(14);

@@ -31,7 +31,7 @@ export default async function CandidatesPage() {
         <div className="grid gap-3">
           {candidates.map((c) => (
             <CandidateRow key={c.id} editable={editable}
-              c={{ id: c.id, electionId: c.election_id, rollNumber: c.roll_number, studentName: c.student_name, displayName: c.display_name, introduction: c.introduction, manifesto: c.manifesto, photoUrl: c.photo_url, status: c.status, displayOrder: c.display_order }} />
+              c={{ id: c.id, electionId: c.election_id, rollNumber: c.roll_number, studentName: c.student_name, gender: c.gender, displayName: c.display_name, introduction: c.introduction, manifesto: c.manifesto, photoUrl: c.photo_url, status: c.status, displayOrder: c.display_order }} />
           ))}
         </div>
       )}

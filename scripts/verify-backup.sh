@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Restores a backup into a scratch database and checks it is complete and consistent:
 #   - schema restored, audit hash chain intact
-#   - ballots = participation records for every election
+#   - one ballot per voter in every position
 #   - no voter has more than one participation record
 #   PG_ADMIN_URL=postgres://postgres:...@localhost:5432 npm run db:verify-backup -- backups/x.dump
 set -euo pipefail
@@ -14,11 +14,12 @@ trap 'psql -q "$ADMIN/postgres" -c "drop database if exists $SCRATCH" >/dev/null
 pg_restore --no-owner --no-privileges --exit-on-error -d "$ADMIN/$SCRATCH" "$FILE"
 R="$ADMIN/$SCRATCH"
 chain=$(psql -tA "$R" -c "select ok from verify_audit_chain()")
-mismatch=$(psql -tA "$R" -c "select count(*) from elections e where (select count(*) from ballots b where b.election_id = e.id) <> (select count(*) from voter_participation p where p.election_id = e.id)")
+# every voter has exactly one ballot in EVERY position (Boys' CR and Girls' CR)
+mismatch=$(psql -tA "$R" -c "select count(*) from election_positions pos where (select count(*) from ballots b where b.position_id = pos.id) <> (select count(*) from voter_participation p where p.election_id = pos.election_id)")
 dups=$(psql -tA "$R" -c "select count(*) from (select 1 from voter_participation group by election_id, student_id having count(*) > 1) x")
 summary=$(psql -tA "$R" -c "select format('%s students, %s elections, %s ballots, %s audit entries', (select count(*) from students), (select count(*) from elections), (select count(*) from ballots), (select count(*) from audit_logs))")
 echo "restored: $summary"
 [ "$chain" = "t" ] || { echo "FAIL: audit chain broken"; exit 1; }
-[ "$mismatch" = "0" ] || { echo "FAIL: ballot/participation mismatch in $mismatch election(s)"; exit 1; }
+[ "$mismatch" = "0" ] || { echo "FAIL: ballot/participation mismatch in $mismatch position(s)"; exit 1; }
 [ "$dups" = "0" ] || { echo "FAIL: duplicate participation"; exit 1; }
 echo "OK: backup restores cleanly and reconciles"

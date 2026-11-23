@@ -19,6 +19,7 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ✅ OTP authentication (hashed codes, expiry, attempt limit, cooldown, rate limiting, enumeration-safe responses)
 - ✅ Election lifecycle with DB-enforced state machine, auto open/close
 - ✅ Atomic `cast_ballot()` with locking + unique constraints; separated participation/ballot tables
+- ✅ Two races, two votes: Boys' CR + Girls' CR — exactly one boy and one girl per voter, enforced in the database; gender-matched candidates; per-race results, ties, corrections and PDF
 
 ## Phase 4 — Administration
 - ✅ Student management (add/edit/deactivate, search, filters, export, data-quality report)
@@ -34,7 +35,7 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ✅ Public results dashboard with winner announcement animation
 
 ## Phase 6 — Validation
-- ✅ 40 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
+- ✅ 48 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
 - ✅ Playwright e2e: desktop + emulated phones, full voting flow, CSRF, admin MFA
 - ✅ Typecheck, lint, production build, CI workflow
 - 🟡 Test on real phones (Android Chrome, iOS Safari) and slow networks — emulation only so far

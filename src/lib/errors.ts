@@ -13,6 +13,8 @@ export const ERRORS = {
   NOT_FOUND: [404, "The requested record was not found."],
   CONFLICT: [409, "This change conflicts with the current state."],
   ALREADY_VOTED: [409, "A ballot has already been recorded for you in this election."],
+  INCOMPLETE_BALLOT: [400, "You must choose exactly one Boys' CR candidate and one Girls' CR candidate."],
+  GENDER_MISMATCH: [409, "The candidate's gender does not match this position."],
   INVALID_CANDIDATE: [400, "The selected candidate is not on the ballot."],
   NOT_ELIGIBLE: [403, "You are not eligible to vote in this election."],
   ELECTION_NOT_OPEN: [409, "Voting has not opened yet."],

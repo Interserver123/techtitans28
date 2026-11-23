@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, FlaskConical, Mail, RotateCcw, Search } from "lucide-react";
 import { api } from "@/lib/client";
-import { dict, errorText, num, type Lang } from "@/lib/i18n";
+import { dict, errorText, num, posLabel, type Lang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
@@ -11,26 +11,31 @@ import { Alert } from "@/components/ui/alert";
 import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
-type C = { id: string; name: string; roll: string; photo: string | null };
+type C = { id: string; pos: string; name: string; roll: string; photo: string | null };
 type Step = "email" | "code" | "choose" | "review" | "done";
 const latin = (v: string) => v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)));
 
-export function DemoFlow({ candidates, lang }: { candidates: C[]; lang: Lang }) {
+export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; positions: { id: string; gender: "MALE" | "FEMALE" | null }[]; lang: Lang }) {
   const t = dict(lang).demo;
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [code, setCode] = useState("");
-  const [choice, setChoice] = useState<C | null>(null);
+  const [choices, setChoices] = useState<Record<string, C>>({});
+  const [tab, setTab] = useState(0);
   const [ack, setAck] = useState(false);
   const [receipt, setReceipt] = useState("");
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const posId = positions[tab]?.id;
+  const allChosen = positions.length > 0 && positions.every((p) => choices[p.id]);
+  const nextUnchosen = positions.findIndex((p) => !choices[p.id]);
   const shown = useMemo(() => {
     const s = latin(q.trim().toLowerCase());
-    return s ? candidates.filter((c) => c.name.toLowerCase().includes(s) || c.roll.toLowerCase().includes(s)) : candidates;
-  }, [q, candidates]);
+    const inPos = positions.length > 1 ? candidates.filter((c) => c.pos === posId) : candidates;
+    return s ? inPos.filter((c) => c.name.toLowerCase().includes(s) || c.roll.toLowerCase().includes(s)) : inPos;
+  }, [q, candidates, positions, posId]);
 
   const call = async <T,>(url: string, json: unknown, then: (r: T) => void) => {
     setBusy(true); setError(null);
@@ -38,7 +43,7 @@ export function DemoFlow({ candidates, lang }: { candidates: C[]; lang: Lang }) 
     setBusy(false);
     if (r.ok) then(r); else setError(errorText(lang, r.error));
   };
-  const restart = () => { setStep("email"); setCode(""); setChoice(null); setAck(false); setReceipt(""); setError(null); };
+  const restart = () => { setStep("email"); setCode(""); setChoices({}); setTab(0); setAck(false); setReceipt(""); setError(null); };
 
   return (
     <Card className="mt-8 overflow-hidden rounded-3xl">
@@ -72,16 +77,29 @@ export function DemoFlow({ candidates, lang }: { candidates: C[]; lang: Lang }) 
           candidates.length === 0 ? <p className="text-center text-muted">{t.noCandidates}</p> : (
             <div>
               <h2 className="font-display text-xl font-bold">{t.choose}</h2>
+              {positions.length > 1 && (
+                <div role="tablist" className="mt-4 grid grid-cols-2 gap-2">
+                  {positions.map((p, i) => (
+                    <button key={p.id} type="button" role="tab" aria-selected={i === tab} onClick={() => { setTab(i); setQ(""); }}
+                      className={cn("rounded-2xl border p-3 text-left transition", i === tab ? "border-emerald bg-emerald/5 ring-2 ring-emerald/15" : "border-line hover:border-gold/60")}>
+                      <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted">{num(i + 1, lang)}/{num(positions.length, lang)}
+                        {choices[p.id] ? <Check className="size-4 text-emerald" strokeWidth={3} /> : <span className="size-4 rounded-full border-2 border-slate-300" />}</span>
+                      <span className="font-display block text-base font-bold">{posLabel(p.gender, lang)}</span>
+                      <span className="block truncate text-xs text-slate-500">{choices[p.id]?.name ?? "—"}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <label className="relative mt-4 block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
                 <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.search} aria-label={t.search} className="h-11 pl-9" />
               </label>
               <ul className="mt-4 grid max-h-[26rem] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
                 {shown.map((c) => {
-                  const on = choice?.id === c.id;
+                  const on = choices[posId ?? ""]?.id === c.id;
                   return (
                     <li key={c.id}>
-                      <button type="button" onClick={() => setChoice(c)} aria-pressed={on}
+                      <button type="button" onClick={() => setChoices((x) => ({ ...x, [posId ?? ""]: c }))} aria-pressed={on}
                         className={cn("flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition", on ? "border-emerald bg-emerald/5 ring-4 ring-emerald/10" : "border-line hover:border-gold/60")}>
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald to-emerald-900 text-sm font-bold text-white">{initials(c.name)}</span>
                         <span className="min-w-0 flex-1"><span className="line-clamp-2 block text-sm font-semibold">{c.name}</span><span className="text-xs text-muted">{t.roll} {num(c.roll, lang)}</span></span>
@@ -91,17 +109,33 @@ export function DemoFlow({ candidates, lang }: { candidates: C[]; lang: Lang }) 
                   );
                 })}
               </ul>
-              <Button size="lg" className="mt-5 w-full" disabled={!choice} onClick={() => setStep("review")}>{t.review} <ArrowRight /></Button>
+              {allChosen ? (
+                <Button size="lg" className="mt-5 w-full" onClick={() => setStep("review")}>{t.review} <ArrowRight /></Button>
+              ) : (
+                <Button size="lg" className="mt-5 w-full" disabled={!choices[posId ?? ""] || nextUnchosen < 0} onClick={() => { setTab(nextUnchosen); setQ(""); }}>
+                  {nextUnchosen >= 0 ? <>{dict(lang).ballot.next(posLabel(positions[nextUnchosen].gender, lang))} <ArrowRight /></> : t.review}
+                </Button>
+              )}
             </div>
           )
         )}
 
-        {step === "review" && choice && (
+        {step === "review" && allChosen && (
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{t.reviewTitle}</p>
-            <span className="mx-auto mt-4 flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-900 text-2xl font-bold text-white">{initials(choice.name)}</span>
-            <p className="font-display mt-3 text-2xl font-bold">{choice.name}</p>
-            <p className="text-sm text-muted">{t.roll} {num(choice.roll, lang)}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {positions.map((p) => {
+                const c = choices[p.id];
+                return (
+                  <div key={p.id} className="rounded-2xl border border-gold/40 bg-amber-50/40 p-4">
+                    <p className="font-display text-sm font-bold text-emerald-900">{posLabel(p.gender, lang, true)}</p>
+                    <span className="mx-auto mt-3 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-900 text-xl font-bold text-white">{initials(c.name)}</span>
+                    <p className="font-display mt-2 text-lg font-bold">{c.name}</p>
+                    <p className="text-xs text-muted">{t.roll} {num(c.roll, lang)}</p>
+                  </div>
+                );
+              })}
+            </div>
             <label className="mx-auto mt-5 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4 text-left text-sm">
               <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" /> {t.confirm}
             </label>

@@ -7,7 +7,7 @@ import { DemoFlow } from "./demo-flow";
 export const metadata = { title: "ডেমো ভোট · Demo vote", robots: { index: false } };
 
 export default async function DemoPage() {
-  const [{ election, candidates }, lang] = await Promise.all([getPublicState(), getLang()]);
+  const [{ election, candidates, positions }, lang] = await Promise.all([getPublicState(), getLang()]);
   const t = dict(lang).demo;
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -17,7 +17,7 @@ export default async function DemoPage() {
       {!demoAvailable(election) ? (
         <p className="mt-8 rounded-2xl border border-line bg-surface p-6 text-center text-muted">{t.closed}</p>
       ) : (
-        <DemoFlow lang={lang} candidates={candidates.map((c) => ({ id: c.id, name: c.display_name, roll: c.roll_number, photo: c.photo_url }))} />
+        <DemoFlow lang={lang} positions={positions.map((p) => ({ id: p.id, gender: p.gender }))} candidates={candidates.map((c) => ({ id: c.id, pos: c.position_id, name: c.display_name, roll: c.roll_number, photo: c.photo_url }))} />
       )}
     </div>
   );

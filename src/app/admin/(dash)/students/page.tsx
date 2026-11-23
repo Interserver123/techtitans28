@@ -37,17 +37,18 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           {canWrite && <StudentDialog batch={settings.batch} />}
         </>}
       />
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {[["তালিকাভুক্ত", quality.counts?.total], ["যোগ্য ভোটার", quality.counts?.eligible], ["নিষ্ক্রিয়", quality.counts?.inactive], ["অযোগ্য", quality.counts?.ineligible], ["ডেভেলপমেন্ট সিড রেকর্ড", quality.counts?.dev_seed]].map(([k, v]) => (
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {[["তালিকাভুক্ত", quality.counts?.total], ["যোগ্য ভোটার", quality.counts?.eligible], ["নিষ্ক্রিয়", quality.counts?.inactive], ["অযোগ্য", quality.counts?.ineligible], ["ছাত্র (যোগ্য)", quality.counts?.male], ["ছাত্রী (যোগ্য)", quality.counts?.female]].map(([k, v]) => (
           <Card key={String(k)} className="px-4 py-3"><p className="text-xs text-slate-500">{k}</p><p className="text-lg font-bold text-white tabular-nums">{bnNum(Number(v ?? 0))}</p></Card>
         ))}
       </div>
-      {(quality.duplicateContacts.length > 0 || quality.otherBatch.length > 0 || (quality.counts?.dev_seed ?? 0) > 0) && (
+      {(quality.duplicateContacts.length > 0 || quality.otherBatch.length > 0 || (quality.counts?.dev_seed ?? 0) > 0 || (quality.counts?.no_gender ?? 0) > 0) && (
         <Card className="mb-4 border-amber-500/30 p-4">
           <p className="flex items-center gap-2 text-sm font-semibold text-amber-300"><AlertTriangle className="size-4" /> তথ্যের মান</p>
           <ul className="mt-2 space-y-1 text-sm text-slate-300">
             {quality.duplicateContacts.map((d) => <li key={d.contact}>একই যোগাযোগ <code className="text-amber-200">{d.contact}</code> একাধিক রোলে ব্যবহৃত: {d.rolls.join(", ")}</li>)}
             {quality.otherBatch.length > 0 && <li>{bnNum(quality.otherBatch.length)} জন শিক্ষার্থী {settings.batch} ব্যাচের নন (ভোট দিতে পারবেন না): {quality.otherBatch.slice(0, 8).map((s) => s.roll_number).join(", ")}{quality.otherBatch.length > 8 ? "…" : ""}</li>}
+            {(quality.counts?.no_gender ?? 0) > 0 && <li>{bnNum(quality.counts?.no_gender ?? 0)} জন যোগ্য শিক্ষার্থীর লিঙ্গ নির্ধারিত নেই — তাদের প্রার্থী করা যাবে না। লিঙ্গ ঠিক করুন।</li>}
             {(quality.counts?.dev_seed ?? 0) > 0 && <li>{bnNum(quality.counts?.dev_seed ?? 0)}টি ডেভেলপমেন্ট সিড রেকর্ড আছে — প্রোডাকশনের আগে মুছে ফেলুন।</li>}
           </ul>
         </Card>
@@ -55,7 +56,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       <Card>
         <div className="border-b border-white/[0.06] p-4"><StudentFilters initial={filter} /></div>
         <Table>
-          <THead><tr><TH>রোল</TH><TH>নাম</TH><TH className="hidden md:table-cell">যোগাযোগ</TH><TH className="hidden sm:table-cell">ব্যাচ</TH><TH>অবস্থা</TH><TH>ভোট</TH><TH className="text-right">কার্যক্রম</TH></tr></THead>
+          <THead><tr><TH>রোল</TH><TH>নাম</TH><TH className="hidden md:table-cell">যোগাযোগ</TH><TH className="hidden sm:table-cell">লিঙ্গ</TH><TH>অবস্থা</TH><TH>ভোট</TH><TH className="text-right">কার্যক্রম</TH></tr></THead>
           <TBody>
             {rows.length === 0 && <tr><TD colSpan={7} className="py-10 text-center text-slate-500">কোনো শিক্ষার্থী মেলেনি।</TD></tr>}
             {rows.map((s) => (
@@ -63,12 +64,12 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                 <TD className="font-mono text-xs text-slate-200">{s.roll_number}</TD>
                 <TD className="text-slate-100">{s.full_name}{s.is_dev_seed && <Badge tone="amber" className="ml-2">ডেভ</Badge>}</TD>
                 <TD className="hidden text-xs text-slate-400 md:table-cell">{s.contact_type === "EMAIL" ? "✉" : "☎"} {s.contact_value}</TD>
-                <TD className="hidden text-xs text-slate-400 sm:table-cell">{s.batch}</TD>
+                <TD className="hidden text-xs sm:table-cell">{s.gender === "MALE" ? <Badge tone="blue">ছাত্র</Badge> : s.gender === "FEMALE" ? <Badge tone="violet">ছাত্রী</Badge> : <span className="text-amber-300">নির্ধারিত নয়</span>}</TD>
                 <TD>{!s.is_active ? <Badge tone="red">নিষ্ক্রিয়</Badge> : !s.is_eligible ? <Badge tone="amber">অযোগ্য</Badge> : <Badge tone="green">সক্রিয়</Badge>}</TD>
                 <TD>{s.has_voted ? <Badge tone="blue">দিয়েছেন</Badge> : <span className="text-xs text-slate-500">—</span>}</TD>
                 <TD className="text-right">
                   {canWrite && <div className="flex justify-end gap-1">
-                    <StudentDialog batch={settings.batch} student={{ id: s.id, rollNumber: s.roll_number, fullName: s.full_name, contactType: s.contact_type, contactValue: s.contact_value, batch: s.batch, isEligible: s.is_eligible, isActive: s.is_active, notes: s.notes ?? "" }} />
+                    <StudentDialog batch={settings.batch} student={{ id: s.id, rollNumber: s.roll_number, fullName: s.full_name, contactType: s.contact_type, contactValue: s.contact_value, batch: s.batch, gender: s.gender ?? "", isEligible: s.is_eligible, isActive: s.is_active, notes: s.notes ?? "" }} />
                     <ActiveToggle id={s.id} active={s.is_active} />
                   </div>}
                 </TD>

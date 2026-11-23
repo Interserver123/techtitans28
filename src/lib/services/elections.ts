@@ -110,7 +110,14 @@ export async function createElection(input: z.input<typeof electionInputSchema>,
       [v.title, v.description, v.opensAt, v.closesAt, adminId],
       c,
     );
-    await query(`insert into election_positions (election_id, code, title) values ($1, 'CR', 'Class Representative')`, [e!.id], c);
+    // Two races, one vote in each: Boys' CR (male candidates) and Girls' CR (female candidates).
+    await query(
+      `insert into election_positions (election_id, code, title, gender, display_order) values
+         ($1, 'CR_BOYS', 'Boys'' Class Representative', 'MALE', 1),
+         ($1, 'CR_GIRLS', 'Girls'' Class Representative', 'FEMALE', 2)`,
+      [e!.id],
+      c,
+    );
     await audit({ actorType: "ADMIN", adminId, action: "ELECTION.CREATED", entityType: "election", entityId: e!.id, details: { title: v.title, opens_at: v.opensAt, closes_at: v.closesAt }, ipHash }, c);
     return e!.id;
   });
@@ -173,8 +180,16 @@ export async function transitionElection(id: string, action: ElectionAction, adm
         throw new AppError("INVALID_TRANSITION", `“${STATUS_LABEL[e.status] ?? e.status}” অবস্থার নির্বাচনে এই কাজটি করা যায় না।`);
       }
       if (action === "schedule") {
-        const cands = await one<{ n: number }>(`select count(*)::int as n from candidates where election_id = $1 and status = 'APPROVED'`, [id], c);
-        if ((cands?.n ?? 0) < 1) throw new AppError("INVALID_STATE", "সময়সূচি নির্ধারণের আগে অন্তত একজন প্রার্থীকে অনুমোদন দিন।");
+        const empty = await query<{ code: string }>(
+          `select p.code from election_positions p
+            where p.election_id = $1 and not exists (select 1 from candidates c where c.position_id = p.id and c.status = 'APPROVED')`,
+          [id],
+          c,
+        );
+        if (empty.length) {
+          const names = empty.map((r) => (r.code === "CR_GIRLS" ? "ছাত্রী সিআর" : r.code === "CR_BOYS" ? "ছাত্র সিআর" : r.code)).join(", ");
+          throw new AppError("INVALID_STATE", `সময়সূচি নির্ধারণের আগে প্রতিটি পদে অন্তত একজন প্রার্থীকে অনুমোদন দিন (প্রার্থী নেই: ${names})।`);
+        }
         if (new Date(e.closes_at) <= new Date()) throw new AppError("INVALID_STATE", "শেষের সময় ইতিমধ্যে পেরিয়ে গেছে।");
       }
       if ((action === "pause" || action === "close") && (!reason || reason.trim().length < 5)) {
@@ -193,8 +208,9 @@ export async function transitionElection(id: string, action: ElectionAction, adm
   }
 }
 
-export async function getPositionId(electionId: string) {
-  const p = await one<{ id: string }>(`select id from election_positions where election_id = $1 and code = 'CR'`, [electionId]);
+/** The race a student runs in is decided by their gender: male → Boys' CR, female → Girls' CR. */
+export async function getPositionIdForGender(electionId: string, gender: "MALE" | "FEMALE", client?: Parameters<typeof query>[2]) {
+  const p = await one<{ id: string }>(`select id from election_positions where election_id = $1 and gender = $2`, [electionId, gender], client);
   if (!p) throw new AppError("NOT_FOUND", "নির্বাচনের পদ পাওয়া যায়নি।");
   return p.id;
 }

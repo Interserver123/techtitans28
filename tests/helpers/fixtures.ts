@@ -25,12 +25,12 @@ export async function resetVolatile() {
   devOutbox().splice(0);
 }
 
-export async function makeStudent(over: Partial<{ roll: string; batch: string; active: boolean; eligible: boolean; email: string }> = {}) {
+export async function makeStudent(over: Partial<{ roll: string; batch: string; active: boolean; eligible: boolean; email: string; gender: "MALE" | "FEMALE" | null }> = {}) {
   const roll = over.roll ?? `T${uniq()}`;
   const row = await one<{ id: string }>(
-    `insert into students (roll_number, full_name, contact_type, contact_value, batch, is_active, is_eligible, is_dev_seed)
-     values ($1, $2, 'EMAIL', $3, $4, $5, $6, true) returning id`,
-    [roll, `Test Student ${roll}`, over.email ?? `${roll.toLowerCase()}@students.test`, over.batch ?? "TechTitans-28", over.active ?? true, over.eligible ?? true],
+    `insert into students (roll_number, full_name, contact_type, contact_value, batch, is_active, is_eligible, gender, is_dev_seed)
+     values ($1, $2, 'EMAIL', $3, $4, $5, $6, $7, true) returning id`,
+    [roll, `Test Student ${roll}`, over.email ?? `${roll.toLowerCase()}@students.test`, over.batch ?? "TechTitans-28", over.active ?? true, over.eligible ?? true, over.gender === undefined ? "MALE" : over.gender],
   );
   return { id: row!.id, roll };
 }
@@ -49,8 +49,11 @@ export async function makeAdmin(role: "SUPER_ADMIN" | "ELECTION_ADMIN" | "RESULT
   return { id: row!.id, email, password, totp: (offsetSteps = 0) => totp.generate({ timestamp: Date.now() + offsetSteps * 30_000 }) };
 }
 
-/** Creates an election with approved candidates; returns ids. Status set via the owner (arrangement only). */
-export async function makeElection(opts: { status?: string; candidates?: number; opensInMin?: number; closesInMin?: number } = {}) {
+/**
+ * Creates an election with TWO races (Boys' CR + Girls' CR) and approved candidates in each.
+ * `ballot(i, j)` returns a valid pair: boy i + girl j.
+ */
+export async function makeElection(opts: { status?: string; boys?: number; girls?: number; opensInMin?: number; closesInMin?: number } = {}) {
   await asOwner(async (c) => {
     // Only one active election may exist; retire any active ones from previous tests.
     await c.query(`update elections set status = 'CLOSED' where status in ('SCHEDULED','LIVE','PAUSED')`);
@@ -59,22 +62,31 @@ export async function makeElection(opts: { status?: string; candidates?: number;
     `insert into elections (title, opens_at, closes_at) values ($1, now() + make_interval(mins => $2), now() + make_interval(mins => $3)) returning id`,
     [`Test Election ${uniq()}`, opts.opensInMin ?? -5, opts.closesInMin ?? 120],
   );
-  const pos = await one<{ id: string }>(`insert into election_positions (election_id, code, title) values ($1, 'CR', 'Class Representative') returning id`, [e!.id]);
-  const candidateIds: string[] = [];
-  for (let i = 0; i < (opts.candidates ?? 3); i++) {
-    const s = await makeStudent();
-    const c = await one<{ id: string }>(
-      `insert into candidates (election_id, position_id, student_id, display_name, status, display_order) values ($1, $2, $3, $4, 'APPROVED', $5) returning id`,
-      [e!.id, pos!.id, s.id, `Candidate ${i + 1}`, i],
-    );
-    candidateIds.push(c!.id);
-  }
+  const boysPos = await one<{ id: string }>(`insert into election_positions (election_id, code, title, gender, display_order) values ($1, 'CR_BOYS', 'Boys'' Class Representative', 'MALE', 1) returning id`, [e!.id]);
+  const girlsPos = await one<{ id: string }>(`insert into election_positions (election_id, code, title, gender, display_order) values ($1, 'CR_GIRLS', 'Girls'' Class Representative', 'FEMALE', 2) returning id`, [e!.id]);
+  const mk = async (n: number, pos: string, gender: "MALE" | "FEMALE", label: string) => {
+    const ids: string[] = [];
+    for (let i = 0; i < n; i++) {
+      const st = await makeStudent({ gender });
+      const c = await one<{ id: string }>(
+        `insert into candidates (election_id, position_id, student_id, display_name, status, display_order) values ($1, $2, $3, $4, 'APPROVED', $5) returning id`,
+        [e!.id, pos, st.id, `${label} ${i + 1}`, i],
+      );
+      ids.push(c!.id);
+    }
+    return ids;
+  };
+  const boys = await mk(opts.boys ?? 3, boysPos!.id, "MALE", "Boy");
+  const girls = await mk(opts.girls ?? 3, girlsPos!.id, "FEMALE", "Girl");
   const target = opts.status ?? "LIVE";
   const path: Record<string, string[]> = {
     DRAFT: [], SCHEDULED: ["SCHEDULED"], LIVE: ["SCHEDULED", "LIVE"], PAUSED: ["SCHEDULED", "LIVE", "PAUSED"], CLOSED: ["SCHEDULED", "LIVE", "CLOSED"],
   };
   for (const st of path[target]) await query(`update elections set status = $2 where id = $1`, [e!.id, st]);
-  return { electionId: e!.id, positionId: pos!.id, candidateIds };
+  return {
+    electionId: e!.id, boysPositionId: boysPos!.id, girlsPositionId: girlsPos!.id, boys, girls,
+    ballot: (i = 0, j = 0) => [boys[i], girls[j]],
+  };
 }
 
 export async function setElectionStatus(id: string, status: string) {

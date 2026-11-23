@@ -13,7 +13,7 @@ import { errorText } from "@/lib/i18n";
 import { bnNum } from "@/lib/format";
 import { useToast } from "@/components/admin/toast";
 
-type S = { id?: string; rollNumber: string; fullName: string; contactType: "EMAIL" | "PHONE"; contactValue: string; batch: string; isEligible: boolean; isActive: boolean; notes: string };
+type S = { id?: string; rollNumber: string; fullName: string; contactType: "EMAIL" | "PHONE"; contactValue: string; batch: string; gender: "MALE" | "FEMALE" | ""; isEligible: boolean; isActive: boolean; notes: string };
 
 export function StudentFilters({ initial }: { initial: { q?: string; voted: string; status: string } }) {
   const router = useRouter();
@@ -45,21 +45,28 @@ export function StudentFilters({ initial }: { initial: { q?: string; voted: stri
 export function StudentDialog({ student, batch }: { student?: S; batch: string }) {
   const [open, setOpen] = useState(false);
   const { run, busy, error } = useAction();
-  const [f, setF] = useState<S>(student ?? { rollNumber: "", fullName: "", contactType: "EMAIL", contactValue: "", batch, isEligible: true, isActive: true, notes: "" });
+  const [f, setF] = useState<S>(student ?? { rollNumber: "", fullName: "", contactType: "EMAIL", contactValue: "", batch, gender: "", isEligible: true, isActive: true, notes: "" });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{student ? <Button size="icon" variant="ghost" aria-label={`${student.fullName} সম্পাদনা`}><Pencil /></Button> : <Button size="sm"><UserPlus /> শিক্ষার্থী যোগ করুন</Button>}</DialogTrigger>
       <DialogContent title={student ? "শিক্ষার্থীর তথ্য সম্পাদনা" : "শিক্ষার্থী যোগ করুন"} description="পরিবর্তনগুলো অডিট লগে লিপিবদ্ধ হয়।">
         <form className="space-y-4" onSubmit={async (e) => {
           e.preventDefault();
-          const r = student ? await run(`/api/admin/students/${student.id}`, { method: "PATCH", json: f }, "শিক্ষার্থীর তথ্য হালনাগাদ হয়েছে") : await run("/api/admin/students", { json: f }, "শিক্ষার্থী যোগ হয়েছে");
+          const r = student ? await run(`/api/admin/students/${student.id}`, { method: "PATCH", json: { ...f, gender: f.gender || null } }, "শিক্ষার্থীর তথ্য হালনাগাদ হয়েছে") : await run("/api/admin/students", { json: { ...f, gender: f.gender || null } }, "শিক্ষার্থী যোগ হয়েছে");
           if (r) setOpen(false);
         }}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="রোল নম্বর" htmlFor="sr"><Input id="sr" value={f.rollNumber} onChange={(e) => setF({ ...f, rollNumber: e.target.value.toUpperCase() })} required maxLength={20} /></Field>
             <Field label="ব্যাচ" htmlFor="sb"><Input id="sb" value={f.batch} onChange={(e) => setF({ ...f, batch: e.target.value })} required maxLength={40} /></Field>
           </div>
-          <Field label="পূর্ণ নাম" htmlFor="sn"><Input id="sn" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} required maxLength={120} /></Field>
+          <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
+            <Field label="পূর্ণ নাম" htmlFor="sn"><Input id="sn" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} required maxLength={120} /></Field>
+            <Field label="লিঙ্গ" htmlFor="sg" hint="প্রার্থী হলে ছাত্র/ছাত্রী সিআর নির্ধারণ করে।">
+              <Select id="sg" value={f.gender} onChange={(e) => setF({ ...f, gender: e.target.value as S["gender"] })}>
+                <option value="">— নির্ধারিত নয় —</option><option value="MALE">ছাত্র</option><option value="FEMALE">ছাত্রী</option>
+              </Select>
+            </Field>
+          </div>
           <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
             <Field label="যোগাযোগের ধরন" htmlFor="sct"><Select id="sct" value={f.contactType} onChange={(e) => setF({ ...f, contactType: e.target.value as S["contactType"] })}><option value="EMAIL">ইমেইল</option><option value="PHONE">ফোন</option></Select></Field>
             <Field label="নিবন্ধিত যোগাযোগ" htmlFor="sc" hint="এখানেই ওটিপি কোড পাঠানো হবে।"><Input id="sc" value={f.contactValue} onChange={(e) => setF({ ...f, contactValue: e.target.value })} required maxLength={254} /></Field>
@@ -119,7 +126,7 @@ export function ImportDialog({ batch }: { batch: string }) {
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPreview(null); setError(null); } }}>
       <DialogTrigger asChild><Button size="sm" variant="outline"><FileUp /> ইমপোর্ট</Button></DialogTrigger>
-      <DialogContent wide title="শিক্ষার্থী ইমপোর্ট" description={<>CSV বা Excel (.xlsx) ফাইল আপলোড করুন। কলাম: <code>roll_number, full_name, contact</code> (ইমেইল বা ফোন); ঐচ্ছিক: <code>batch</code> (ডিফল্ট {batch}), <code>eligible</code>, <code>active</code>, <code>notes</code>।</>}>
+      <DialogContent wide title="শিক্ষার্থী ইমপোর্ট" description={<>CSV বা Excel (.xlsx) ফাইল আপলোড করুন। কলাম: <code>roll_number, full_name, contact</code> (ইমেইল বা ফোন); ঐচ্ছিক: <code>gender</code> (male/female বা ছাত্র/ছাত্রী), <code>batch</code> (ডিফল্ট {batch}), <code>eligible</code>, <code>active</code>, <code>notes</code>।</>}>
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_200px]">
             <Input type="file" accept=".csv,.xlsx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setPreview(null); }} className="h-auto py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-electric file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />

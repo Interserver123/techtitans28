@@ -8,7 +8,7 @@ export const GET = adminRoute<{ id: string }>("ballots.read", async (_req, { adm
   const id = assertUuid(params.id);
   const rows = await getBallotLedger(id);
   await audit({ actorType: "ADMIN", adminId: admin.adminId, action: "EXPORT.BALLOT_LEDGER", entityType: "election", entityId: id, details: { rows: rows.length }, ipHash: c.ipHash });
-  const csv = ["ballot_ref,candidate,status"].concat(rows.map((r) => `${r.ballot_ref},"${r.candidate_name.replace(/"/g, '""')}",${r.status}`)).join("\r\n") + "\r\n";
+  const csv = ["ballot_ref,position,candidate,status"].concat(rows.map((r) => `${r.ballot_ref},"${r.position_title.replace(/"/g, '""')}","${r.candidate_name.replace(/"/g, '""')}",${r.status}`)).join("\r\n") + "\r\n";
   return new Response(csv, {
     headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="ballot-ledger-${id.slice(0, 8)}.csv"`, "cache-control": "no-store" },
   });

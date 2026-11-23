@@ -59,6 +59,15 @@ export async function GET() {
         db.ok = false;
         db.hint = "The app role cannot execute the election functions. Re-run supabase/deploy.sql.";
       }
+      // Two-race voting (Boys' CR + Girls' CR) needs migration 5: the ballot function takes both choices.
+      const twoRaces = await client
+        .query<{ ok: boolean }>(`select has_function_privilege(current_user, 'public.cast_ballot(text, uuid[])', 'execute') as ok`)
+        .then((r) => r.rows[0]?.ok === true)
+        .catch(() => false);
+      if (probe && !twoRaces) {
+        db.ok = false;
+        db.hint = "The database is missing the two-race voting upgrade (Boys' CR + Girls' CR). Run the latest supabase/deploy.sql in the Supabase SQL Editor.";
+      }
     }
     report.database = db;
   } catch (err) {

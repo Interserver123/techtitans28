@@ -41,9 +41,9 @@ async function main() {
       const name = `${FIRST[i % FIRST.length]} ${LAST[(i * 7) % LAST.length]}`;
       const contact = i % 5 === 0 ? ["PHONE", `+88017${String(10000000 + i).slice(-8)}`] : ["EMAIL", `${roll.toLowerCase()}@students.example.edu`];
       const r = await c.query(
-        `insert into students (roll_number, full_name, contact_type, contact_value, batch, is_dev_seed)
-         values ($1, $2, $3, $4, 'TechTitans-28', true) on conflict (roll_number) do update set full_name = excluded.full_name returning id`,
-        [roll, name, contact[0], contact[1]],
+        `insert into students (roll_number, full_name, contact_type, contact_value, batch, gender, is_dev_seed)
+         values ($1, $2, $3, $4, 'TechTitans-28', $5, true) on conflict (roll_number) do update set full_name = excluded.full_name, gender = excluded.gender returning id`,
+        [roll, name, contact[0], contact[1], i % 3 === 0 ? "FEMALE" : "MALE"],
       );
       students.push(r.rows[0].id);
     }
@@ -75,19 +75,22 @@ async function main() {
       ["Elect the Class Representative who will represent TechTitans-28 before the ICT Department for the 2026 academic session. (Development data.)"],
     );
     const electionId = e.rows[0].id;
-    const pos = await c.query(`insert into election_positions (election_id, code, title) values ($1, 'CR', 'Class Representative') returning id`, [electionId]);
+    const boysPos = await c.query(`insert into election_positions (election_id, code, title, gender, display_order) values ($1, 'CR_BOYS', 'Boys'' Class Representative', 'MALE', 1) returning id`, [electionId]);
+    const girlsPos = await c.query(`insert into election_positions (election_id, code, title, gender, display_order) values ($1, 'CR_GIRLS', 'Girls'' Class Representative', 'FEMALE', 2) returning id`, [electionId]);
+    // students[i-1] is D28(i): female when i % 3 === 0, male otherwise.
     const cands = [
-      [students[2], "Tanvir Islam", "Focused on transparent communication between students and faculty, and a shared semester resource hub."],
-      [students[7], "Sadia Akter", "Advocating for structured lab hours, mentorship circles, and timely exam-schedule announcements."],
-      [students[12], "Rakib Hossain", "Building a stronger batch identity through hackathons, sports and alumni connections."],
-      [students[19], "Lamia Rahman", "Putting student welfare first: accessible notes, mental-health support and fair assessment feedback."],
+      [boysPos.rows[0].id, students[1], "Tanvir Islam", "Focused on transparent communication between students and faculty, and a shared semester resource hub."],
+      [boysPos.rows[0].id, students[6], "Rakib Hossain", "Building a stronger batch identity through hackathons, sports and alumni connections."],
+      [boysPos.rows[0].id, students[10], "Arif Rahman", "Fair assessment feedback and a public tracker of every request made to the department."],
+      [girlsPos.rows[0].id, students[2], "Sadia Akter", "Advocating for structured lab hours, mentorship circles, and timely exam-schedule announcements."],
+      [girlsPos.rows[0].id, students[11], "Lamia Rahman", "Putting student welfare first: accessible notes, mental-health support and fair assessment feedback."],
     ];
     for (let i = 0; i < cands.length; i++) {
-      const [sid, name, intro] = cands[i];
+      const [pid, sid, name, intro] = cands[i];
       await c.query(
         `insert into candidates (election_id, position_id, student_id, display_name, introduction, manifesto, status, display_order)
          values ($1, $2, $3, $4, $5, $6, 'APPROVED', $7)`,
-        [electionId, pos.rows[0].id, sid, name, intro,
+        [electionId, pid, sid, name, intro,
           `1. ${intro}\n2. Monthly open meetings where any student can raise issues.\n3. A public tracker of every request made to the department and its outcome.\n\n(Development data — fictional manifesto.)`, i],
       );
     }

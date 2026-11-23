@@ -63,7 +63,7 @@ const en = {
     steps: [
       ["Enter your roll", "Type your university roll number."],
       ["Verify the code", "A 6-digit one-time code goes to your registered email or phone."],
-      ["Choose & confirm", "Select one candidate, review, then confirm."],
+      ["Choose & confirm", "Pick one boy and one girl candidate, review both, then confirm."],
       ["Keep your receipt", "A receipt ID proves your ballot counted — never who you chose."],
     ],
   },
@@ -93,7 +93,7 @@ const en = {
     eyebrow: "Before you vote", title: "Election guidelines", sub: "Enforced by the system and by the Election Committee.", go: "Go to voter portal",
     items: (batch: string) => [
       ["Who can vote?", `Only registered, active students of ${batch}. Your roll number must be on the official register.`],
-      ["How many votes do I get?", "Exactly one ballot for one Class Representative candidate. Once submitted, it is final — nobody, including administrators, can change it."],
+      ["How many votes do I get?", "Exactly two: one vote for a Boys' CR candidate and one for a Girls' CR candidate. Both are submitted together; you cannot vote twice in the same race. Once submitted, your ballot is final — nobody, including administrators, can change it."],
       ["I didn’t get my code.", "Wait a minute and request a new one, and check spam. If your registered contact is wrong, report it on the help page so the committee can correct it."],
       ["Can someone see who I voted for?", "No. Your identity and your choice are stored separately with no link between them. Your receipt proves a ballot was recorded, not what it contained."],
       ["Someone voted using my identity.", "Report it immediately on the help page. The committee investigates in person. A report never creates an extra ballot."],
@@ -128,16 +128,19 @@ const en = {
     changeRoll: "Change roll", resendIn: (s: string) => `Resend in ${s}s`, resend: "Resend code", enter6: "Enter the 6-digit code.",
   },
   ballot: {
-    eyebrow: "Official ballot · Class Representative", title: "Choose one candidate",
+    eyebrow: "Official ballot · Boys' CR + Girls' CR", title: "Cast your two votes",
     signedIn: "Signed in as", secret: "Your choice is secret.",
     pausedTitle: "Voting is paused", closedTitle: "Voting is not open", cannot: "Your ballot cannot be submitted right now.",
     session: "Session", expiresIn: (t: string) => `expires in ${t}`, expired: "expired",
     expiredTitle: "Session expired", expiredBody1: "For security, please", expiredLink: "verify again", expiredBody2: ". No ballot was submitted.",
     legend: "Class Representative candidates", manifesto: "Manifesto", roll: "Roll",
     reviewEyebrow: "Review your ballot", cr: "Class Representative",
-    confirm1: "I confirm this is my choice. I understand my ballot is ", final: "final", confirm2: " and cannot be changed after submission.",
+    confirm1: "I confirm these are my two choices. I understand my ballot is ", final: "final", confirm2: " and cannot be changed after submission.",
+    chooseFor: (l: string) => `Select one candidate for ${l}`, notChosen: "Not chosen yet", chosen: "Chosen",
+    next: (l: string) => `Next: ${l}`, change: "Change", reviewTitle: "Review your two votes", stepOf: (a: string, b: string) => `Vote ${a} of ${b}`,
+    needBoth: "You need to choose one candidate in each race before you can submit.",
     separate: "Your identity is recorded separately from your choice.",
-    selected: "Selected:", selectOne: "Select one candidate", review: "Review choice", back: "Back", submit: "Submit final ballot",
+    selected: "Selected:", selectOne: "Select one candidate", review: "Review choices", back: "Back", submit: "Submit final ballot",
   },
   receipt: {
     title: "Your vote has been recorded", thanks: (t: string) => `Thank you for taking part in ${t}.`,
@@ -184,6 +187,11 @@ const en = {
     doneTitle: "Demo complete", done: "This was a demo. No vote was recorded and the results are unaffected.", receipt: "Demo receipt",
     again: "Start again", realVote: "Go to the real voter portal", closed: "The demo has ended because voting has closed.", noCandidates: "Candidates have not been announced yet.",
     roll: "Roll", search: "Search by name or roll…",
+  },
+  pos: { male: "Boys' CR", female: "Girls' CR", maleLong: "Boys' Class Representative", femaleLong: "Girls' Class Representative", neutral: "Class Representative" },
+  rule: {
+    title: "Two votes: one for a boy, one for a girl",
+    body: "Every student casts exactly two votes — one for the Boys' CR and one for the Girls' CR. Both choices are submitted together and cannot be changed.",
   },
   errors: {} as Record<string, string>,
 };
@@ -241,7 +249,7 @@ const bn: Dict = {
     steps: [
       ["রোল নম্বর দিন", "আপনার বিশ্ববিদ্যালয়ের রোল নম্বর লিখুন।"],
       ["কোড যাচাই করুন", "আপনার নিবন্ধিত ইমেইল বা ফোনে ৬ অঙ্কের একটি এককালীন কোড যাবে।"],
-      ["বেছে নিন ও নিশ্চিত করুন", "একজন প্রার্থী বেছে নিন, পর্যালোচনা করুন, তারপর নিশ্চিত করুন।"],
+      ["বেছে নিন ও নিশ্চিত করুন", "একজন ছাত্র ও একজন ছাত্রী প্রার্থী বেছে নিন, দুটিই পর্যালোচনা করুন, তারপর নিশ্চিত করুন।"],
       ["রসিদ সংরক্ষণ করুন", "রসিদ আইডি প্রমাণ করে আপনার ব্যালট গণনা হয়েছে — কাকে ভোট দিয়েছেন তা কখনও নয়।"],
     ],
   },
@@ -271,7 +279,7 @@ const bn: Dict = {
     eyebrow: "ভোট দেওয়ার আগে", title: "নির্বাচনী নির্দেশিকা", sub: "সিস্টেম ও নির্বাচন কমিটি — উভয়েই এগুলো প্রয়োগ করে।", go: "ভোটার পোর্টালে যান",
     items: (batch) => [
       ["কে ভোট দিতে পারবেন?", `শুধুমাত্র ${batch}-এর নিবন্ধিত ও সক্রিয় শিক্ষার্থীরা। আপনার রোল নম্বর অবশ্যই অফিসিয়াল তালিকায় থাকতে হবে।`],
-      ["আমি কয়টি ভোট দিতে পারব?", "ক্লাস প্রতিনিধি পদে ঠিক একটি ব্যালট। জমা দেওয়ার পর তা চূড়ান্ত — প্রশাসকসহ কেউই তা পরিবর্তন করতে পারবেন না।"],
+      ["আমি কয়টি ভোট দিতে পারব?", "ঠিক দুটি: ছাত্র সিআর পদে একটি এবং ছাত্রী সিআর পদে একটি। দুটি ভোট একসাথে জমা হয়; একই পদে দুবার ভোট দেওয়া যায় না। জমা দেওয়ার পর আপনার ব্যালট চূড়ান্ত — প্রশাসকসহ কেউই তা পরিবর্তন করতে পারবেন না।"],
       ["আমি কোড পাইনি।", "এক মিনিট অপেক্ষা করে নতুন কোড চান এবং স্প্যাম ফোল্ডার দেখুন। নিবন্ধিত যোগাযোগ তথ্য ভুল হলে সাহায্য পাতায় জানান, কমিটি তা সংশোধন করবে।"],
       ["কেউ কি দেখতে পারবে আমি কাকে ভোট দিয়েছি?", "না। আপনার পরিচয় ও আপনার পছন্দ আলাদাভাবে সংরক্ষিত, দুটির মধ্যে কোনো সংযোগ নেই। রসিদ শুধু প্রমাণ করে একটি ব্যালট জমা হয়েছে, তাতে কী ছিল তা নয়।"],
       ["কেউ আমার পরিচয় ব্যবহার করে ভোট দিয়েছে।", "অবিলম্বে সাহায্য পাতায় জানান। কমিটি সরাসরি তদন্ত করবে। অভিযোগ করলে কখনও স্বয়ংক্রিয়ভাবে অতিরিক্ত ব্যালট দেওয়া হয় না।"],
@@ -306,16 +314,19 @@ const bn: Dict = {
     changeRoll: "রোল পরিবর্তন", resendIn: (s) => `${s} সেকেন্ড পর আবার পাঠানো যাবে`, resend: "আবার কোড পাঠান", enter6: "৬ অঙ্কের কোডটি লিখুন।",
   },
   ballot: {
-    eyebrow: "অফিসিয়াল ব্যালট · ক্লাস প্রতিনিধি", title: "একজন প্রার্থী বেছে নিন",
+    eyebrow: "অফিসিয়াল ব্যালট · ছাত্র সিআর + ছাত্রী সিআর", title: "আপনার দুটি ভোট দিন",
     signedIn: "প্রবেশ করেছেন:", secret: "আপনার পছন্দ গোপন থাকবে।",
     pausedTitle: "ভোটগ্রহণ স্থগিত", closedTitle: "ভোটগ্রহণ চালু নেই", cannot: "এই মুহূর্তে আপনার ব্যালট জমা দেওয়া যাবে না।",
     session: "সেশন", expiresIn: (t) => `শেষ হবে ${t} পর`, expired: "মেয়াদোত্তীর্ণ",
     expiredTitle: "সেশনের মেয়াদ শেষ", expiredBody1: "নিরাপত্তার জন্য অনুগ্রহ করে", expiredLink: "আবার যাচাই করুন", expiredBody2: "। কোনো ব্যালট জমা হয়নি।",
     legend: "ক্লাস প্রতিনিধি পদপ্রার্থী", manifesto: "ইশতেহার", roll: "রোল",
     reviewEyebrow: "আপনার ব্যালট পর্যালোচনা করুন", cr: "ক্লাস প্রতিনিধি",
-    confirm1: "আমি নিশ্চিত করছি এটিই আমার পছন্দ। আমি বুঝি যে আমার ব্যালট ", final: "চূড়ান্ত", confirm2: " এবং জমা দেওয়ার পর পরিবর্তন করা যাবে না।",
+    confirm1: "আমি নিশ্চিত করছি এই দুটিই আমার পছন্দ। আমি বুঝি যে আমার ব্যালট ", final: "চূড়ান্ত", confirm2: " এবং জমা দেওয়ার পর পরিবর্তন করা যাবে না।",
+    chooseFor: (l) => `${l} পদের জন্য একজন প্রার্থী বেছে নিন`, notChosen: "এখনও বাছাই হয়নি", chosen: "বাছাই হয়েছে",
+    next: (l) => `পরের ধাপ: ${l}`, change: "বদলান", reviewTitle: "আপনার দুটি ভোট পর্যালোচনা করুন", stepOf: (a, b) => `${b}টির মধ্যে ${a} নম্বর ভোট`,
+    needBoth: "জমা দিতে প্রতিটি পদে একজন করে প্রার্থী বেছে নিতে হবে।",
     separate: "আপনার পরিচয় আপনার পছন্দ থেকে আলাদাভাবে সংরক্ষিত হয়।",
-    selected: "নির্বাচিত:", selectOne: "একজন প্রার্থী বেছে নিন", review: "পছন্দ পর্যালোচনা", back: "ফিরে যান", submit: "চূড়ান্ত ব্যালট জমা দিন",
+    selected: "নির্বাচিত:", selectOne: "একজন প্রার্থী বেছে নিন", review: "পছন্দগুলো পর্যালোচনা", back: "ফিরে যান", submit: "চূড়ান্ত ব্যালট জমা দিন",
   },
   receipt: {
     title: "আপনার ভোট গ্রহণ করা হয়েছে", thanks: (t) => `${t}-এ অংশ নেওয়ার জন্য ধন্যবাদ।`,
@@ -363,7 +374,14 @@ const bn: Dict = {
     again: "আবার শুরু করুন", realVote: "আসল ভোটার পোর্টালে যান", closed: "ভোটগ্রহণ শেষ হওয়ায় ডেমো বন্ধ হয়ে গেছে।", noCandidates: "প্রার্থীদের নাম এখনো ঘোষণা করা হয়নি।",
     roll: "রোল", search: "নাম বা রোল দিয়ে খুঁজুন…",
   },
+  pos: { male: "ছাত্র সিআর", female: "ছাত্রী সিআর", maleLong: "ছাত্র ক্লাস প্রতিনিধি (সিআর)", femaleLong: "ছাত্রী ক্লাস প্রতিনিধি (সিআর)", neutral: "ক্লাস প্রতিনিধি (সিআর)" },
+  rule: {
+    title: "দুটি ভোট: একটি ছাত্রকে, একটি ছাত্রীকে",
+    body: "প্রত্যেক শিক্ষার্থী ঠিক দুটি ভোট দেবেন — একটি ছাত্র সিআর পদে, একটি ছাত্রী সিআর পদে। দুটি পছন্দ একসাথে জমা হয় এবং পরে বদলানো যায় না।",
+  },
   errors: {
+    INCOMPLETE_BALLOT: "ছাত্র সিআর পদে একজন এবং ছাত্রী সিআর পদে একজন — ঠিক দুজনকে বেছে নিতে হবে।",
+    GENDER_MISMATCH: "প্রার্থীর লিঙ্গ এই পদের সাথে মেলে না।",
     VALIDATION: "তথ্যে ভুল আছে। আবার দেখে নিন।",
     INVALID_OTP: "কোডটি ভুল অথবা মেয়াদোত্তীর্ণ।",
     OTP_LOCKED: "অনেকবার ভুল চেষ্টা হয়েছে। নতুন কোড চান।",
@@ -400,6 +418,14 @@ const bn: Dict = {
 };
 
 export const DICT: Record<Lang, Dict> = { en, bn };
+
+/** Label of a race: Boys' CR / Girls' CR (or the neutral title for a legacy single-race election). */
+export function posLabel(gender: "MALE" | "FEMALE" | null | undefined, lang: Lang, long = false) {
+  const P = DICT[lang].pos;
+  if (gender === "MALE") return long ? P.maleLong : P.male;
+  if (gender === "FEMALE") return long ? P.femaleLong : P.female;
+  return P.neutral;
+}
 export const dict = (lang: Lang) => DICT[lang];
 
 const BENGALI = /[\u0980-\u09FF]/;

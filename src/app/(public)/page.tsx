@@ -13,14 +13,14 @@ import { Marquee } from "@/components/site/marquee";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import { getLang } from "@/lib/i18n-server";
-import { dict, num } from "@/lib/i18n";
+import { dict, num, posLabel } from "@/lib/i18n";
 import { Alpana } from "@/components/site/alpana";
 import { CandidateGrid } from "@/components/site/candidate-grid";
 import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [{ election, settings, turnout, candidates, votingOpen, serverNow }, lang] = await Promise.all([getPublicState(), getLang()]);
+  const [{ election, settings, turnout, candidates, positions, votingOpen, serverNow }, lang] = await Promise.all([getPublicState(), getLang()]);
   const t = dict(lang);
   const dt = (d: Date | string | null | undefined) => fmtDateTime(d, {}, lang);
   const status = election?.status ?? null;
@@ -200,6 +200,27 @@ export default async function HomePage() {
           <Heading eyebrow={t.cand.eyebrow} title={t.cand.title} subtitle={t.cand.sub} />
           {candidates.length === 0 ? (
             <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">{t.cand.empty}</div>
+          ) : positions.length > 1 ? (
+            <>
+              <div className="mx-auto mt-8 flex max-w-2xl gap-3 rounded-2xl border border-gold/40 bg-gradient-to-br from-amber-50 to-white p-4 text-sm shadow-card">
+                <Users className="mt-0.5 size-5 shrink-0 text-emerald-900" aria-hidden />
+                <div><p className="font-semibold text-emerald-900">{t.rule.title}</p><p className="mt-0.5 text-slate-600">{t.rule.body}</p></div>
+              </div>
+              {positions.map((p) => {
+                const group = candidates.filter((c) => c.position_id === p.id);
+                if (!group.length) return null;
+                return (
+                  <div key={p.id} className="mt-14 first:mt-10">
+                    <h3 className="font-display flex items-center justify-center gap-3 text-center text-2xl font-bold sm:text-3xl">
+                      <span className="h-px w-8 bg-gold" aria-hidden />{posLabel(p.gender, lang, true)}
+                      <span className="rounded-full bg-emerald-900 px-3 py-1 font-sans text-xs font-semibold text-gold-300">{t.ui.candidatesN(num(group.length, lang))}</span>
+                      <span className="h-px w-8 bg-gold" aria-hidden />
+                    </h3>
+                    <CandidateGrid lang={lang} candidates={group.map((c) => ({ id: c.id, display_name: c.display_name, roll_number: c.roll_number, introduction: c.introduction, photo_url: c.photo_url }))} />
+                  </div>
+                );
+              })}
+            </>
           ) : (
             <CandidateGrid lang={lang} candidates={candidates.map((c) => ({ id: c.id, display_name: c.display_name, roll_number: c.roll_number, introduction: c.introduction, photo_url: c.photo_url }))} />
           )}

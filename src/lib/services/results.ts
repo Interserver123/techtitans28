@@ -4,14 +4,24 @@ import { AppError, fromDbError } from "../errors";
 import { getElection, getTurnout, type Election } from "./elections";
 import { photoUrl } from "../storage";
 
-export type TallyRow = { candidate_id: string; display_name: string; roll_number: string; votes: number; rank: number; photo_url?: string | null };
+export type TallyRow = {
+  candidate_id: string; display_name: string; roll_number: string; votes: number; rank: number; photo_url?: string | null;
+  position_id: string; position_code: string; position_title: string; position_gender: "MALE" | "FEMALE" | null; position_order: number;
+};
+export type Outcome = { kind: "WINNER"; winner: TallyRow } | { kind: "TIE"; tied: TallyRow[] } | { kind: "NO_VOTES" };
+export type PositionResult = {
+  position: { id: string; code: string; title: string; gender: "MALE" | "FEMALE" | null; order: number };
+  tally: TallyRow[];
+  totals: { total_ballots: number; valid_ballots: number; invalidated_ballots: number };
+  outcome: Outcome;
+};
 
 export type ResultSummary = {
   election: Election;
-  tally: TallyRow[];
-  totals: { total_ballots: number; valid_ballots: number; invalidated_ballots: number; participation: number };
+  positions: PositionResult[];
+  /** Election-wide: ballot rows are one per voter per position. */
+  totals: { total_ballots: number; valid_ballots: number; invalidated_ballots: number; participation: number; positions: number };
   turnout: { eligible: number; voted: number; turnoutPct: number };
-  outcome: { kind: "WINNER"; winner: TallyRow } | { kind: "TIE"; tied: TallyRow[] } | { kind: "NO_VOTES" };
   reconciled: boolean;
   appliedCorrections: number;
   pendingCorrections: number;
@@ -20,15 +30,29 @@ export type ResultSummary = {
   official: boolean;
 };
 
-function outcomeOf(tally: TallyRow[]): ResultSummary["outcome"] {
+export function outcomeOf(tally: Pick<TallyRow, "votes" | "candidate_id" | "display_name" | "roll_number" | "rank">[]): Outcome {
   const top = tally[0]?.votes ?? 0;
   if (!tally.length || top === 0) return { kind: "NO_VOTES" };
-  const tied = tally.filter((t) => t.votes === top);
+  const tied = tally.filter((t) => t.votes === top) as TallyRow[];
   return tied.length > 1 ? { kind: "TIE", tied } : { kind: "WINNER", winner: tied[0] };
 }
 
 export async function getBallotTotals(electionId: string) {
   return (await one<ResultSummary["totals"]>(`select * from ballot_totals($1)`, [electionId]))!;
+}
+
+type PosTotals = { position_id: string; code: string; title: string; gender: "MALE" | "FEMALE" | null; display_order: number; total_ballots: number; valid_ballots: number; invalidated_ballots: number };
+
+function groupByPosition(tally: TallyRow[], pos: PosTotals[]): PositionResult[] {
+  return pos.map((p) => {
+    const rows = tally.filter((t) => t.position_id === p.position_id).sort((a, b) => b.votes - a.votes);
+    return {
+      position: { id: p.position_id, code: p.code, title: p.title, gender: p.gender, order: p.display_order },
+      tally: rows,
+      totals: { total_ballots: p.total_ballots, valid_ballots: p.valid_ballots, invalidated_ballots: p.invalidated_ballots },
+      outcome: outcomeOf(rows),
+    };
+  });
 }
 
 /**
@@ -43,19 +67,25 @@ export async function getResultSummary(electionId: string): Promise<ResultSummar
     const photos = await query<{ id: string; photo_path: string | null }>(`select id, photo_path from candidates where election_id = $1`, [electionId]);
     const photoMap = new Map(photos.map((p) => [p.id, photoUrl(p.photo_path)]));
     const totals = await getBallotTotals(electionId);
+    const byPos = await query<PosTotals>(`select * from ballot_totals_by_position($1)`, [electionId]);
     const corr = await one<{ applied: number; pending: number }>(
       `select count(*) filter (where status = 'APPROVED')::int as applied, count(*) filter (where status = 'PENDING')::int as pending
          from correction_requests where election_id = $1`,
       [electionId],
     );
     const hash = await one<{ h: string }>(`select tally_hash($1) as h`, [electionId]);
+    const withPhotos = tally.map((t) => ({ ...t, photo_url: photoMap.get(t.candidate_id) ?? null }));
+    const positions = groupByPosition(withPhotos, byPos);
     return {
       election,
-      tally: tally.map((t) => ({ ...t, photo_url: photoMap.get(t.candidate_id) ?? null })),
+      positions,
       totals,
       turnout: await getTurnout(election),
-      outcome: outcomeOf(tally),
-      reconciled: totals.total_ballots === totals.participation && tally.reduce((a, t) => a + t.votes, 0) === totals.valid_ballots,
+      // Every position must hold exactly one ballot per voter, and each tally must add up to its valid ballots.
+      reconciled:
+        byPos.length > 0 &&
+        byPos.every((p) => p.total_ballots === totals.participation) &&
+        positions.every((p) => p.tally.reduce((a, t) => a + t.votes, 0) === p.totals.valid_ballots),
       appliedCorrections: corr?.applied ?? 0,
       pendingCorrections: corr?.pending ?? 0,
       currentHash: hash!.h,
@@ -71,17 +101,20 @@ export async function getResultSummary(electionId: string): Promise<ResultSummar
 export async function getPublishedResults(election: Election) {
   if (election.status !== "RESULTS_PUBLISHED") return null;
   const rows = await query<TallyRow & { is_winner: boolean; is_tied: boolean; photo_path: string | null }>(
-    `select r.candidate_id, c.display_name, s.roll_number, r.vote_count as votes, r.rank, r.is_winner, r.is_tied, c.photo_path
+    `select r.candidate_id, c.display_name, s.roll_number, r.vote_count as votes, r.rank, r.is_winner, r.is_tied, c.photo_path,
+            p.id as position_id, p.code as position_code, p.title as position_title, p.gender as position_gender, p.display_order as position_order
        from election_results r join candidates c on c.id = r.candidate_id join students s on s.id = c.student_id
-      where r.election_id = $1 order by r.rank, c.display_order, c.display_name`,
+       join election_positions p on p.id = c.position_id
+      where r.election_id = $1 order by p.display_order, r.rank, c.display_order, c.display_name`,
     [election.id],
   );
   const totals = await getBallotTotals(election.id);
+  const byPos = await query<PosTotals>(`select * from ballot_totals_by_position($1)`, [election.id]);
+  const withPhotos = rows.map((r) => ({ ...r, photo_url: photoUrl(r.photo_path) }));
   return {
-    rows: rows.map((r) => ({ ...r, photo_url: photoUrl(r.photo_path) })),
+    positions: groupByPosition(withPhotos, byPos),
     totals,
     turnout: await getTurnout(election),
-    outcome: outcomeOf(rows),
     publishedAt: election.results_published_at,
     note: election.result_note,
   };
@@ -105,7 +138,7 @@ export async function publishResults(electionId: string, adminId: string, note: 
 
 export async function getBallotLedger(electionId: string) {
   try {
-    return await query<{ ballot_id: string; ballot_ref: string; candidate_name: string; status: string; last_correction_id: string | null }>(
+    return await query<{ ballot_id: string; ballot_ref: string; candidate_name: string; status: string; last_correction_id: string | null; position_id: string; position_title: string; position_gender: "MALE" | "FEMALE" | null }>(
       `select * from ballot_ledger($1)`,
       [electionId],
     );

@@ -110,21 +110,34 @@ await check("resend button is on cooldown right after sending", async () => {
   await ctx.close();
 });
 
-await check("ballot: cannot continue without a choice; review shows the selected candidate; submit needs the confirmation tick", async () => {
+await check("two-vote ballot: one boy then one girl; review shows both; submit needs the confirmation tick", async () => {
   const ctx = await phone(); const page = await ctx.newPage();
   await loginAs(page, ctx, "D28020");
   await page.waitForURL("**/vote/ballot");
-  const review = page.getByRole("button", { name: "Review choice" });
-  assert(await review.isDisabled(), "Review must be disabled before choosing");
+  await page.getByText("Two votes: one for a boy, one for a girl").waitFor();
+  const cont = page.getByRole("button", { name: "Select one candidate" });
+  assert(await cont.isDisabled(), "cannot continue before choosing a boy");
   await page.getByText("Manifesto").first().click();
   await page.locator("label", { hasText: "Rakib Hossain" }).first().click();
   await page.screenshot({ path: `${OUT}/portal-3-ballot.png` });
+  await page.getByRole("button", { name: /Next: Girls' CR/ }).click();
+  await page.getByRole("heading", { name: /Select one candidate for Girls' Class Representative/ }).waitFor();
+  assert((await page.locator("label", { hasText: "Rakib Hossain" }).count()) === 0, "a boy is never listed in the Girls' race");
+  assert((await page.getByRole("button", { name: "Review choices" }).count()) === 0, "Review is not offered until BOTH races are chosen");
+  // Switching back and forth keeps the boy's choice.
+  await page.getByRole("tab", { name: /Boys' CR/ }).click();
+  assert(await page.locator('input[type=radio]:checked').count() === 1, "boy choice kept");
+  await page.getByRole("tab", { name: /Girls' CR/ }).click();
+  await page.locator("label", { hasText: "Lamia Rahman" }).first().click();
+  await page.screenshot({ path: `${OUT}/portal-3b-girls.png` });
+  const review = page.getByRole("button", { name: "Review choices" });
   await review.click();
-  await page.getByText("Review your ballot").waitFor();
-  assert((await page.locator("main").innerText()).includes("Rakib Hossain"), "review screen shows selection");
+  await page.getByText("Review your two votes").waitFor();
+  const main = await page.locator("main").innerText();
+  assert(main.includes("Rakib Hossain") && main.includes("Lamia Rahman"), "review screen shows both selections");
   await page.getByRole("button", { name: /Back/ }).click();
-  await page.getByRole("heading", { name: "Choose one candidate" }).waitFor();
-  await page.getByRole("button", { name: "Review choice" }).click();
+  await page.getByRole("heading", { name: "Cast your two votes" }).waitFor();
+  await page.getByRole("button", { name: "Review choices" }).click();
   const submit = page.getByRole("button", { name: "Submit final ballot" });
   assert(await submit.isDisabled(), "submit disabled until confirmed");
   await page.getByRole("checkbox").check();
@@ -133,7 +146,8 @@ await check("ballot: cannot continue without a choice; review shows the selected
   await page.waitForURL("**/vote/receipt");
   const receipt = (await page.getByTestId("receipt-code").innerText()).trim();
   assert(/^TT28-/.test(receipt), "receipt shown");
-  assert(!(await page.locator("main").innerText()).includes("Rakib"), "receipt must not name the candidate");
+  const rt = await page.locator("main").innerText();
+  assert(!rt.includes("Rakib") && !rt.includes("Lamia"), "receipt must not name either candidate");
   await page.screenshot({ path: `${OUT}/portal-5-receipt.png` });
   // Reload keeps showing the receipt; going to /vote or /vote/ballot redirects to it.
   await page.goto(`${BASE}/vote/ballot`); await page.waitForURL("**/vote/receipt");
@@ -173,20 +187,31 @@ await check("a tampered/forged session cookie cannot reach the ballot or vote", 
   const page = await ctx.newPage();
   await page.goto(`${BASE}/vote/ballot`); await page.waitForURL(`${BASE}/vote`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf")?.value ?? "";
-  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { candidateId: "00000000-0000-4000-8000-000000000000" } });
+  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] } });
   assert(r.status() === 401, `expected 401, got ${r.status()}`);
   await ctx.close();
 });
 
-await check("two phones voting at the same time for the same voter: only one ballot is accepted", async () => {
+await check("STRICT RULE over the API: one vote only, two boys or two girls are rejected; a valid pair is accepted exactly once under 10 simultaneous requests", async () => {
   const ctx = await phone(); const page = await ctx.newPage();
   await loginAs(page, ctx, "D28040");
   await page.waitForURL("**/vote/ballot");
-  const ids = await page.locator('input[name="candidate"]').evaluateAll((els) => els.map((e) => e.value));
+  const boyIds = await page.locator('input[type=radio]').evaluateAll((els) => els.map((e) => e.value));
+  await page.getByRole("tab", { name: /Girls' CR/ }).click();
+  const girlIds = await page.locator('input[type=radio]').evaluateAll((els) => els.map((e) => e.value));
+  assert(boyIds.length >= 2 && girlIds.length >= 2, `need 2+ candidates per race (boys ${boyIds.length}, girls ${girlIds.length})`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const h = { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" };
-  const rs = await Promise.all(Array.from({ length: 10 }, (_, i) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { candidateId: ids[i % ids.length] } })));
-  const codes = await Promise.all(rs.map(async (r) => r.status()));
+  const post = (ids) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { candidateIds: ids } });
+  for (const [name, ids] of [["boy only", [boyIds[0]]], ["girl only", [girlIds[0]]], ["two boys", [boyIds[0], boyIds[1]]], ["two girls", [girlIds[0], girlIds[1]]], ["three", [boyIds[0], girlIds[0], girlIds[1]]]]) {
+    const r = await post(ids);
+    const j = await r.json();
+    assert(r.status() === 400 && j.error.code === "INCOMPLETE_BALLOT", `${name}: expected 400 INCOMPLETE_BALLOT, got ${r.status()} ${j.error?.code}`);
+  }
+  const status = await (await ctx.request.get(`${BASE}/api/vote/status`)).json();
+  assert(status.hasVoted === false, "rejected attempts must not count as voting");
+  const rs = await Promise.all(Array.from({ length: 10 }, (_, i) => post([boyIds[i % boyIds.length], girlIds[(i + 1) % girlIds.length]])));
+  const codes = rs.map((r) => r.status());
   assert(codes.filter((c) => c === 200).length === 1, `expected exactly one 200, got ${codes}`);
   assert(codes.filter((c) => c === 409).length === 9, `expected nine 409, got ${codes}`);
   await ctx.close();

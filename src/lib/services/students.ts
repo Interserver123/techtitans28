@@ -13,6 +13,7 @@ export type Student = {
   contact_type: "EMAIL" | "PHONE";
   contact_value: string;
   batch: string;
+  gender: "MALE" | "FEMALE" | null;
   is_eligible: boolean;
   is_active: boolean;
   notes: string | null;
@@ -46,6 +47,8 @@ export const studentSchema = z
     contactType: z.enum(["EMAIL", "PHONE"]).optional(),
     contactValue: z.string().trim().min(5, "যোগাযোগের তথ্য আবশ্যক।").max(254),
     batch: z.string().trim().min(2).max(40),
+    /** MALE → can run for Boys' CR, FEMALE → Girls' CR. Every student votes in both races regardless. */
+    gender: z.enum(["MALE", "FEMALE"]).nullable().optional(),
     isEligible: z.boolean().default(true),
     isActive: z.boolean().default(true),
     notes: z.string().trim().max(500).optional().default(""),
@@ -98,9 +101,9 @@ export async function createStudent(input: StudentInput, adminId: string, ipHash
   try {
     return await tx(async (c) => {
       const row = await one<{ id: string }>(
-        `insert into students (roll_number, full_name, contact_type, contact_value, batch, is_eligible, is_active, notes)
-         values ($1, $2, $3, $4, $5, $6, $7, nullif($8, '')) returning id`,
-        [v.rollNumber, v.fullName, v.contactType, v.contactValue, v.batch, v.isEligible, v.isActive, v.notes],
+        `insert into students (roll_number, full_name, contact_type, contact_value, batch, gender, is_eligible, is_active, notes)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, nullif($9, '')) returning id`,
+        [v.rollNumber, v.fullName, v.contactType, v.contactValue, v.batch, v.gender ?? null, v.isEligible, v.isActive, v.notes],
         c,
       );
       await audit({ actorType: "ADMIN", adminId, action: "STUDENT.CREATED", entityType: "student", entityId: row!.id, details: { roll_number: v.rollNumber, batch: v.batch }, ipHash }, c);
@@ -121,15 +124,15 @@ export async function updateStudent(id: string, input: StudentInput, adminId: st
       if (!before) throw new AppError("NOT_FOUND");
       await query(
         `update students set roll_number = $2, full_name = $3, contact_type = $4, contact_value = $5, batch = $6,
-            is_eligible = $7, is_active = $8, notes = nullif($9, '') where id = $1`,
-        [id, v.rollNumber, v.fullName, v.contactType, v.contactValue, v.batch, v.isEligible, v.isActive, v.notes],
+            gender = $7, is_eligible = $8, is_active = $9, notes = nullif($10, '') where id = $1`,
+        [id, v.rollNumber, v.fullName, v.contactType, v.contactValue, v.batch, v.gender ?? null, v.isEligible, v.isActive, v.notes],
         c,
       );
       const changed: Record<string, { from: unknown; to: unknown }> = {};
       const pairs: [string, unknown, unknown][] = [
         ["roll_number", before.roll_number, v.rollNumber], ["full_name", before.full_name, v.fullName],
         ["contact_type", before.contact_type, v.contactType], ["contact_changed", false, before.contact_value !== v.contactValue],
-        ["batch", before.batch, v.batch], ["is_eligible", before.is_eligible, v.isEligible], ["is_active", before.is_active, v.isActive],
+        ["batch", before.batch, v.batch], ["gender", before.gender, v.gender ?? null], ["is_eligible", before.is_eligible, v.isEligible], ["is_active", before.is_active, v.isActive],
       ];
       for (const [k, a, b] of pairs) if (a !== b) changed[k] = { from: a, to: b };
       // Contact values are personal data; the audit log records only that they changed.
@@ -166,6 +169,7 @@ const HEADER_ALIASES: Record<string, keyof StudentInput> = {
   email: "contactValue", phone: "contactValue", mobile: "contactValue", contact: "contactValue", contact_value: "contactValue", "registered contact": "contactValue",
   contact_type: "contactType", "contact type": "contactType",
   batch: "batch", session: "batch",
+  gender: "gender", sex: "gender", "লিঙ্গ": "gender",
   eligible: "isEligible", is_eligible: "isEligible", eligibility: "isEligible",
   active: "isActive", is_active: "isActive", status: "isActive",
   notes: "notes",
@@ -227,12 +231,16 @@ export async function previewImport(records: Record<string, unknown>[], defaultB
     if (isEligible === undefined) errors.push(`যোগ্যতার মান "${String(rec.isEligible)}" বোঝা যায়নি।`);
     if (isActive === undefined) errors.push(`অবস্থার মান "${String(rec.isActive)}" বোঝা যায়নি।`);
     const ct = String(rec.contactType ?? "").trim().toUpperCase();
+    const genderRaw = String(rec.gender ?? "").trim().toLowerCase();
+    const gender = !genderRaw ? null : ["m", "male", "boy", "ছাত্র", "ছেলে", "পুরুষ"].includes(genderRaw) ? "MALE" : ["f", "female", "girl", "ছাত্রী", "মেয়ে", "নারী"].includes(genderRaw) ? "FEMALE" : undefined;
+    if (gender === undefined) errors.push(`লিঙ্গের মান "${String(rec.gender)}" বোঝা যায়নি (male/female বা ছাত্র/ছাত্রী লিখুন)।`);
     const parsed = studentSchema.safeParse({
       rollNumber: String(rec.rollNumber ?? ""),
       fullName: String(rec.fullName ?? ""),
       contactType: ct === "EMAIL" || ct === "PHONE" ? ct : undefined,
       contactValue: String(rec.contactValue ?? ""),
       batch: String(rec.batch ?? "").trim() || defaultBatch,
+      gender: gender ?? null,
       isEligible: isEligible ?? true,
       isActive: isActive ?? true,
       notes: String(rec.notes ?? ""),
@@ -299,17 +307,17 @@ export async function commitImport(preview: ImportPreview, adminId: string, ipHa
         const d = r.data!;
         if (r.action === "insert") {
           await query(
-            `insert into students (roll_number, full_name, contact_type, contact_value, batch, is_eligible, is_active, notes)
-             values ($1, $2, $3, $4, $5, $6, $7, nullif($8, ''))`,
-            [d.rollNumber, d.fullName, d.contactType, d.contactValue, d.batch, d.isEligible, d.isActive, d.notes],
+            `insert into students (roll_number, full_name, contact_type, contact_value, batch, gender, is_eligible, is_active, notes)
+             values ($1, $2, $3, $4, $5, $6, $7, $8, nullif($9, ''))`,
+            [d.rollNumber, d.fullName, d.contactType, d.contactValue, d.batch, d.gender ?? null, d.isEligible, d.isActive, d.notes],
             c,
           );
           inserted++;
         } else if (r.action === "update") {
           await query(
-            `update students set full_name = $2, contact_type = $3, contact_value = $4, batch = $5, is_eligible = $6, is_active = $7,
-                notes = coalesce(nullif($8, ''), notes) where roll_number = $1`,
-            [d.rollNumber, d.fullName, d.contactType, d.contactValue, d.batch, d.isEligible, d.isActive, d.notes],
+            `update students set full_name = $2, contact_type = $3, contact_value = $4, batch = $5, gender = coalesce($6, gender),
+                is_eligible = $7, is_active = $8, notes = coalesce(nullif($9, ''), notes) where roll_number = $1`,
+            [d.rollNumber, d.fullName, d.contactType, d.contactValue, d.batch, d.gender ?? null, d.isEligible, d.isActive, d.notes],
             c,
           );
           updated++;
@@ -335,13 +343,16 @@ export async function dataQualityReport(batch: string) {
     `select roll_number, full_name, batch from students where batch <> $1 order by roll_number limit 200`,
     [batch],
   );
-  const counts = await one<{ total: number; eligible: number; inactive: number; ineligible: number; dev_seed: number }>(
+  const counts = await one<{ total: number; eligible: number; inactive: number; ineligible: number; dev_seed: number; male: number; female: number; no_gender: number }>(
     `select count(*)::int as total,
+            count(*) filter (where is_active and is_eligible and batch = $1 and to_jsonb(s)->>'gender' = 'MALE')::int as male,
+            count(*) filter (where is_active and is_eligible and batch = $1 and to_jsonb(s)->>'gender' = 'FEMALE')::int as female,
+            count(*) filter (where is_active and is_eligible and batch = $1 and to_jsonb(s)->>'gender' is null)::int as no_gender,
             count(*) filter (where is_active and is_eligible and batch = $1)::int as eligible,
             count(*) filter (where not is_active)::int as inactive,
             count(*) filter (where not is_eligible)::int as ineligible,
             count(*) filter (where is_dev_seed)::int as dev_seed
-       from students`,
+       from students s`,
     [batch],
   );
   return { duplicateContacts, otherBatch, counts };
@@ -363,9 +374,9 @@ export async function exportStudentsCsv(electionId: string | null, adminId: stri
     if (!next.rows.length) break;
     all.push(...next.rows);
   }
-  const header = ["roll_number", "full_name", "contact_type", "contact", "batch", "eligible", "active", "voted"];
+  const header = ["roll_number", "full_name", "gender", "contact_type", "contact", "batch", "eligible", "active", "voted"];
   const lines = [header.join(",")].concat(
-    all.map((s) => [s.roll_number, s.full_name, s.contact_type, s.contact_value, s.batch, s.is_eligible, s.is_active, s.has_voted ? "yes" : "no"].map(csvCell).join(",")),
+    all.map((s) => [s.roll_number, s.full_name, s.gender ?? "", s.contact_type, s.contact_value, s.batch, s.is_eligible, s.is_active, s.has_voted ? "yes" : "no"].map(csvCell).join(",")),
   );
   await audit({ actorType: "ADMIN", adminId, action: "EXPORT.STUDENTS", entityType: "student", details: { rows: all.length, filter: { q: filter.q ?? "", voted: filter.voted ?? "", status: filter.status ?? "" } }, ipHash });
   return lines.join("\r\n") + "\r\n";

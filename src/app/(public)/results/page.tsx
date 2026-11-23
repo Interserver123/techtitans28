@@ -12,7 +12,7 @@ import { ParticipationChart, ResultsBarChart } from "@/components/charts";
 import { Progress } from "@/components/ui/progress";
 import { fmtDateTime, pct } from "@/lib/format";
 import { getLang } from "@/lib/i18n-server";
-import { num, type Lang } from "@/lib/i18n";
+import { num, posLabel, type Lang } from "@/lib/i18n";
 
 const STR = {
   en: {
@@ -65,70 +65,79 @@ export default async function ResultsPage() {
       </div>
 
       {published ? (
-        <section className="mt-8">
-          {published.outcome.kind === "WINNER" && (
-            <div className="relative overflow-hidden rounded-2xl bg-navy p-6 text-white sm:p-10">
-              <WinnerCelebration />
-              <div className="bg-grid absolute inset-0 opacity-60" aria-hidden />
-              <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
-                <div className="animate-pop relative">
-                  <CandidateAvatar name={published.outcome.winner.display_name} url={published.outcome.winner.photo_url ?? null} className="size-32 rounded-2xl ring-4 ring-electric/60 sm:size-36" />
-                  <span className="absolute -bottom-3 -right-3 flex size-11 items-center justify-center rounded-full bg-electric shadow-lg"><Trophy className="size-5" /></span>
-                </div>
-                <div className="animate-fade-up [animation-delay:250ms]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">{S.official}</p>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{published.outcome.winner.display_name}</h2>
-                  <p className="mt-1 text-slate-400">{S.roll} {published.outcome.winner.roll_number} · {n(published.outcome.winner.votes)} {S.votes} ({S.ofValid} {n(pct(published.outcome.winner.votes, published.totals.valid_ballots))}%)</p>
-                  <p className="mt-3 text-xs text-slate-500">{S.published} {fmtDateTime(published.publishedAt, {}, lang)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          {published.outcome.kind === "TIE" && (
-            <Card className="border-amber-300 bg-amber-50 p-6">
-              <div className="flex gap-3"><Scale className="size-6 text-amber-700" />
-                <div>
-                  <h2 className="text-xl font-bold text-amber-900">{S.tie}</h2>
-                  <p className="mt-1 text-sm text-amber-900/80">{S.tieText(published.outcome.tied.map((t) => t.display_name).join(S.and), n(published.outcome.tied[0].votes))}</p>
-                  {published.note && <p className="mt-3 rounded-lg bg-white/70 p-3 text-sm text-amber-950"><strong>{S.decision}</strong> {published.note}</p>}
-                </div>
-              </div>
-            </Card>
-          )}
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-            <Card>
-              <CardHeader>
-                <CardTitle>{S.cw}</CardTitle>
-                <CardDescription>{S.validLine(n(published.totals.valid_ballots), n(published.totals.invalidated_ballots))}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResultsBarChart data={published.rows.map((r) => ({ name: r.display_name, votes: r.votes, lead: r.is_winner || r.is_tied }))} />
-                <ul className="mt-4 divide-y divide-line">
-                  {published.rows.map((r) => (
-                    <li key={r.candidate_id} className="flex items-center gap-3 py-3">
-                      <span className="w-6 text-sm font-bold text-muted">{n(r.rank)}</span>
-                      <CandidateAvatar name={r.display_name} url={r.photo_url ?? null} className="size-10 rounded-full text-sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{r.display_name}</p>
-                        <Progress value={pct(r.votes, published.totals.valid_ballots)} className="mt-1.5 h-1.5" />
+        <section className="mt-8 space-y-10">
+          {published.positions.map((pr) => {
+            const valid = pr.totals.valid_ballots;
+            const title = posLabel(pr.position.gender, lang, true);
+            return (
+              <div key={pr.position.id}>
+                <h2 className="font-display mb-4 flex items-center gap-3 text-2xl font-bold sm:text-3xl">
+                  <span className="h-px w-8 bg-gold" aria-hidden />{title}
+                </h2>
+                {pr.outcome.kind === "WINNER" && (
+                  <div className="relative overflow-hidden rounded-2xl bg-navy p-6 text-white sm:p-10">
+                    <WinnerCelebration />
+                    <div className="bg-grid absolute inset-0 opacity-60" aria-hidden />
+                    <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
+                      <div className="animate-pop relative">
+                        <CandidateAvatar name={pr.outcome.winner.display_name} url={pr.outcome.winner.photo_url ?? null} className="size-32 rounded-2xl ring-4 ring-gold/70 sm:size-36" />
+                        <span className="absolute -bottom-3 -right-3 flex size-11 items-center justify-center rounded-full bg-gold text-navy shadow-lg"><Trophy className="size-5" /></span>
                       </div>
-                      <div className="text-right tabular-nums">
-                        <p className="font-bold">{n(r.votes)}</p>
-                        <p className="text-xs text-muted">{n(pct(r.votes, published.totals.valid_ballots))}%</p>
+                      <div className="animate-fade-up [animation-delay:250ms]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">{S.official} · {posLabel(pr.position.gender, lang)}</p>
+                        <h3 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{pr.outcome.winner.display_name}</h3>
+                        <p className="mt-1 text-slate-400">{S.roll} {pr.outcome.winner.roll_number} · {n(pr.outcome.winner.votes)} {S.votes} ({S.ofValid} {n(pct(pr.outcome.winner.votes, valid))}%)</p>
+                        <p className="mt-3 text-xs text-slate-500">{S.published} {fmtDateTime(published.publishedAt, {}, lang)}</p>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
+                    </div>
+                  </div>
+                )}
+                {pr.outcome.kind === "TIE" && (
+                  <Card className="border-amber-300 bg-amber-50 p-6">
+                    <div className="flex gap-3"><Scale className="size-6 text-amber-700" />
+                      <div>
+                        <h3 className="text-xl font-bold text-amber-900">{S.tie}</h3>
+                        <p className="mt-1 text-sm text-amber-900/80">{S.tieText(pr.outcome.tied.map((t) => t.display_name).join(S.and), n(pr.outcome.tied[0].votes))}</p>
+                        {published.note && <p className="mt-3 rounded-lg bg-white/70 p-3 text-sm text-amber-950"><strong>{S.decision}</strong> {published.note}</p>}
+                      </div>
+                    </div>
+                  </Card>
+                )}
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>{S.cw}</CardTitle>
+                    <CardDescription>{S.validLine(n(valid), n(pr.totals.invalidated_ballots))}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResultsBarChart data={pr.tally.slice(0, 12).map((r) => ({ name: r.display_name, votes: r.votes, lead: r.rank === 1 && r.votes > 0 }))} />
+                    <ul className="mt-4 divide-y divide-line">
+                      {pr.tally.map((r) => (
+                        <li key={r.candidate_id} className="flex items-center gap-3 py-3">
+                          <span className="w-7 text-sm font-bold text-muted">{n(r.rank)}</span>
+                          <CandidateAvatar name={r.display_name} url={r.photo_url ?? null} className="size-10 rounded-full text-sm" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold">{r.display_name}</p>
+                            <Progress value={pct(r.votes, valid)} className="mt-1.5 h-1.5" />
+                          </div>
+                          <div className="text-right tabular-nums">
+                            <p className="font-bold">{n(r.votes)}</p>
+                            <p className="text-xs text-muted">{n(pct(r.votes, valid))}%</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="p-6"><LiveTurnout initial={turnout} live={false} lang={lang} /></Card>
+            <Card className="p-6">
+              <h3 className="font-semibold">{S.report}</h3>
+              <p className="mt-1 text-sm text-muted">{S.reportText}</p>
+              <Button asChild className="mt-4 w-full" variant="navy"><a href="/api/public/report"><Download /> {S.download}</a></Button>
             </Card>
-            <div className="space-y-6">
-              <Card className="p-6"><LiveTurnout initial={turnout} live={false} lang={lang} /></Card>
-              <Card className="p-6">
-                <h3 className="font-semibold">{S.report}</h3>
-                <p className="mt-1 text-sm text-muted">{S.reportText}</p>
-                <Button asChild className="mt-4 w-full" variant="navy"><a href="/api/public/report"><Download /> {S.download}</a></Button>
-              </Card>
-            </div>
           </div>
         </section>
       ) : (

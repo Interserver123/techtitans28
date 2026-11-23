@@ -83,9 +83,17 @@ alter role techtitans_app_user set search_path = public, extensions;
 
 insert into tt_deploy_output
 select 'migrations applied', string_agg(filename, ', ' order by filename) from public.schema_migrations;
+do $tt$ begin
+  if to_regclass('storage.buckets') is not null then
+    insert into tt_deploy_output
+    select 'storage buckets', coalesce(string_agg(id || case when public then ' (public)' else ' (private)' end, ', '), 'none')
+      from storage.buckets where id in ('candidate-photos', 'correction-evidence');
+  else
+    insert into tt_deploy_output values ('storage buckets', 'storage schema not found (not a Supabase database)');
+  end if;
+end $tt$;
 insert into tt_deploy_output
-select 'storage buckets', coalesce((select string_agg(id || case when public then ' (public)' else ' (private)' end, ', ')
-  from storage.buckets where id in ('candidate-photos', 'correction-evidence')), 'storage schema not found');
+select 'two-race voting', case when to_regprocedure('public.cast_ballot(text, uuid[])') is not null then 'ready (Boys'' CR + Girls'' CR)' else 'MISSING' end;
 insert into tt_deploy_output
 select 'audit chain', case when ok then 'intact' else 'BROKEN' end from public.verify_audit_chain();
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { voterFromCookies } from "@/lib/session";
-import { listApprovedCandidates } from "@/lib/services/voting";
+import { listApprovedCandidates, listPositions } from "@/lib/services/voting";
 import { getElection, isVotingOpen } from "@/lib/services/elections";
 import { BallotForm } from "./ballot-form";
 import { Alert } from "@/components/ui/alert";
@@ -11,7 +11,7 @@ export default async function BallotPage() {
   if (!s) redirect("/vote");
   if (s.hasVoted) redirect("/vote/receipt");
   const e = await getElection(s.electionId);
-  const candidates = await listApprovedCandidates(s.electionId);
+  const [candidates, positions] = await Promise.all([listApprovedCandidates(s.electionId), listPositions(s.electionId)]);
   const { lang, t } = await getDict();
   const B = t.ballot;
   return (
@@ -22,7 +22,7 @@ export default async function BallotPage() {
       {!isVotingOpen(e) ? (
         <Alert className="mt-6" tone="warning" title={e.status === "PAUSED" ? B.pausedTitle : B.closedTitle}>{B.cannot}</Alert>
       ) : (
-        <BallotForm candidates={candidates} expiresAt={new Date(s.expiresAt).toISOString()} serverNow={new Date().toISOString()} lang={lang} />
+        <BallotForm positions={positions} candidates={candidates} expiresAt={new Date(s.expiresAt).toISOString()} serverNow={new Date().toISOString()} lang={lang} />
       )}
     </div>
   );
