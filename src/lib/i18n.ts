@@ -72,7 +72,6 @@ const en = {
     sub: "The rules are enforced inside the database itself — not just by the website.",
     cards: [
       ["One person, one vote", "Database-level locking makes a second ballot impossible — even under thousands of simultaneous requests."],
-      ["An open, audited ballot", "The Super Admin can see who voted for whom and can correct a vote when needed. Every view and every change is written to the audit log, and your receipt tells you if your vote was changed."],
       ["Sealed results", "Candidate-wise counts cannot be computed until voting closes."],
       ["Tamper-evident audit trail", "Every administrative action is recorded in a hash-chained, append-only log."],
       ["Two-person corrections", "No ballot is ever edited. Corrections need a reason and a second administrator’s approval."],
@@ -295,7 +294,6 @@ const bn: Dict = {
     sub: "নিয়মগুলো শুধু ওয়েবসাইটে নয় — সরাসরি ডেটাবেসের ভেতরেই প্রয়োগ করা হয়।",
     cards: [
       ["এক ব্যক্তি, এক ভোট", "ডেটাবেস-স্তরের সুরক্ষায় দ্বিতীয় ব্যালট দেওয়া অসম্ভব — একই সময়ে হাজারো অনুরোধ এলেও।"],
-      ["উন্মুক্ত ও নিরীক্ষিত ব্যালট", "সুপার অ্যাডমিন দেখতে পারেন কে কাকে ভোট দিয়েছেন এবং প্রয়োজনে ভোট সংশোধন করতে পারেন। প্রতিটি দেখা ও পরিবর্তন অডিট লগে থাকে, আর আপনার ভোট বদলালে রসিদে জানানো হবে।"],
       ["সিলগালা ফলাফল", "ভোটগ্রহণ শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক গণনা করাই যায় না।"],
       ["কারচুপি-প্রতিরোধী অডিট", "প্রতিটি প্রশাসনিক কাজ হ্যাশ-শৃঙ্খলিত, অপরিবর্তনীয় লগে সংরক্ষিত থাকে।"],
       ["দুই-ব্যক্তির সংশোধন", "কোনো ব্যালট কখনও সম্পাদনা করা হয় না। সংশোধনে কারণ ও দ্বিতীয় একজন প্রশাসকের অনুমোদন লাগে।"],

@@ -265,10 +265,9 @@ export default async function HomePage() {
         <div className="mt-14 grid gap-4 md:grid-cols-6">
           {[
             { icon: Lock, t: t.trust.cards[0][0], d: t.trust.cards[0][1], span: "md:col-span-3", tone: "from-emerald-50 to-white" },
-            { icon: EyeOff, t: t.trust.cards[1][0], d: t.trust.cards[1][1], span: "md:col-span-3", tone: "from-amber-50 to-white" },
-            { icon: ShieldCheck, t: t.trust.cards[2][0], d: t.trust.cards[2][1], span: "md:col-span-2", tone: "from-slate-50 to-white" },
-            { icon: FileClock, t: t.trust.cards[3][0], d: t.trust.cards[3][1], span: "md:col-span-2", tone: "from-slate-50 to-white" },
-            { icon: Gavel, t: t.trust.cards[4][0], d: t.trust.cards[4][1], span: "md:col-span-2", tone: "from-slate-50 to-white" },
+            { icon: ShieldCheck, t: t.trust.cards[1][0], d: t.trust.cards[1][1], span: "md:col-span-3", tone: "from-amber-50 to-white" },
+            { icon: FileClock, t: t.trust.cards[2][0], d: t.trust.cards[2][1], span: "md:col-span-3", tone: "from-slate-50 to-white" },
+            { icon: Gavel, t: t.trust.cards[3][0], d: t.trust.cards[3][1], span: "md:col-span-3", tone: "from-slate-50 to-white" },
           ].map(({ icon: Icon, t: title, d, span, tone }, i) => (
             <SpotlightCard key={title} className={cn("reveal rounded-3xl border border-line bg-gradient-to-br p-7 shadow-card", tone, span, `reveal-delay-${i % 3}`)}>
               <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-900 text-gold-300 shadow-lg shadow-navy/20"><Icon className="size-5" /></span>
