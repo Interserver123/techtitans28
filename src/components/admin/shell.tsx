@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, Settings, ShieldHalf, UserCog, Users, Vote, X,
 } from "lucide-react";
+import Image from "next/image";
 import { Brand } from "@/components/site/brand";
 import { api } from "@/lib/client";
 import { cn } from "@/lib/utils";
@@ -39,23 +40,25 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
   const isActive = (href: string) => (href === "/admin" ? path === "/admin" : path.startsWith(href));
 
   const sidebar = (
-    <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center justify-between px-5">
+    <div className="relative flex h-full flex-col overflow-hidden">
+      <Image src="/campus/building.jpg" alt="" fill sizes="288px" className="object-cover opacity-[0.12] mix-blend-luminosity" aria-hidden />
+      <div className="gold-rule absolute inset-x-0 top-16" />
+      <div className="relative flex h-16 items-center justify-between px-5">
         <Brand dark href="/admin" />
         <button className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X className="size-5" /></button>
       </div>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3" aria-label="Admin">
+      <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-3" aria-label="Admin">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} onClick={() => setOpen(false)}
             className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-              isActive(href) ? "bg-electric/15 text-white ring-1 ring-inset ring-electric/30" : "text-slate-400 hover:bg-white/5 hover:text-white")}>
-            <Icon className={cn("size-4", isActive(href) && "text-blue-400")} /> {label}
+              isActive(href) ? "bg-gold/10 text-white ring-1 ring-inset ring-gold/30" : "text-slate-400 hover:bg-white/5 hover:text-white")}>
+            <Icon className={cn("size-4", isActive(href) && "text-gold")} /> {label}
           </Link>
         ))}
       </nav>
-      <div className="border-t border-white/5 p-4">
+      <div className="relative border-t border-gold/20 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-electric/20 text-xs font-bold text-blue-300">
+          <div className="flex size-9 items-center justify-center rounded-full bg-gold/15 text-xs font-bold text-gold-300">
             {admin.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("")}
           </div>
           <div className="min-w-0 flex-1">
@@ -82,7 +85,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
           </div>
         )}
         <div className="lg:pl-64">
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/5 bg-navy/85 px-4 backdrop-blur-xl sm:px-6">
+          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gold/20 bg-navy/85 px-4 backdrop-blur-xl sm:px-6">
             <button className="rounded-lg p-2 text-slate-300 hover:bg-white/10 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="size-5" /></button>
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <label htmlFor="election-select" className="hidden text-xs font-medium uppercase tracking-wider text-slate-500 sm:block">Election</label>

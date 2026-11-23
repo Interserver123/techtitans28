@@ -84,7 +84,7 @@ export function VoterLogin() {
               <p className="mt-1 text-sm text-muted">Roll <strong className="text-ink">{roll}</strong></p>
             </div>
             {notice && (
-              <div className="flex gap-3 rounded-xl bg-electric-50 p-3 text-sm text-blue-900"><MessageSquareText className="size-4 shrink-0 mt-0.5" /> {notice}</div>
+              <div className="flex gap-3 rounded-xl bg-electric-50 p-3 text-sm text-emerald-900"><MessageSquareText className="size-4 shrink-0 mt-0.5" /> {notice}</div>
             )}
             <Field label="6-digit code" htmlFor="otp" hint="The code expires in 5 minutes. Never share it.">
               <Input

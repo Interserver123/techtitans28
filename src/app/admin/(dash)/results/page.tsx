@@ -55,7 +55,7 @@ export default async function ResultsAdminPage() {
             <CardDescription>Computed from valid ballots by compute_tally()</CardDescription>
           </CardHeader>
           <CardContent>
-            {r.outcome.kind === "WINNER" && <div className="mb-4 flex items-center gap-3 rounded-xl bg-electric/10 p-4 ring-1 ring-electric/25"><Trophy className="size-5 text-blue-300" /><p className="text-sm text-slate-100"><strong>{r.outcome.winner.display_name}</strong> leads with {r.outcome.winner.votes} votes.</p></div>}
+            {r.outcome.kind === "WINNER" && <div className="mb-4 flex items-center gap-3 rounded-xl bg-electric/10 p-4 ring-1 ring-electric/25"><Trophy className="size-5 text-gold-300" /><p className="text-sm text-slate-100"><strong>{r.outcome.winner.display_name}</strong> leads with {r.outcome.winner.votes} votes.</p></div>}
             {r.outcome.kind === "TIE" && <Alert tone="warning" className="mb-4" title="Tied result">{r.outcome.tied.map((t) => t.display_name).join(", ")} have {r.outcome.tied[0].votes} votes each. No winner is declared automatically; a committee tie-resolution note is required to publish.</Alert>}
             {r.outcome.kind === "NO_VOTES" && <Alert tone="info" className="mb-4">No valid votes were cast.</Alert>}
             <ResultsBarChart dark data={r.tally.map((t) => ({ name: t.display_name, votes: t.votes, lead: t.rank === 1 && t.votes > 0 }))} />

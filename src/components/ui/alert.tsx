@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  info: { cls: "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-100", Icon: Info },
+  info: { cls: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-blue-100", Icon: Info },
   success: { cls: "border-green-200 bg-green-50 text-green-900 dark:border-green-500/25 dark:bg-green-500/10 dark:text-green-100", Icon: CheckCircle2 },
   warning: { cls: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100", Icon: AlertTriangle },
   error: { cls: "border-red-200 bg-red-50 text-red-900 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-100", Icon: XCircle },

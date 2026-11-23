@@ -35,7 +35,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <TD className="font-mono text-xs text-slate-500">{r.id}</TD>
                 <TD className="whitespace-nowrap text-xs text-slate-400">{fmtDateTime(r.occurred_at, { second: "2-digit" })}</TD>
                 <TD className="text-xs text-slate-300">{r.actor_label ?? r.actor_type.toLowerCase()}</TD>
-                <TD><code className="text-xs text-blue-300">{r.action}</code></TD>
+                <TD><code className="text-xs text-gold-300">{r.action}</code></TD>
                 <TD className="hidden text-xs text-slate-400 md:table-cell">{r.entity_type}{r.entity_id ? ` · ${r.entity_id.slice(0, 8)}` : ""}</TD>
                 <TD className="hidden max-w-md truncate font-mono text-[11px] text-slate-500 lg:table-cell" title={JSON.stringify(r.details)}>{JSON.stringify(r.details)}</TD>
               </TR>

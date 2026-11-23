@@ -14,7 +14,7 @@ export default async function BallotPage() {
   return (
     <div className="animate-fade-up">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-electric">Official ballot · Class Representative</p>
-      <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Choose one candidate</h1>
+      <h1 className="font-display mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Choose one candidate</h1>
       <p className="mt-1 text-sm text-muted">Signed in as <strong className="text-ink">{s.fullName}</strong> ({s.rollNumber}). Your choice is secret.</p>
       {!isVotingOpen(e) ? (
         <Alert className="mt-6" tone="warning" title={e.status === "PAUSED" ? "Voting is paused" : "Voting is not open"}>Your ballot cannot be submitted right now.</Alert>

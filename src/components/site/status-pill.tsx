@@ -3,7 +3,7 @@ import { STATUS_LABEL } from "@/lib/format";
 
 const tone: Record<string, string> = {
   LIVE: "bg-green-50 text-green-700 ring-green-200",
-  SCHEDULED: "bg-blue-50 text-blue-700 ring-blue-200",
+  SCHEDULED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   PAUSED: "bg-amber-50 text-amber-800 ring-amber-200",
   CLOSED: "bg-slate-100 text-slate-700 ring-slate-200",
   RESULTS_PUBLISHED: "bg-violet-50 text-violet-700 ring-violet-200",

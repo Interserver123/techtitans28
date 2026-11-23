@@ -25,7 +25,7 @@ export default async function DisputesPage() {
               <div className="flex flex-col gap-3 lg:flex-row lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <code className="text-sm font-semibold text-blue-300">{d.reference}</code>
+                    <code className="text-sm font-semibold text-gold-300">{d.reference}</code>
                     <Badge tone={tone[d.status as keyof typeof tone] ?? "neutral"}>{d.status.replace("_", " ").toLowerCase()}</Badge>
                     <Badge tone={d.category === "IDENTITY_MISUSE" ? "red" : "neutral"}>{DISPUTE_CATEGORIES[d.category as keyof typeof DISPUTE_CATEGORIES]}</Badge>
                   </div>

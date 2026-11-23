@@ -19,7 +19,7 @@ export function Countdown({ target, serverNow, label, dark = false }: { target: 
   const cells: [string, number][] = [["Days", p.d], ["Hours", p.h], ["Minutes", p.m], ["Seconds", p.s]];
   return (
     <div aria-live="off">
-      <p className={dark ? "text-xs font-semibold uppercase tracking-[0.18em] text-blue-300/80" : "text-xs font-semibold uppercase tracking-[0.18em] text-muted"}>{label}</p>
+      <p className={dark ? "text-xs font-semibold uppercase tracking-[0.18em] text-gold-300/80" : "text-xs font-semibold uppercase tracking-[0.18em] text-muted"}>{label}</p>
       <div className="mt-3 grid grid-cols-4 gap-2 sm:gap-3">
         {cells.map(([k, v]) => (
           <div key={k} className={dark ? "rounded-xl border border-white/10 bg-white/[0.04] px-2 py-3 text-center backdrop-blur" : "rounded-xl border border-line bg-surface px-2 py-3 text-center shadow-card"}>

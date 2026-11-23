@@ -15,7 +15,7 @@ export const buttonVariants = cva(
         ghost: "text-ink hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10",
         danger: "bg-danger text-white hover:bg-red-700",
         success: "bg-success text-white hover:bg-green-700",
-        subtle: "bg-electric-50 text-electric-600 hover:bg-blue-100 dark:bg-electric/15 dark:text-blue-300 dark:hover:bg-electric/25",
+        subtle: "bg-electric-50 text-electric-600 hover:bg-emerald-100 dark:bg-electric/15 dark:text-gold-300 dark:hover:bg-electric/25",
       },
       size: {
         sm: "h-8 px-3 text-xs",

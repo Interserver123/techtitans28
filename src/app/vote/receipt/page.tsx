@@ -17,7 +17,7 @@ export default async function ReceiptPage() {
         <div className="animate-pop mx-auto flex size-16 items-center justify-center rounded-full bg-success shadow-lg shadow-green-600/40">
           <CheckCircle2 className="size-9" />
         </div>
-        <h1 className="mt-5 text-2xl font-bold tracking-tight">Your vote has been recorded</h1>
+        <h1 className="font-display mt-5 text-2xl font-bold tracking-tight">Your vote has been recorded</h1>
         <p className="mt-1 text-sm text-slate-400">Thank you for taking part in {s.electionTitle}.</p>
       </div>
       <div className="space-y-5 p-6 sm:p-8">
