@@ -188,9 +188,8 @@ const en = {
   },
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
-    sub: "Walk through the real voting steps with the real candidate list. A real code is emailed to you, but no ballot is recorded.",
-    emailLabel: "Your email address", emailPh: "you@example.com", send: "Email me a demo code",
-    sentTo: (e: string) => `A 6-digit demo code was sent to ${e}. Check spam too.`, codeLabel: "6-digit code", verify: "Verify", other: "Use another email",
+    sub: "Walk through the real voting steps with your roll number and the real candidate list. A real code is sent to your registered email, but no ballot is recorded.",
+    sentTo: (e: string) => `A 6-digit demo code was sent to ${e}. Check spam too.`, codeLabel: "6-digit code", verify: "Verify", other: "Use another roll number",
     choose: "Choose one candidate", review: "Review choice", back: "Back", reviewTitle: "Review your demo ballot",
     confirm: "I understand this is a demo and this choice is not counted.", submit: "Submit demo ballot",
     doneTitle: "Demo complete", done: "This was a demo. No vote was recorded and the results are unaffected.", receipt: "Demo receipt",
@@ -383,9 +382,8 @@ const bn: Dict = {
   },
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",
-    sub: "আসল প্রার্থী তালিকা দিয়ে ভোটদানের প্রতিটি ধাপ পরখ করুন। আপনার ইমেইলে আসল কোড যাবে, কিন্তু কোনো ব্যালট জমা হবে না।",
-    emailLabel: "আপনার ইমেইল ঠিকানা", emailPh: "you@example.com", send: "ডেমো কোড ইমেইলে পাঠান",
-    sentTo: (e) => `${e}-এ ৬ অঙ্কের একটি ডেমো কোড পাঠানো হয়েছে। স্প্যাম ফোল্ডারও দেখুন।`, codeLabel: "৬ অঙ্কের কোড", verify: "যাচাই করুন", other: "অন্য ইমেইল দিন",
+    sub: "আপনার রোল নম্বর ও আসল প্রার্থী তালিকা দিয়ে ভোটদানের প্রতিটি ধাপ পরখ করুন। আপনার নিবন্ধিত ইমেইলে আসল কোড যাবে, কিন্তু কোনো ব্যালট জমা হবে না।",
+    sentTo: (e) => `${e}-এ ৬ অঙ্কের একটি ডেমো কোড পাঠানো হয়েছে। স্প্যাম ফোল্ডারও দেখুন।`, codeLabel: "৬ অঙ্কের কোড", verify: "যাচাই করুন", other: "অন্য রোল নম্বর দিন",
     choose: "একজন প্রার্থী বেছে নিন", review: "পছন্দ পর্যালোচনা", back: "ফিরে যান", reviewTitle: "আপনার ডেমো ব্যালট দেখে নিন",
     confirm: "আমি জানি এটি ডেমো, এই পছন্দ গণনা হবে না।", submit: "ডেমো ব্যালট জমা দিন",
     doneTitle: "ডেমো সম্পন্ন", done: "এটি ছিল একটি ডেমো। কোনো ভোট জমা হয়নি, ফলাফলে কোনো প্রভাব পড়বে না।", receipt: "ডেমো রসিদ",

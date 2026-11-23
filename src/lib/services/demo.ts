@@ -3,18 +3,22 @@ import { z } from "zod";
 import { hmac, numericOtp, randomToken, safeEqual } from "../crypto";
 import { AppError } from "../errors";
 import { enforceRateLimit } from "../rate-limit";
-import { otpProvider } from "../otp/provider";
+import { otpProvider, otpStatus } from "../otp/provider";
+import { one } from "../db";
+import { maskContact } from "../mask";
+import { rollSchema } from "./voter-auth";
 import type { RequestContext } from "../http";
 import type { Election } from "./elections";
 
 /**
- * Demo vote: lets anyone try the real flow (email code → ballot → receipt) without touching the
- * election. Nothing is stored except rate-limit counters: the code is checked against a signed,
- * short-lived token, and the "ballot" never leaves the browser.
+ * Demo vote: a voter tries the real flow (roll number → "is this you?" → code to their registered
+ * contact → two-page ballot → receipt) without touching the election. Nothing is stored except
+ * rate-limit counters: the code is checked against a signed, short-lived token, and the "ballot"
+ * never leaves the browser. Works before voting opens, so voters can practise.
  */
 const TTL_SECONDS = 5 * 60;
 
-export const demoEmailSchema = z.object({ email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254) });
+export const demoRollSchema = z.object({ roll: z.string().max(40) });
 export const demoVerifySchema = z.object({ token: z.string().max(400), code: z.string().trim().max(10) });
 
 /** The demo switches itself off once voting has closed. */
@@ -22,17 +26,40 @@ export const demoAvailable = (e: Pick<Election, "status"> | null) => !e || !["CL
 
 const sign = (payload: string) => hmac("demo-token", payload);
 
-export async function requestDemoCode(email: string, ctx: RequestContext) {
-  // Strict limits: this endpoint sends real email to an address the visitor types.
-  await enforceRateLimit("demo-ip", ctx.ipHash ?? "unknown", 3, 3600);
-  await enforceRateLimit("demo-email", email, 3, 86400);
-  await enforceRateLimit("demo-global", "all", 40, 86400);
+type Voter = { full_name: string; contact_type: "EMAIL" | "PHONE"; contact_value: string };
+
+async function findVoter(rollInput: string) {
+  const roll = rollSchema.parse(rollInput);
+  const v = await one<Voter>(
+    `select full_name, contact_type, contact_value from students
+      where roll_number = $1 and is_active and is_eligible and batch = setting_text('election.batch', 'TechTitans-28')`,
+    [roll],
+  );
+  if (!v) throw new AppError("NOT_ELIGIBLE", "This roll number is not on the voter list or is not eligible to vote.");
+  return { roll, v };
+}
+
+/** Demo step 1: show the voter's name and partly hidden contact, exactly like the real portal. */
+export async function lookupDemoVoter(rollInput: string, ctx: RequestContext) {
+  await enforceRateLimit("demo-lookup-ip", ctx.ip ?? "unknown", 60, 15 * 60);
+  const { roll, v } = await findVoter(rollInput);
+  const st = otpStatus();
+  const deliverable = st.mode === "dev" || (v.contact_type === "EMAIL" ? st.email : st.sms);
+  return { roll, fullName: v.full_name, contactType: v.contact_type, maskedContact: maskContact(v.contact_type, v.contact_value), deliverable };
+}
+
+/** Demo step 2: send a demo code to the voter's REGISTERED contact (never to an address the visitor types). */
+export async function requestDemoCode(rollInput: string, ctx: RequestContext) {
+  await enforceRateLimit("demo-ip", ctx.ipHash ?? "unknown", 10, 3600);
+  const { roll, v } = await findVoter(rollInput);
+  await enforceRateLimit("demo-roll", roll, 5, 86400);
+  await enforceRateLimit("demo-global", "all", 150, 86400);
   const code = numericOtp(6);
   const nonce = randomToken(12);
   const payload = Buffer.from(JSON.stringify({ n: nonce, x: Math.floor(Date.now() / 1000) + TTL_SECONDS, h: hmac("demo-code", `${nonce}:${code}`) })).toString("base64url");
   const token = `${payload}.${sign(payload)}`;
-  const deliver = () => otpProvider().send({ contactType: "EMAIL", to: email, code, studentName: "ডেমো ব্যবহারকারী", ttlMinutes: TTL_SECONDS / 60, demo: true });
-  return { token, deliver };
+  const deliver = () => otpProvider().send({ contactType: v.contact_type, to: v.contact_value, code, studentName: v.full_name, ttlMinutes: TTL_SECONDS / 60, demo: true });
+  return { token, maskedContact: maskContact(v.contact_type, v.contact_value), deliver };
 }
 
 export async function verifyDemoCode(token: string, code: string) {

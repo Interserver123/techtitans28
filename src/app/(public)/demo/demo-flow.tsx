@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, FlaskConical, Mail, RotateCcw, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, AtSign, Check, FlaskConical, Phone, RotateCcw, Search, UserRound } from "lucide-react";
 import { api } from "@/lib/client";
 import { dict, errorText, num, posLabel, type Lang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,16 @@ import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
 type C = { id: string; pos: string; name: string; roll: string; photo: string | null };
-type Step = "email" | "code" | "choose" | "review" | "done";
+type Step = "roll" | "confirm" | "code" | "choose" | "review" | "done";
+type Who = { fullName: string; contactType: "EMAIL" | "PHONE"; maskedContact: string; deliverable: boolean };
 const latin = (v: string) => v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)));
 
 export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; positions: { id: string; gender: "MALE" | "FEMALE" | null }[]; lang: Lang }) {
   const t = dict(lang).demo;
-  const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const V = dict(lang).vote;
+  const [step, setStep] = useState<Step>("roll");
+  const [roll, setRoll] = useState("");
+  const [who, setWho] = useState<Who | null>(null);
   const [token, setToken] = useState("");
   const [code, setCode] = useState("");
   const [choices, setChoices] = useState<Record<string, C>>({});
@@ -43,7 +46,7 @@ export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; pos
     setBusy(false);
     if (r.ok) then(r); else setError(errorText(lang, r.error));
   };
-  const restart = () => { setStep("email"); setCode(""); setChoices({}); setTab(0); setAck(false); setReceipt(""); setError(null); };
+  const restart = () => { setStep("roll"); setWho(null); setCode(""); setChoices({}); setTab(0); setAck(false); setReceipt(""); setError(null); };
 
   return (
     <Card className="mt-8 overflow-hidden rounded-3xl">
@@ -51,19 +54,41 @@ export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; pos
         <FlaskConical className="size-4" /> {t.banner}
       </div>
       <div className="p-5 sm:p-7">
-        {step === "email" && (
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void call<{ token: string }>("/api/demo/request-code", { email }, (r) => { setToken(r.token); setStep("code"); }); }}>
-            <Field label={t.emailLabel} htmlFor="demo-email">
-              <Input id="demo-email" type="email" required autoComplete="email" placeholder={t.emailPh} value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
+        {step === "roll" && (
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void call<Who>("/api/demo/lookup", { roll }, (r) => { setWho(r); setStep("confirm"); }); }}>
+            <div>
+              <h2 className="text-xl font-semibold">{V.rollTitle}</h2>
+              <p className="mt-1 text-sm text-muted">{V.rollSub}</p>
+            </div>
+            <Field label={V.rollLabel} htmlFor="demo-roll">
+              <Input id="demo-roll" value={roll} onChange={(e) => setRoll(latin(e.target.value).toUpperCase().replace(/\s/g, ""))} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="lg" className="w-full" loading={busy}><Mail /> {t.send}</Button>
+            <Button type="submit" size="lg" className="w-full" loading={busy} disabled={roll.length < 3}>{V.find} <ArrowRight /></Button>
           </form>
+        )}
+
+        {step === "confirm" && who && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">{V.confirmTitle}</h2>
+            <dl className="divide-y divide-line overflow-hidden rounded-2xl border border-gold/40 bg-gradient-to-b from-amber-50/60 to-white">
+              <div className="flex items-center gap-3 p-4"><UserRound className="size-5 shrink-0 text-emerald-900" aria-hidden /><div><dt className="text-xs text-muted">{V.confirmName}</dt><dd className="text-lg font-bold">{who.fullName}</dd></div></div>
+              <div className="flex items-center gap-3 p-4"><span className="size-5 shrink-0 text-center text-xs font-bold text-emerald-900" aria-hidden>#</span><div><dt className="text-xs text-muted">{V.rollLabel}</dt><dd className="font-mono font-semibold">{roll}</dd></div></div>
+              <div className="flex items-center gap-3 p-4">{who.contactType === "EMAIL" ? <AtSign className="size-5 shrink-0 text-emerald-900" aria-hidden /> : <Phone className="size-5 shrink-0 text-emerald-900" aria-hidden />}<div className="min-w-0"><dt className="text-xs text-muted">{who.contactType === "EMAIL" ? V.confirmEmail : V.confirmPhone}</dt><dd className="break-all font-mono text-[15px] font-semibold">{who.maskedContact}</dd></div></div>
+            </dl>
+            {who.deliverable ? <p className="text-sm text-slate-600">{V.codeWillGo(who.maskedContact)}</p> : <Alert tone="warning">{V.cannotDeliver}</Alert>}
+            {error && <Alert tone="error">{error}</Alert>}
+            <Button size="lg" className="w-full" loading={busy} disabled={!who.deliverable}
+              onClick={() => void call<{ token: string }>("/api/demo/request-code", { roll }, (r) => { setToken(r.token); setCode(""); setStep("code"); })}>
+              {who.contactType === "EMAIL" ? V.sendHere : V.sendHerePhone} <ArrowRight />
+            </Button>
+            <button type="button" onClick={restart} className="inline-flex w-full items-center justify-center gap-1 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> {V.notMe}</button>
+          </div>
         )}
 
         {step === "code" && (
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void call<{ receipt: string }>("/api/demo/verify", { token, code }, (r) => { setReceipt(r.receipt); setStep("choose"); }); }}>
-            <Alert tone="info">{t.sentTo(email)}</Alert>
+            <Alert tone="info">{t.sentTo(who?.maskedContact ?? "")}</Alert>
             <Field label={t.codeLabel} htmlFor="demo-code">
               <Input id="demo-code" value={code} onChange={(e) => setCode(latin(e.target.value).replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="••••••" className="h-14 text-center font-mono text-2xl font-bold tracking-[0.5em]" required />
             </Field>
