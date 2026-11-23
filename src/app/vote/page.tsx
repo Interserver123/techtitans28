@@ -17,7 +17,7 @@ export default async function VotePage() {
   return (
     <div className="animate-fade-up">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-electric">Voter portal</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight">{e?.title ?? "CR Election"}</h1>
+      <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">{e?.title ?? "CR Election"}</h1>
       {e && <p className="mt-1 text-sm text-muted">Voting window: {fmtDateTime(e.opens_at)} – {fmtDateTime(e.closes_at)}</p>}
       <div className="mt-8">
         {!e && <Alert tone="info" title="No election is open">The Election Committee has not opened an election yet.</Alert>}

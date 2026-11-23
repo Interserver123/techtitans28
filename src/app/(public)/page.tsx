@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight, ArrowUpRight, BadgeCheck, ChevronDown, EyeOff, FileClock, Fingerprint, Gavel, KeyRound, LifeBuoy, Lock, Mail, MapPin,
   Phone, ReceiptText, ShieldCheck, Smartphone, Trophy, Users, Vote, Zap,
@@ -42,25 +43,27 @@ export default async function HomePage() {
     <>
       {/* ───────────── HERO ───────────── */}
       <section className="noise relative isolate overflow-hidden bg-navy text-white">
-        <div className="aurora" aria-hidden><i /></div>
-        <div className="bg-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_25%,transparent_72%)]" aria-hidden />
+        <Image src="/campus/aerial.jpg" alt="Aerial view of the Islamic University campus" fill priority sizes="100vw" className="ken-burns -z-20 object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-900/95 via-navy/85 to-navy/70" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_0%,rgb(201_162_74/0.22),transparent_55%)]" aria-hidden />
         <div className="relative mx-auto grid max-w-6xl gap-14 px-4 pb-20 pt-12 sm:px-6 md:pb-28 md:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="animate-fade-up">
             <div className="border-shimmer inline-flex items-center gap-2.5 rounded-full py-1.5 pl-2 pr-4 text-xs font-medium text-slate-200">
               <StatusPill status={status} className="bg-white/10 py-0.5 text-white ring-white/15" />
-              <span className="text-slate-400">{settings.institution}</span>
+              <span className="text-slate-300">{settings.institution}</span>
             </div>
-            <h1 className="mt-7 text-[2.75rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-6xl md:text-7xl">
+            <Image src="/campus/logo.png" alt="" width={72} height={68} className="mt-7 size-16 rounded-2xl shadow-2xl ring-2 ring-gold/70" aria-hidden />
+            <h1 className="font-display mt-6 text-[2.75rem] font-bold leading-[1.02] sm:text-6xl md:text-7xl">
               Your batch.<br />
               Your voice.<br />
-              <span className="text-gradient">CR Election 2026</span>
+              <span className="text-gold-gradient italic">CR Election 2026</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
               {election?.description?.trim() ||
                 `Choose the Class Representative who will speak for ${settings.batch}. One verified student, one secret ballot — sealed, audited and transparent.`}
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="xl" className="group relative overflow-hidden bg-gradient-to-r from-electric to-indigo-500 shadow-glow hover:brightness-110">
+              <Button asChild size="xl" className="group relative overflow-hidden bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
                 <Link href="/vote">
                   <Vote /> {votingOpen ? "Start voting" : "Open voter portal"}
                   <ArrowRight className="transition group-hover:translate-x-1" />
@@ -75,19 +78,19 @@ export default async function HomePage() {
             <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-medium text-slate-400">
               {[[ShieldCheck, "OTP-verified voters"], [EyeOff, "Secret ballot"], [FileClock, "Tamper-evident audit log"]].map(([Icon, label]) => {
                 const I = Icon as typeof ShieldCheck;
-                return <li key={label as string} className="flex items-center gap-2"><I className="size-4 text-blue-300" />{label as string}</li>;
+                return <li key={label as string} className="flex items-center gap-2"><I className="size-4 text-gold-300" />{label as string}</li>;
               })}
             </ul>
           </div>
 
           <div className="relative animate-fade-up [animation-delay:150ms]">
-            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-electric/30 via-indigo-500/10 to-transparent blur-2xl" aria-hidden />
+            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-gold/25 via-emerald/10 to-transparent blur-2xl" aria-hidden />
             <div className="glass rounded-3xl p-6 sm:p-7">
               {countdown ? (
                 <Countdown target={countdown.target} serverNow={serverNow} label={countdown.label} dark />
               ) : (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-300/80">Election status</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Election status</p>
                   <p className="mt-3 text-3xl font-bold tracking-tight">{status ? STATUS_LABEL[status] : "Not yet announced"}</p>
                   <p className="mt-1.5 text-sm text-slate-400">
                     {status === "RESULTS_PUBLISHED" ? "The official result has been published by the Election Committee." : status === "CLOSED" ? "Voting has ended. Results are published after verification." : "The Election Committee will announce the schedule here."}
@@ -106,7 +109,7 @@ export default async function HomePage() {
               One ballot per student
             </div>
             <div className="glass absolute -right-3 -top-5 hidden animate-float-slow items-center gap-2.5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-200 sm:flex">
-              <span className="flex size-8 items-center justify-center rounded-full bg-blue-500/20"><Lock className="size-4 text-blue-300" /></span>
+              <span className="flex size-8 items-center justify-center rounded-full bg-gold/20"><Lock className="size-4 text-gold-300" /></span>
               Results sealed until close
             </div>
           </div>
@@ -124,6 +127,28 @@ export default async function HomePage() {
           ].map((t) => <><span className="size-1.5 rotate-45 bg-gold" />{t}</>)}
         />
       </div>
+
+      {/* ───────────── CAMPUS ───────────── */}
+      <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6" aria-label="Our campus">
+        <Heading eyebrow="Islamic University · Kushtia" title="One campus. One voice." subtitle="Under the gulmohar trees of our university, the 28th ICT batch chooses who will carry its voice." />
+        <div className="mt-12 grid gap-4 md:grid-cols-6 md:grid-rows-2">
+          <figure className="reveal group relative min-h-64 overflow-hidden rounded-3xl shadow-lift md:col-span-4 md:row-span-2 md:min-h-[26rem]">
+            <Image src="/campus/aerial.jpg" alt="Islamic University campus from above" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-5 left-6 text-2xl text-white">The red-brick campus</figcaption>
+          </figure>
+          <figure className="reveal reveal-delay-1 group relative min-h-44 overflow-hidden rounded-3xl shadow-lift md:col-span-2">
+            <Image src="/campus/gate.jpg" alt="Main gate beneath a blooming gulmohar tree" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">The gate</figcaption>
+          </figure>
+          <figure className="reveal reveal-delay-2 group relative min-h-44 overflow-hidden rounded-3xl shadow-lift md:col-span-2">
+            <Image src="/campus/building.jpg" alt="Academic building framed by gulmohar blossoms" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">Where we learn</figcaption>
+          </figure>
+        </div>
+      </section>
 
       {/* ───────────── LIVE STATS ───────────── */}
       {turnout && (
@@ -164,7 +189,7 @@ export default async function HomePage() {
                       CANDIDATE · {String(i + 1).padStart(2, "0")}
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-5">
-                      <h3 className="text-2xl font-bold tracking-tight text-white">{c.display_name}</h3>
+                      <h3 className="font-display text-2xl font-bold text-white">{c.display_name}</h3>
                       <p className="mt-0.5 text-sm text-slate-300">Roll {c.roll_number}</p>
                     </div>
                   </div>
@@ -182,12 +207,13 @@ export default async function HomePage() {
       </section>
 
       {/* ───────────── HOW IT WORKS ───────────── */}
-      <section id="how-it-works" className="noise relative scroll-mt-24 overflow-hidden bg-navy py-20 text-white sm:py-24">
-        <div className="aurora opacity-60" aria-hidden />
+      <section id="how-it-works" className="noise relative isolate scroll-mt-24 overflow-hidden bg-emerald-900 py-20 text-white sm:py-24">
+        <Image src="/campus/building.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover opacity-25 mix-blend-luminosity" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/90 to-navy/95" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <Heading dark eyebrow="Four steps · about two minutes" title="Vote in under two minutes" subtitle="Designed for your phone. No app, no account, no passwords." />
           <ol className="relative mt-16 grid gap-5 md:grid-cols-4">
-            <div className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent md:block" aria-hidden />
+            <div className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent md:block" aria-hidden />
             {[
               { icon: Fingerprint, t: "Enter your roll", d: "Type your university roll number." },
               { icon: KeyRound, t: "Verify the code", d: "A 6-digit one-time code goes to your registered email or phone." },
@@ -195,7 +221,7 @@ export default async function HomePage() {
               { icon: ReceiptText, t: "Keep your receipt", d: "A receipt ID proves your ballot counted — never who you chose." },
             ].map(({ icon: Icon, t, d }, i) => (
               <li key={t} className={cn("reveal relative text-center", `reveal-delay-${i}`)}>
-                <div className="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-electric to-indigo-500 shadow-glow">
+                <div className="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-900 ring-1 ring-gold/50 shadow-glow">
                   <Icon className="size-6" aria-hidden />
                   <span className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full border border-navy bg-white text-[11px] font-bold text-navy">{i + 1}</span>
                 </div>
@@ -212,14 +238,14 @@ export default async function HomePage() {
         <Heading eyebrow="Trust by design" title="Built so nobody has to be trusted" subtitle="The rules are enforced inside the database itself — not just by the website." />
         <div className="mt-14 grid gap-4 md:grid-cols-6">
           {[
-            { icon: Lock, t: "One person, one vote", d: "Row locks and a unique constraint make a second ballot impossible — even under thousands of simultaneous requests.", span: "md:col-span-3", tone: "from-blue-50 to-white" },
-            { icon: EyeOff, t: "A genuinely secret ballot", d: "Who voted and what was chosen live in separate tables with no link between them. Your receipt never shows your choice.", span: "md:col-span-3", tone: "from-indigo-50 to-white" },
+            { icon: Lock, t: "One person, one vote", d: "Row locks and a unique constraint make a second ballot impossible — even under thousands of simultaneous requests.", span: "md:col-span-3", tone: "from-emerald-50 to-white" },
+            { icon: EyeOff, t: "A genuinely secret ballot", d: "Who voted and what was chosen live in separate tables with no link between them. Your receipt never shows your choice.", span: "md:col-span-3", tone: "from-amber-50 to-white" },
             { icon: ShieldCheck, t: "Sealed results", d: "Candidate-wise counts cannot be computed until voting closes.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
             { icon: FileClock, t: "Tamper-evident audit trail", d: "Every administrative action is recorded in a hash-chained, append-only log.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
             { icon: Gavel, t: "Two-person corrections", d: "No ballot is ever edited. Corrections need a reason and a second administrator’s approval.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
           ].map(({ icon: Icon, t, d, span, tone }, i) => (
             <SpotlightCard key={t} className={cn("reveal rounded-3xl border border-line bg-gradient-to-br p-7 shadow-card", tone, span, `reveal-delay-${i % 3}`)}>
-              <span className="flex size-11 items-center justify-center rounded-xl bg-navy text-white shadow-lg shadow-navy/20"><Icon className="size-5" /></span>
+              <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-900 text-gold-300 shadow-lg shadow-navy/20"><Icon className="size-5" /></span>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{t}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{d}</p>
             </SpotlightCard>
@@ -308,7 +334,7 @@ export default async function HomePage() {
           <div className="noise relative h-fit overflow-hidden rounded-3xl bg-navy p-7 text-white shadow-lift">
             <div className="aurora opacity-50" aria-hidden />
             <div className="relative">
-              <LifeBuoy className="size-7 text-blue-300" aria-hidden />
+              <LifeBuoy className="size-7 text-gold-300" aria-hidden />
               <h3 className="mt-4 text-xl font-semibold">Need help?</h3>
               <p className="mt-1.5 text-sm text-slate-400">Code not arriving, roll not accepted, or a suspected misuse of your identity — tell the committee.</p>
               <ul className="mt-6 space-y-3 text-sm text-slate-200">
@@ -324,12 +350,13 @@ export default async function HomePage() {
       </section>
 
       {/* ───────────── FINAL CTA ───────────── */}
-      <section className="noise relative isolate overflow-hidden bg-navy py-20 text-center text-white">
-        <div className="aurora" aria-hidden><i /></div>
+      <section className="noise relative isolate overflow-hidden bg-navy py-24 text-center text-white">
+        <Image src="/campus/aerial-wide.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/95 via-emerald-900/85 to-navy/70" aria-hidden />
         <div className="relative mx-auto max-w-2xl px-4">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">Make your vote <span className="text-gold">count</span>.</h2>
+          <h2 className="font-display text-4xl font-bold sm:text-6xl">Make your vote <span className="text-gold-gradient italic">count</span>.</h2>
           <p className="mt-4 text-slate-300">{votingOpen ? "Voting is live. It takes under two minutes." : "Open the voter portal when the election goes live."}</p>
-          <Button asChild size="xl" className="mt-8 bg-gradient-to-r from-electric to-indigo-500 shadow-glow hover:brightness-110">
+          <Button asChild size="xl" className="mt-8 bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
             <Link href="/vote"><Vote /> {votingOpen ? "Cast your vote" : "Voter portal"} <ArrowRight /></Link>
           </Button>
         </div>
@@ -341,10 +368,10 @@ export default async function HomePage() {
 function Heading({ eyebrow, title, subtitle, align = "center", dark = false }: { eyebrow: string; title: string; subtitle?: string; align?: "center" | "left"; dark?: boolean }) {
   return (
     <div className={cn("reveal", align === "center" ? "mx-auto max-w-2xl text-center" : "")}>
-      <p className={cn("inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]", dark ? "text-blue-300" : "text-electric")}>
+      <p className={cn("inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]", dark ? "text-gold-300" : "text-emerald")}>
         <span className="h-px w-6 bg-gold" />{eyebrow}<span className={cn("h-px w-6 bg-gold", align === "left" && "hidden")} />
       </p>
-      <h2 className={cn("mt-4 text-3xl font-extrabold tracking-[-0.03em] sm:text-5xl", dark && "text-white")}>{title}</h2>
+      <h2 className={cn("font-display mt-4 text-3xl font-bold sm:text-5xl", dark && "text-white")}>{title}</h2>
       {subtitle && <p className={cn("mt-4 text-base leading-relaxed", dark ? "text-slate-400" : "text-muted")}>{subtitle}</p>}
     </div>
   );

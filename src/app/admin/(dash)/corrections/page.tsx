@@ -34,12 +34,12 @@ export default async function CorrectionsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone={tone[r.status]}>{r.status.toLowerCase()}</Badge>
                   <span className="font-semibold text-white">{r.correction === "INVALIDATE_BALLOT" ? "Invalidate ballot" : "Reinstate ballot"}</span>
-                  <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs text-blue-300">{r.ballot_ref}</code>
+                  <code className="rounded bg-white/5 px-1.5 py-0.5 text-xs text-gold-300">{r.ballot_ref}</code>
                   <span className="text-xs text-slate-500">current: {r.ballot_status.toLowerCase()}</span>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{r.reason}</p>
                 {r.evidence_note && <p className="mt-1 text-sm text-slate-400">Evidence: {r.evidence_note}</p>}
-                {r.evidence_path && <a className="mt-1 inline-flex items-center gap-1 text-xs text-blue-400 hover:underline" href={`/api/admin/corrections/${r.id}/evidence`}><Paperclip className="size-3" /> Download attachment</a>}
+                {r.evidence_path && <a className="mt-1 inline-flex items-center gap-1 text-xs text-gold hover:underline" href={`/api/admin/corrections/${r.id}/evidence`}><Paperclip className="size-3" /> Download attachment</a>}
                 <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                   Requested by <span className="text-slate-300">{r.requester_name}</span> · {fmtDateTime(r.requested_at)}
                   {r.reviewed_by && <><ArrowRight className="size-3" /> {r.status.toLowerCase()} by <span className="text-slate-300">{r.reviewer_name}</span> · {fmtDateTime(r.reviewed_at)}</>}

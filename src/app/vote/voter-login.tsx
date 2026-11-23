@@ -75,7 +75,7 @@ export function VoterLogin() {
               <Input id="roll" value={roll} onChange={(e) => setRoll(e.target.value.toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="e.g. 2128001" maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-electric to-indigo-500 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>Send verification code <ArrowRight /></Button>
+            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>Send verification code <ArrowRight /></Button>
           </form>
         ) : (
           <form onSubmit={verify} className="space-y-5">
@@ -84,7 +84,7 @@ export function VoterLogin() {
               <p className="mt-1 text-sm text-muted">Roll <strong className="text-ink">{roll}</strong></p>
             </div>
             {notice && (
-              <div className="flex gap-3 rounded-xl bg-electric-50 p-3 text-sm text-blue-900"><MessageSquareText className="size-4 shrink-0 mt-0.5" /> {notice}</div>
+              <div className="flex gap-3 rounded-xl bg-electric-50 p-3 text-sm text-emerald-900"><MessageSquareText className="size-4 shrink-0 mt-0.5" /> {notice}</div>
             )}
             <Field label="6-digit code" htmlFor="otp" hint="The code expires in 5 minutes. Never share it.">
               <Input
@@ -95,7 +95,7 @@ export function VoterLogin() {
               />
             </Field>
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-electric to-indigo-500 shadow-glow hover:brightness-110" loading={busy} disabled={code.length !== 6}>Verify &amp; continue <ArrowRight /></Button>
+            <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={code.length !== 6}>Verify &amp; continue <ArrowRight /></Button>
             <div className="flex items-center justify-between text-sm">
               <button type="button" className="inline-flex items-center gap-1 font-medium text-muted hover:text-ink" onClick={() => { setStep("roll"); setError(null); }}>
                 <ArrowLeft className="size-4" /> Change roll

@@ -80,7 +80,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-blue-400" /> Recent administrative activity</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-white"><Activity className="size-4 text-gold" /> Recent administrative activity</CardTitle>
           <CardDescription>{admin.permissions.has("audit.read") ? "Latest audit log entries" : "Your recent actions"}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,7 +88,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             <ul className="divide-y divide-white/[0.06]">
               {activity.map((a) => (
                 <li key={a.id} className="flex flex-col gap-0.5 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <span className="flex items-center gap-2 text-slate-200"><CheckCheck className="size-3.5 text-slate-500" /> <code className="text-xs text-blue-300">{a.action}</code> <span className="text-slate-500">{a.actor_label ?? "system"}</span></span>
+                  <span className="flex items-center gap-2 text-slate-200"><CheckCheck className="size-3.5 text-slate-500" /> <code className="text-xs text-gold-300">{a.action}</code> <span className="text-slate-500">{a.actor_label ?? "system"}</span></span>
                   <span className="text-xs text-slate-500">{fmtDateTime(a.occurred_at)}</span>
                 </li>
               ))}

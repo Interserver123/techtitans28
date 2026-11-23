@@ -49,7 +49,7 @@ export default async function ResultsPage() {
                   <span className="absolute -bottom-3 -right-3 flex size-11 items-center justify-center rounded-full bg-electric shadow-lg"><Trophy className="size-5" /></span>
                 </div>
                 <div className="animate-fade-up [animation-delay:250ms]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-300">Official result · Elected Class Representative</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Official result · Elected Class Representative</p>
                   <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{published.outcome.winner.display_name}</h2>
                   <p className="mt-1 text-slate-400">Roll {published.outcome.winner.roll_number} · {published.outcome.winner.votes} votes ({pct(published.outcome.winner.votes, published.totals.valid_ballots)}% of valid ballots)</p>
                   <p className="mt-3 text-xs text-slate-500">Published {fmtDateTime(published.publishedAt)}</p>
