@@ -23,28 +23,28 @@ function sniff(buf: Buffer): "image/jpeg" | "image/png" | "image/webp" | "applic
  * neutralises polyglot files.
  */
 export async function processCandidatePhoto(input: Buffer) {
-  if (input.length === 0) throw new AppError("VALIDATION", "The file is empty.");
-  if (input.length > MAX_PHOTO_BYTES) throw new AppError("PAYLOAD_TOO_LARGE", "Photos must be 3 MB or smaller.");
+  if (input.length === 0) throw new AppError("VALIDATION", "ফাইলটি খালি।");
+  if (input.length > MAX_PHOTO_BYTES) throw new AppError("PAYLOAD_TOO_LARGE", "ছবি সর্বোচ্চ ৩ MB হতে পারে।");
   const kind = sniff(input);
   if (!kind || kind === "application/pdf") throw new AppError("UNSUPPORTED_MEDIA", "Upload a JPEG, PNG or WebP image.");
   try {
     const img = sharp(input, { limitInputPixels: 40_000_000, failOn: "error" });
     const meta = await img.metadata();
     if (!meta.width || !meta.height || meta.width < 200 || meta.height < 200) {
-      throw new AppError("VALIDATION", "Photos must be at least 200×200 pixels.");
+      throw new AppError("VALIDATION", "ছবি অন্তত ২০০×২০০ পিক্সেলের হতে হবে।");
     }
     return await img.rotate().resize(800, 800, { fit: "cover", position: "attention" }).webp({ quality: 84 }).toBuffer();
   } catch (e) {
     if (e instanceof AppError) throw e;
-    throw new AppError("UNSUPPORTED_MEDIA", "The image could not be processed.");
+    throw new AppError("UNSUPPORTED_MEDIA", "ছবিটি প্রক্রিয়া করা যায়নি।");
   }
 }
 
 export function validateEvidence(input: Buffer) {
-  if (input.length === 0) throw new AppError("VALIDATION", "The file is empty.");
-  if (input.length > MAX_EVIDENCE_BYTES) throw new AppError("PAYLOAD_TOO_LARGE", "Evidence files must be 5 MB or smaller.");
+  if (input.length === 0) throw new AppError("VALIDATION", "ফাইলটি খালি।");
+  if (input.length > MAX_EVIDENCE_BYTES) throw new AppError("PAYLOAD_TOO_LARGE", "প্রমাণের ফাইল সর্বোচ্চ ৫ MB হতে পারে।");
   const kind = sniff(input);
-  if (!kind) throw new AppError("UNSUPPORTED_MEDIA", "Evidence must be a PDF, JPEG, PNG or WebP file.");
+  if (!kind) throw new AppError("UNSUPPORTED_MEDIA", "প্রমাণ অবশ্যই PDF, JPEG, PNG বা WebP ফাইল হতে হবে।");
   return kind;
 }
 
@@ -59,7 +59,7 @@ export async function putObject(kind: "photo" | "evidence", bytes: Buffer, conte
   if (env().STORAGE_DRIVER === "supabase") {
     const bucket = kind === "photo" ? env().SUPABASE_PHOTO_BUCKET : env().SUPABASE_EVIDENCE_BUCKET;
     const { error } = await supabase().storage.from(bucket).upload(path, bytes, { contentType, upsert: false, cacheControl: "31536000" });
-    if (error) throw new AppError("INTERNAL", "Upload failed.");
+    if (error) throw new AppError("INTERNAL", "আপলোড ব্যর্থ হয়েছে।");
   } else {
     await query(`insert into media_objects (path, content_type, is_public, bytes) values ($1, $2, $3, $4)`, [path, contentType, kind === "photo", bytes]);
   }

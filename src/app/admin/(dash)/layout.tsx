@@ -3,7 +3,7 @@ import { getAdminElections } from "@/lib/admin-context";
 import { AdminShell } from "@/components/admin/shell";
 import { ROLE_LABELS } from "@/lib/permissions";
 
-export const metadata = { title: "Admin", robots: { index: false } };
+export const metadata = { title: "অ্যাডমিন", robots: { index: false } };
 
 export default async function DashLayout({ children }: { children: React.ReactNode }) {
   const admin = await adminPage(null);

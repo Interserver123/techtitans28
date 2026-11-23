@@ -10,7 +10,7 @@ export const POST = route(async (req) => {
   // Delivery runs after the response is sent: identical timing for every roll.
   after(deliver);
   const res = ok({
-    message: "If this roll number is registered and eligible, a 6-digit code has been sent to its registered contact.",
+    message: "রোল নম্বরটি নিবন্ধিত ও যোগ্য হলে এর নিবন্ধিত যোগাযোগে ৬ অঙ্কের একটি কোড পাঠানো হয়েছে।",
   });
   setChallengeCookie(res, challengeId);
   return res;

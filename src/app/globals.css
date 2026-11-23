@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.theme-admin, .theme-admin *));
 
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter Variable", "Noto Sans Bengali Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --color-navy: #08140f;
   --color-navy-800: #0f1f18;
   --color-navy-700: #173126;
@@ -15,7 +15,7 @@
   --color-gold-300: #e6cd8a;
   --color-emerald: #0f7a4f;
   --color-emerald-900: #06281c;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-display: "Iowan Old Style", "Noto Serif Bengali Variable", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --color-canvas: #f7f8f4;
   --color-surface: #ffffff;
   --color-ink: #0f172a;
@@ -85,6 +85,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "cv11", "ss01";
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -257,4 +258,14 @@ details[open] .faq-chevron { transform: rotate(180deg); }
     radial-gradient(900px 380px at 80% -10%, rgb(15 122 79 / 0.10), transparent 70%),
     radial-gradient(700px 320px at 0% 0%, rgb(201 162 74 / 0.08), transparent 70%);
   background-attachment: fixed;
+}
+
+/* Bengali: wide letter-spacing splits conjuncts (যুক্তাক্ষর) and vowel signs apart, so wide
+   tracking utilities are toned down for anything that is not a monospace code. Tight negative
+   tracking is also reset, because it makes Bengali glyphs collide. */
+html:lang(bn) :is([class*="tracking-[0."], .tracking-wide, .tracking-wider, .tracking-widest):not(.font-mono) {
+  letter-spacing: 0.01em;
+}
+html:lang(bn) :is([class*="tracking-[-"], .tracking-tight, .tracking-tighter):not(.font-mono) {
+  letter-spacing: 0;
 }

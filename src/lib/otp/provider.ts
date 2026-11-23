@@ -1,3 +1,4 @@
+import { bn as bnDigits } from "../format";
 import "server-only";
 import nodemailer from "nodemailer";
 import { env, isProductionLike } from "../env";
@@ -48,15 +49,15 @@ const smtpProvider: OtpProvider = {
     await transport.sendMail({
       from: e.SMTP_FROM,
       to: msg.to,
-      subject: "Your TechTitans-28 CR Election verification code",
+      subject: "টেকটাইটানস-২৮ সিআর নির্বাচন: আপনার যাচাই কোড",
       text: [
-        `Hello ${msg.studentName},`,
+        `প্রিয় ${msg.studentName},`,
         "",
-        `Your one-time verification code is: ${msg.code}`,
-        `It expires in ${msg.ttlMinutes} minutes and can be used once.`,
+        `আপনার এককালীন যাচাই কোড: ${msg.code}`,
+        `কোডটি ${bnDigits(msg.ttlMinutes)} মিনিট পর মেয়াদোত্তীর্ণ হবে এবং একবারই ব্যবহার করা যাবে।`,
         "",
-        "Never share this code. The Election Committee will never ask for it.",
-        "If you did not request this code, report it to the Election Committee immediately.",
+        "এই কোড কখনো কাউকে দেবেন না। নির্বাচন কমিটির কেউ কখনো এটি চাইবেন না।",
+        "আপনি এই কোড না চেয়ে থাকলে এখনই নির্বাচন কমিটিকে জানান।",
       ].join("\n"),
     });
   },
@@ -74,7 +75,8 @@ const smsHttpProvider: OtpProvider = {
       body: JSON.stringify({
         to: msg.to,
         sender: e.SMS_SENDER_ID,
-        message: `TechTitans-28 CR Election code: ${msg.code}. Valid ${msg.ttlMinutes} min. Do not share.`,
+        // Bengali SMS is sent as Unicode (70 characters per segment); this stays within one segment.
+        message: `সিআর নির্বাচনের কোড: ${msg.code}। মেয়াদ ${bnDigits(msg.ttlMinutes)} মিনিট। কাউকে দেবেন না।`,
       }),
       signal: AbortSignal.timeout(10_000),
     });

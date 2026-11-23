@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { bnNum } from "@/lib/format";
 
 /** Counts up to `value` once when scrolled into view. Shows the final value for reduced-motion users. */
 export function AnimatedNumber({ value, suffix = "", decimals = 0 }: { value: number; suffix?: string; decimals?: number }) {
@@ -26,5 +27,5 @@ export function AnimatedNumber({ value, suffix = "", decimals = 0 }: { value: nu
     io.observe(el);
     return () => { io.disconnect(); cancelAnimationFrame(raf); };
   }, [value]);
-  return <span ref={ref} className="tabular-nums">{shown.toFixed(decimals)}{suffix}</span>;
+  return <span ref={ref} className="tabular-nums">{bnNum(Number(shown.toFixed(decimals)), decimals)}{suffix}</span>;
 }

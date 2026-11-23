@@ -6,19 +6,19 @@ import { audit } from "../audit";
 import { enforceRateLimit } from "../rate-limit";
 
 export const DISPUTE_CATEGORIES = {
-  IDENTITY_MISUSE: "Someone else may have voted using my identity",
-  OTP_NOT_RECEIVED: "I did not receive my verification code",
-  NOT_ON_REGISTER: "My roll number is not accepted",
-  TECHNICAL: "Technical problem while voting",
-  OTHER: "Other",
+  IDENTITY_MISUSE: "আমার পরিচয় ব্যবহার করে অন্য কেউ ভোট দিয়ে থাকতে পারে",
+  OTP_NOT_RECEIVED: "আমি যাচাই কোড পাইনি",
+  NOT_ON_REGISTER: "আমার রোল নম্বর গ্রহণ করছে না",
+  TECHNICAL: "ভোট দেওয়ার সময় কারিগরি সমস্যা",
+  OTHER: "অন্যান্য",
 } as const;
 
 export const disputeSchema = z.object({
-  rollNumber: z.union([z.literal(""), z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "Invalid roll number.")]).default(""),
-  reporterName: z.string().trim().min(2, "Enter your name.").max(120),
-  reporterContact: z.string().trim().min(5, "Enter a phone number or email.").max(254),
+  rollNumber: z.union([z.literal(""), z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "রোল নম্বর সঠিক নয়।")]).default(""),
+  reporterName: z.string().trim().min(2, "আপনার নাম লিখুন।").max(120),
+  reporterContact: z.string().trim().min(5, "একটি ফোন নম্বর বা ইমেইল লিখুন।").max(254),
   category: z.enum(Object.keys(DISPUTE_CATEGORIES) as [keyof typeof DISPUTE_CATEGORIES, ...(keyof typeof DISPUTE_CATEGORIES)[]]),
-  description: z.string().trim().min(10, "Describe the problem (at least 10 characters).").max(3000),
+  description: z.string().trim().min(10, "সমস্যাটি বর্ণনা করুন (অন্তত ১০ অক্ষর)।").max(3000),
 });
 
 /**
@@ -57,7 +57,7 @@ export async function listDisputes(status?: string) {
 
 export const disputeUpdateSchema = z.object({
   status: z.enum(["UNDER_REVIEW", "RESOLVED", "REJECTED"]),
-  resolutionNote: z.string().trim().min(5, "Add a note describing the decision.").max(3000),
+  resolutionNote: z.string().trim().min(5, "সিদ্ধান্ত বর্ণনা করে একটি নোট লিখুন।").max(3000),
 });
 
 export async function updateDispute(id: string, input: z.input<typeof disputeUpdateSchema>, adminId: string, ipHash: string | null) {

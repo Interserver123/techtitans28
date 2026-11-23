@@ -13,7 +13,7 @@ import { SpotlightCard } from "@/components/site/spotlight-card";
 import { AnimatedNumber } from "@/components/site/animated-number";
 import { Marquee } from "@/components/site/marquee";
 import { Button } from "@/components/ui/button";
-import { fmtDateTime, STATUS_LABEL } from "@/lib/format";
+import { bn, bnNum, fmtDateTime, STATUS_LABEL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -21,19 +21,19 @@ export default async function HomePage() {
   const status = election?.status ?? null;
   const countdown =
     election && status === "SCHEDULED" && new Date(election.opens_at) > new Date()
-      ? { target: new Date(election.opens_at).toISOString(), label: "Voting opens in" }
+      ? { target: new Date(election.opens_at).toISOString(), label: "ভোটগ্রহণ শুরু হতে বাকি" }
       : election && (status === "LIVE" || status === "PAUSED" || status === "SCHEDULED")
-        ? { target: new Date(election.closes_at).toISOString(), label: "Voting closes in" }
+        ? { target: new Date(election.closes_at).toISOString(), label: "ভোটগ্রহণ শেষ হতে বাকি" }
         : null;
 
   const order = ["DRAFT", "SCHEDULED", "LIVE", "CLOSED", "RESULTS_PUBLISHED"];
   const at = status === "PAUSED" ? 2 : Math.max(0, order.indexOf(status ?? "DRAFT"));
   const timeline = [
-    { t: "Candidates announced", d: `${candidates.length} approved candidate${candidates.length === 1 ? "" : "s"} for Class Representative`, when: null as string | null, icon: Users },
-    { t: "Voting opens", d: "Verified students cast one secret ballot", when: election ? fmtDateTime(election.opens_at) : "To be announced", icon: Zap },
-    { t: "Voting closes", d: "Ballots sealed; no further votes accepted", when: election ? fmtDateTime(election.closes_at) : "To be announced", icon: Lock },
-    { t: "Result verification", d: "Tally reconciled and verified by the Results Officer", when: election?.results_verified_at ? fmtDateTime(election.results_verified_at) : null, icon: Gavel },
-    { t: "Official result", d: "Published with a downloadable report", when: election?.results_published_at ? fmtDateTime(election.results_published_at) : null, icon: Trophy },
+    { t: "প্রার্থী ঘোষণা", d: `ক্লাস রিপ্রেজেন্টেটিভ পদে ${bnNum(candidates.length)} জন অনুমোদিত প্রার্থী`, when: null as string | null, icon: Users },
+    { t: "ভোটগ্রহণ শুরু", d: "যাচাইকৃত শিক্ষার্থীরা একটি করে গোপন ব্যালট দেবেন", when: election ? fmtDateTime(election.opens_at) : "পরে ঘোষণা করা হবে", icon: Zap },
+    { t: "ভোটগ্রহণ শেষ", d: "ব্যালট সিলগালা; এরপর আর কোনো ভোট গ্রহণ করা হবে না", when: election ? fmtDateTime(election.closes_at) : "পরে ঘোষণা করা হবে", icon: Lock },
+    { t: "ফলাফল যাচাই", d: "ফলাফল কর্মকর্তা ভোট গণনা মিলিয়ে যাচাই করবেন", when: election?.results_verified_at ? fmtDateTime(election.results_verified_at) : null, icon: Gavel },
+    { t: "অফিসিয়াল ফলাফল", d: "ডাউনলোডযোগ্য প্রতিবেদনসহ প্রকাশ", when: election?.results_published_at ? fmtDateTime(election.results_published_at) : null, icon: Trophy },
   ];
   const progress = [1, 2, 3, 3, 4][Math.min(at, 4)];
   const stateIndex = status === "RESULTS_PUBLISHED" ? 4 : status === "CLOSED" ? (election?.results_verified_at ? 3 : 2) : status === "LIVE" || status === "PAUSED" ? 1 : 0;
@@ -43,7 +43,7 @@ export default async function HomePage() {
     <>
       {/* ───────────── HERO ───────────── */}
       <section className="noise relative isolate overflow-hidden bg-navy text-white">
-        <Image src="/campus/aerial.jpg" alt="Aerial view of the Islamic University campus" fill priority sizes="100vw" className="ken-burns -z-20 object-cover" />
+        <Image src="/campus/aerial.jpg" alt="ইসলামী বিশ্ববিদ্যালয় ক্যাম্পাসের আকাশ থেকে তোলা দৃশ্য" fill priority sizes="100vw" className="ken-burns -z-20 object-cover" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-900/95 via-navy/85 to-navy/70" aria-hidden />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_0%,rgb(201_162_74/0.22),transparent_55%)]" aria-hidden />
         <div className="relative mx-auto grid max-w-6xl gap-14 px-4 pb-20 pt-12 sm:px-6 md:pb-28 md:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
@@ -54,29 +54,29 @@ export default async function HomePage() {
             </div>
             <Image src="/campus/logo.png" alt="" width={72} height={68} className="mt-7 size-16 rounded-2xl shadow-2xl ring-2 ring-gold/70" aria-hidden />
             <h1 className="font-display mt-6 text-[2.75rem] font-bold leading-[1.02] sm:text-6xl md:text-7xl">
-              Your batch.<br />
-              Your voice.<br />
-              <span className="text-gold-gradient italic">CR Election 2026</span>
+              আপনার ব্যাচ।<br />
+              আপনার কণ্ঠ।<br />
+              <span className="text-gold-gradient">সিআর নির্বাচন ২০২৬</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
               {election?.description?.trim() ||
-                `Choose the Class Representative who will speak for ${settings.batch}. One verified student, one secret ballot — sealed, audited and transparent.`}
+                `${settings.batch}-এর হয়ে কথা বলবেন যিনি, সেই ক্লাস রিপ্রেজেন্টেটিভকে বেছে নিন। একজন যাচাইকৃত শিক্ষার্থী, একটি গোপন ব্যালট — সিলগালা, নিরীক্ষিত ও স্বচ্ছ।`}
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="xl" className="group relative overflow-hidden bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
                 <Link href="/vote">
-                  <Vote /> {votingOpen ? "Start voting" : "Open voter portal"}
+                  <Vote /> {votingOpen ? "ভোট দেওয়া শুরু করুন" : "ভোটার পোর্টাল খুলুন"}
                   <ArrowRight className="transition group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button asChild size="xl" variant="outline" className="border-white/15 bg-white/5 text-white backdrop-blur hover:bg-white/10">
                 <Link href={status === "RESULTS_PUBLISHED" ? "/results" : "#candidates"}>
-                  {status === "RESULTS_PUBLISHED" ? <><Trophy /> Official results</> : <><Users /> Meet the candidates</>}
+                  {status === "RESULTS_PUBLISHED" ? <><Trophy /> অফিসিয়াল ফলাফল</> : <><Users /> প্রার্থীদের দেখুন</>}
                 </Link>
               </Button>
             </div>
             <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-medium text-slate-400">
-              {[[ShieldCheck, "OTP-verified voters"], [EyeOff, "Secret ballot"], [FileClock, "Tamper-evident audit log"]].map(([Icon, label]) => {
+              {[[ShieldCheck, "ওটিপি-যাচাইকৃত ভোটার"], [EyeOff, "গোপন ব্যালট"], [FileClock, "কারচুপি-প্রতিরোধী অডিট লগ"]].map(([Icon, label]) => {
                 const I = Icon as typeof ShieldCheck;
                 return <li key={label as string} className="flex items-center gap-2"><I className="size-4 text-gold-300" />{label as string}</li>;
               })}
@@ -90,14 +90,14 @@ export default async function HomePage() {
                 <Countdown target={countdown.target} serverNow={serverNow} label={countdown.label} dark />
               ) : (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Election status</p>
-                  <p className="mt-3 text-3xl font-bold tracking-tight">{status ? STATUS_LABEL[status] : "Not yet announced"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">নির্বাচনের অবস্থা</p>
+                  <p className="mt-3 text-3xl font-bold tracking-tight">{status ? STATUS_LABEL[status] : "এখনো ঘোষণা হয়নি"}</p>
                   <p className="mt-1.5 text-sm text-slate-400">
-                    {status === "RESULTS_PUBLISHED" ? "The official result has been published by the Election Committee." : status === "CLOSED" ? "Voting has ended. Results are published after verification." : "The Election Committee will announce the schedule here."}
+                    {status === "RESULTS_PUBLISHED" ? "নির্বাচন কমিটি অফিসিয়াল ফলাফল প্রকাশ করেছে।" : status === "CLOSED" ? "ভোটগ্রহণ শেষ হয়েছে। যাচাইয়ের পর ফলাফল প্রকাশ করা হবে।" : "নির্বাচন কমিটি এখানে সময়সূচি ঘোষণা করবে।"}
                   </p>
                 </div>
               )}
-              {status === "PAUSED" && <p className="mt-4 rounded-xl bg-amber-500/15 px-3 py-2 text-sm text-amber-200">Voting is temporarily paused by the Election Committee.</p>}
+              {status === "PAUSED" && <p className="mt-4 rounded-xl bg-amber-500/15 px-3 py-2 text-sm text-amber-200">নির্বাচন কমিটি সাময়িকভাবে ভোটগ্রহণ স্থগিত রেখেছে।</p>}
               {turnout && (
                 <div className="mt-6 border-t border-white/10 pt-5">
                   <LiveTurnout initial={turnout} live={status === "LIVE"} dark />
@@ -106,11 +106,11 @@ export default async function HomePage() {
             </div>
             <div className="glass absolute -bottom-9 -left-4 hidden animate-float items-center gap-2.5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-200 sm:flex">
               <span className="flex size-8 items-center justify-center rounded-full bg-green-500/20"><BadgeCheck className="size-4 text-green-400" /></span>
-              One ballot per student
+              প্রতি শিক্ষার্থীর একটি ব্যালট
             </div>
             <div className="glass absolute -right-3 -top-5 hidden animate-float-slow items-center gap-2.5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-200 sm:flex">
               <span className="flex size-8 items-center justify-center rounded-full bg-gold/20"><Lock className="size-4 text-gold-300" /></span>
-              Results sealed until close
+              ভোট শেষ না হওয়া পর্যন্ত ফলাফল সিলগালা
             </div>
           </div>
         </div>
@@ -122,43 +122,43 @@ export default async function HomePage() {
         <Marquee
           className="text-sm font-medium text-slate-500"
           items={[
-            "Islamic University, Bangladesh", "Department of ICT", `${settings.batch}`, "One student · one ballot", "Secret & verifiable", "Sealed until close",
-            "Mobile-first voting", "Hash-chained audit trail", "Independent Election Committee",
+            "ইসলামী বিশ্ববিদ্যালয়, বাংলাদেশ", "তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ", `${settings.batch}`, "একজন শিক্ষার্থী · একটি ব্যালট", "গোপন ও যাচাইযোগ্য", "শেষ পর্যন্ত সিলগালা",
+            "মোবাইলেই ভোট", "হ্যাশ-চেইনড অডিট ট্রেইল", "স্বাধীন নির্বাচন কমিটি",
           ].map((t) => <><span className="size-1.5 rotate-45 bg-gold" />{t}</>)}
         />
       </div>
 
       {/* ───────────── CAMPUS ───────────── */}
-      <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6" aria-label="Our campus">
-        <Heading eyebrow="Islamic University · Kushtia" title="One campus. One voice." subtitle="Under the gulmohar trees of our university, the 28th ICT batch chooses who will carry its voice." />
+      <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6" aria-label="আমাদের ক্যাম্পাস">
+        <Heading eyebrow="ইসলামী বিশ্ববিদ্যালয় · কুষ্টিয়া" title="এক ক্যাম্পাস। এক কণ্ঠ।" subtitle="কৃষ্ণচূড়ার ছায়ায় ঘেরা আমাদের বিশ্ববিদ্যালয়ে আইসিটির ২৮তম ব্যাচ বেছে নেবে তাদের কণ্ঠস্বর।" />
         <div className="mt-12 grid gap-4 md:grid-cols-6 md:grid-rows-2">
           <figure className="reveal group relative min-h-64 overflow-hidden rounded-3xl shadow-lift md:col-span-4 md:row-span-2 md:min-h-[26rem]">
-            <Image src="/campus/aerial.jpg" alt="Islamic University campus from above" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <Image src="/campus/aerial.jpg" alt="আকাশ থেকে ইসলামী বিশ্ববিদ্যালয় ক্যাম্পাস" fill sizes="(min-width:768px) 66vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
-            <figcaption className="font-display absolute bottom-5 left-6 text-2xl text-white">The red-brick campus</figcaption>
+            <figcaption className="font-display absolute bottom-5 left-6 text-2xl text-white">লাল ইটের ক্যাম্পাস</figcaption>
           </figure>
           <figure className="reveal reveal-delay-1 group relative min-h-44 overflow-hidden rounded-3xl shadow-lift md:col-span-2">
-            <Image src="/campus/gate.jpg" alt="Main gate beneath a blooming gulmohar tree" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <Image src="/campus/gate.jpg" alt="ফুটন্ত কৃষ্ণচূড়ার নিচে প্রধান ফটক" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
-            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">The gate</figcaption>
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">প্রধান ফটক</figcaption>
           </figure>
           <figure className="reveal reveal-delay-2 group relative min-h-44 overflow-hidden rounded-3xl shadow-lift md:col-span-2">
-            <Image src="/campus/building.jpg" alt="Academic building framed by gulmohar blossoms" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
+            <Image src="/campus/building.jpg" alt="কৃষ্ণচূড়ায় ঘেরা একাডেমিক ভবন" fill sizes="(min-width:768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent" />
-            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">Where we learn</figcaption>
+            <figcaption className="font-display absolute bottom-4 left-5 text-lg text-white">যেখানে আমরা শিখি</figcaption>
           </figure>
         </div>
       </section>
 
       {/* ───────────── LIVE STATS ───────────── */}
       {turnout && (
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6" aria-label="Election at a glance">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6" aria-label="এক নজরে নির্বাচন">
           <div className="reveal grid gap-px overflow-hidden rounded-3xl border border-line bg-line shadow-elite sm:grid-cols-4">
             {[
-              { k: "Eligible voters", v: turnout.eligible, s: "" },
-              { k: "Ballots cast", v: turnout.voted, s: "" },
-              { k: "Turnout", v: turnout.turnoutPct, s: "%", d: 1 },
-              { k: "Candidates", v: candidates.length, s: "" },
+              { k: "যোগ্য ভোটার", v: turnout.eligible, s: "" },
+              { k: "ভোট পড়েছে", v: turnout.voted, s: "" },
+              { k: "ভোটার উপস্থিতি", v: turnout.turnoutPct, s: "%", d: 1 },
+              { k: "প্রার্থী", v: candidates.length, s: "" },
             ].map((x) => (
               <div key={x.k} className="bg-surface px-6 py-7 text-center">
                 <p className="text-4xl font-extrabold tracking-tight sm:text-5xl"><AnimatedNumber value={x.v} suffix={x.s} decimals={x.d ?? 0} /></p>
@@ -167,7 +167,7 @@ export default async function HomePage() {
             ))}
           </div>
           {election && (
-            <p className="mt-4 text-center text-xs text-muted">Voting window: {fmtDateTime(election.opens_at)} – {fmtDateTime(election.closes_at)} (Asia/Dhaka)</p>
+            <p className="mt-4 text-center text-xs text-muted">ভোটগ্রহণের সময়: {fmtDateTime(election.opens_at)} – {fmtDateTime(election.closes_at)} (বাংলাদেশ সময়)</p>
           )}
         </section>
       )}
@@ -175,9 +175,9 @@ export default async function HomePage() {
       {/* ───────────── CANDIDATES ───────────── */}
       <section id="candidates" className="relative scroll-mt-24 overflow-hidden py-20 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Heading eyebrow="Position · Class Representative" title="Meet the candidates" subtitle="Approved by the Election Committee. Order does not imply ranking." />
+          <Heading eyebrow="পদ · ক্লাস রিপ্রেজেন্টেটিভ" title="প্রার্থীদের সাথে পরিচিত হোন" subtitle="নির্বাচন কমিটি কর্তৃক অনুমোদিত। তালিকার ক্রম কোনো র‍্যাঙ্কিং নির্দেশ করে না।" />
           {candidates.length === 0 ? (
-            <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">Candidates will be announced by the Election Committee.</div>
+            <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">নির্বাচন কমিটি প্রার্থীদের নাম ঘোষণা করবে।</div>
           ) : (
             <div className="mt-14 flex flex-wrap justify-center gap-6">
               {candidates.map((c, i) => (
@@ -186,17 +186,17 @@ export default async function HomePage() {
                     <CandidateAvatar name={c.display_name} url={c.photo_url} className="size-full text-5xl transition duration-700 group-hover:scale-[1.06]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
                     <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-navy/60 px-3 py-1 text-[11px] font-semibold tracking-wide text-white backdrop-blur">
-                      CANDIDATE · {String(i + 1).padStart(2, "0")}
+                      প্রার্থী · {bnNum(i + 1)}
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-5">
                       <h3 className="font-display text-2xl font-bold text-white">{c.display_name}</h3>
-                      <p className="mt-0.5 text-sm text-slate-300">Roll {c.roll_number}</p>
+                      <p className="mt-0.5 text-sm text-slate-300">রোল {bn(c.roll_number)}</p>
                     </div>
                   </div>
                   <div className="p-5">
-                    <p className="line-clamp-3 min-h-[3.9rem] text-sm leading-relaxed text-slate-600">{c.introduction || "Introduction coming soon."}</p>
+                    <p className="line-clamp-3 min-h-[3.9rem] text-sm leading-relaxed text-slate-600">{c.introduction || "পরিচিতি শিগগিরই আসছে।"}</p>
                     <Link href={`/candidates/${c.id}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-electric-600 transition hover:gap-2.5">
-                      Read manifesto <ArrowUpRight className="size-4" />
+                      ইশতেহার পড়ুন <ArrowUpRight className="size-4" />
                     </Link>
                   </div>
                 </SpotlightCard>
@@ -211,19 +211,19 @@ export default async function HomePage() {
         <Image src="/campus/building.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover opacity-25 mix-blend-luminosity" aria-hidden />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/90 to-navy/95" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-          <Heading dark eyebrow="Four steps · about two minutes" title="Vote in under two minutes" subtitle="Designed for your phone. No app, no account, no passwords." />
+          <Heading dark eyebrow="চারটি ধাপ · প্রায় দুই মিনিট" title="দুই মিনিটেই ভোট দিন" subtitle="আপনার ফোনের জন্যই তৈরি। কোনো অ্যাপ, অ্যাকাউন্ট বা পাসওয়ার্ড লাগবে না।" />
           <ol className="relative mt-16 grid gap-5 md:grid-cols-4">
             <div className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent md:block" aria-hidden />
             {[
-              { icon: Fingerprint, t: "Enter your roll", d: "Type your university roll number." },
-              { icon: KeyRound, t: "Verify the code", d: "A 6-digit one-time code goes to your registered email or phone." },
-              { icon: Vote, t: "Choose & confirm", d: "Select one candidate, review, then confirm." },
-              { icon: ReceiptText, t: "Keep your receipt", d: "A receipt ID proves your ballot counted — never who you chose." },
+              { icon: Fingerprint, t: "রোল নম্বর দিন", d: "আপনার বিশ্ববিদ্যালয় রোল নম্বর লিখুন।" },
+              { icon: KeyRound, t: "কোড যাচাই করুন", d: "নিবন্ধিত ইমেইল বা ফোনে ৬ অঙ্কের একটি যাচাই কোড যাবে।" },
+              { icon: Vote, t: "বেছে নিন ও নিশ্চিত করুন", d: "একজন প্রার্থী বেছে নিন, আরেকবার দেখে নিশ্চিত করুন।" },
+              { icon: ReceiptText, t: "রসিদ রেখে দিন", d: "রসিদ আইডি প্রমাণ করে আপনার ভোট গণনায় এসেছে — কাকে দিয়েছেন তা নয়।" },
             ].map(({ icon: Icon, t, d }, i) => (
               <li key={t} className={cn("reveal relative text-center", `reveal-delay-${i}`)}>
                 <div className="relative mx-auto flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-900 ring-1 ring-gold/50 shadow-glow">
                   <Icon className="size-6" aria-hidden />
-                  <span className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full border border-navy bg-white text-[11px] font-bold text-navy">{i + 1}</span>
+                  <span className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full border border-navy bg-white text-[11px] font-bold text-navy">{bnNum(i + 1)}</span>
                 </div>
                 <h3 className="mt-5 font-semibold">{t}</h3>
                 <p className="mx-auto mt-1.5 max-w-[16rem] text-sm leading-relaxed text-slate-400">{d}</p>
@@ -235,14 +235,14 @@ export default async function HomePage() {
 
       {/* ───────────── SECURITY BENTO ───────────── */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <Heading eyebrow="Trust by design" title="Built so nobody has to be trusted" subtitle="The rules are enforced inside the database itself — not just by the website." />
+        <Heading eyebrow="নকশাতেই আস্থা" title="কাউকে অন্ধভাবে বিশ্বাস করতে হয় না" subtitle="নিয়মগুলো শুধু ওয়েবসাইটে নয় — সরাসরি ডেটাবেসের ভেতরেই কার্যকর করা হয়।" />
         <div className="mt-14 grid gap-4 md:grid-cols-6">
           {[
-            { icon: Lock, t: "One person, one vote", d: "Row locks and a unique constraint make a second ballot impossible — even under thousands of simultaneous requests.", span: "md:col-span-3", tone: "from-emerald-50 to-white" },
-            { icon: EyeOff, t: "A genuinely secret ballot", d: "Who voted and what was chosen live in separate tables with no link between them. Your receipt never shows your choice.", span: "md:col-span-3", tone: "from-amber-50 to-white" },
-            { icon: ShieldCheck, t: "Sealed results", d: "Candidate-wise counts cannot be computed until voting closes.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
-            { icon: FileClock, t: "Tamper-evident audit trail", d: "Every administrative action is recorded in a hash-chained, append-only log.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
-            { icon: Gavel, t: "Two-person corrections", d: "No ballot is ever edited. Corrections need a reason and a second administrator’s approval.", span: "md:col-span-2", tone: "from-slate-50 to-white" },
+            { icon: Lock, t: "একজন, একটি ভোট", d: "রো-লক ও ইউনিক কনস্ট্রেইন্টের কারণে দ্বিতীয় ব্যালট দেওয়া অসম্ভব — একসাথে হাজারো অনুরোধ এলেও।", span: "md:col-span-3", tone: "from-emerald-50 to-white" },
+            { icon: EyeOff, t: "সত্যিকারের গোপন ব্যালট", d: "কে ভোট দিয়েছেন আর কী বেছে নিয়েছেন — এ দুটি আলাদা টেবিলে থাকে, তাদের মধ্যে কোনো সংযোগ নেই। রসিদে কখনো আপনার পছন্দ দেখা যায় না।", span: "md:col-span-3", tone: "from-amber-50 to-white" },
+            { icon: ShieldCheck, t: "সিলগালা ফলাফল", d: "ভোটগ্রহণ শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক গণনা করা যায় না।", span: "md:col-span-2", tone: "from-slate-50 to-white" },
+            { icon: FileClock, t: "কারচুপি-প্রতিরোধী অডিট ট্রেইল", d: "প্রতিটি প্রশাসনিক কাজ হ্যাশ-চেইনড, শুধু-সংযোজনযোগ্য লগে লিপিবদ্ধ হয়।", span: "md:col-span-2", tone: "from-slate-50 to-white" },
+            { icon: Gavel, t: "দুইজনের অনুমোদনে সংশোধন", d: "কোনো ব্যালট কখনো সম্পাদনা করা হয় না। সংশোধনের জন্য কারণ ও দ্বিতীয় একজন অ্যাডমিনের অনুমোদন লাগে।", span: "md:col-span-2", tone: "from-slate-50 to-white" },
           ].map(({ icon: Icon, t, d, span, tone }, i) => (
             <SpotlightCard key={t} className={cn("reveal rounded-3xl border border-line bg-gradient-to-br p-7 shadow-card", tone, span, `reveal-delay-${i % 3}`)}>
               <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-900 text-gold-300 shadow-lg shadow-navy/20"><Icon className="size-5" /></span>
@@ -256,7 +256,7 @@ export default async function HomePage() {
       {/* ───────────── TIMELINE ───────────── */}
       <section className="border-y border-line bg-gradient-to-b from-white to-canvas py-20 sm:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <Heading eyebrow="Election activity" title="Timeline" subtitle="Follow the election from announcement to the official result." />
+          <Heading eyebrow="নির্বাচনের কার্যক্রম" title="সময়রেখা" subtitle="ঘোষণা থেকে অফিসিয়াল ফলাফল পর্যন্ত নির্বাচনের প্রতিটি ধাপ অনুসরণ করুন।" />
           <ol className="relative mt-14 space-y-8 border-l border-line pl-9">
             {timeline.map(({ t, d, when, icon: Icon }, i) => {
               const done = i < stateIndex || (status === "RESULTS_PUBLISHED");
@@ -269,7 +269,7 @@ export default async function HomePage() {
                   </span>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <h3 className="font-semibold">{t}</h3>
-                    {current && <span className="rounded-full bg-electric-50 px-2.5 py-0.5 text-[11px] font-semibold text-electric-600">In progress</span>}
+                    {current && <span className="rounded-full bg-electric-50 px-2.5 py-0.5 text-[11px] font-semibold text-electric-600">চলমান</span>}
                     {when && <span className="text-xs text-muted">{when}</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-slate-600">{d}</p>
@@ -284,17 +284,17 @@ export default async function HomePage() {
       <section id="guidelines" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24">
         <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr]">
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <Heading align="left" eyebrow="Before you vote" title="Election guidelines" subtitle="Enforced by the system and by the Election Committee." />
-            <Button asChild size="lg" className="mt-8"><Link href="/vote">Go to voter portal <ArrowRight /></Link></Button>
+            <Heading align="left" eyebrow="ভোট দেওয়ার আগে" title="নির্বাচনী নির্দেশিকা" subtitle="সিস্টেম ও নির্বাচন কমিটি উভয়েই এগুলো কার্যকর করে।" />
+            <Button asChild size="lg" className="mt-8"><Link href="/vote">ভোটার পোর্টালে যান <ArrowRight /></Link></Button>
           </div>
           <div className="space-y-3">
             {[
-              [`Who can vote?`, `Only registered, active students of ${settings.batch}. Your roll number must be on the official register.`],
-              ["How many votes do I get?", "Exactly one ballot for one Class Representative candidate. Once submitted, it is final — nobody, including administrators, can change it."],
-              ["I didn’t get my code.", "Wait a minute and request a new one, and check spam. If your registered contact is wrong, report it on the help page so the committee can correct it."],
-              ["Can someone see who I voted for?", "No. Your identity and your choice are stored separately with no link between them. Your receipt proves a ballot was recorded, not what it contained."],
-              ["Someone voted using my identity.", "Report it immediately on the help page. The committee investigates in person. A report never creates an extra ballot."],
-              ["Can I vote for someone else or share my code?", "No. Voting on behalf of others is misconduct. Never share your one-time code — committee members will never ask for it."],
+              [`কারা ভোট দিতে পারবেন?`, `শুধু ${settings.batch}-এর নিবন্ধিত ও সক্রিয় শিক্ষার্থীরা। আপনার রোল নম্বর অফিসিয়াল তালিকায় থাকতে হবে।`],
+              ["আমি কয়টি ভোট দিতে পারব?", "ঠিক একটি ব্যালট, একজন ক্লাস রিপ্রেজেন্টেটিভ প্রার্থীর জন্য। একবার জমা দিলে সেটিই চূড়ান্ত — অ্যাডমিনসহ কেউই তা বদলাতে পারেন না।"],
+              ["আমার কোড আসেনি।", "এক মিনিট অপেক্ষা করে নতুন কোড চান এবং স্প্যাম ফোল্ডার দেখুন। নিবন্ধিত ফোন বা ইমেইল ভুল থাকলে সহায়তা পাতায় জানান, কমিটি তা সংশোধন করবে।"],
+              ["কেউ কি জানতে পারবে আমি কাকে ভোট দিয়েছি?", "না। আপনার পরিচয় ও আপনার পছন্দ আলাদাভাবে সংরক্ষিত থাকে, তাদের মধ্যে কোনো সংযোগ নেই। রসিদ শুধু প্রমাণ করে ব্যালট জমা পড়েছে, তাতে কী ছিল তা নয়।"],
+              ["আমার পরিচয় ব্যবহার করে কেউ ভোট দিয়েছে।", "সাথে সাথে সহায়তা পাতায় জানান। কমিটি সরাসরি তদন্ত করবে। অভিযোগ করলে বাড়তি কোনো ব্যালট তৈরি হয় না।"],
+              ["আমি কি অন্য কারো হয়ে ভোট দিতে বা কোড শেয়ার করতে পারি?", "না। অন্যের হয়ে ভোট দেওয়া অসদাচরণ। যাচাই কোড কখনো কাউকে দেবেন না — কমিটির কেউ কখনো তা চাইবেন না।"],
             ].map(([q, a], i) => (
               <details key={q} className={cn("reveal group rounded-2xl border border-line bg-surface p-5 shadow-card open:shadow-lift", `reveal-delay-${i % 3}`)}>
                 <summary className="flex cursor-pointer items-center justify-between gap-4 font-semibold">
@@ -312,7 +312,7 @@ export default async function HomePage() {
       <section id="committee" className="scroll-mt-24 border-t border-line bg-surface py-20 sm:py-24">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <Heading align="left" eyebrow="Independent oversight" title="Election Committee" />
+            <Heading align="left" eyebrow="স্বাধীন তত্ত্বাবধান" title="নির্বাচন কমিটি" />
             {settings.committee.length ? (
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {settings.committee.map((m) => (
@@ -328,22 +328,22 @@ export default async function HomePage() {
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-muted">Committee members will be listed here once announced.</p>
+              <p className="mt-6 text-sm text-muted">ঘোষণার পর কমিটির সদস্যদের নাম এখানে দেখানো হবে।</p>
             )}
           </div>
           <div className="noise relative h-fit overflow-hidden rounded-3xl bg-navy p-7 text-white shadow-lift">
             <div className="aurora opacity-50" aria-hidden />
             <div className="relative">
               <LifeBuoy className="size-7 text-gold-300" aria-hidden />
-              <h3 className="mt-4 text-xl font-semibold">Need help?</h3>
-              <p className="mt-1.5 text-sm text-slate-400">Code not arriving, roll not accepted, or a suspected misuse of your identity — tell the committee.</p>
+              <h3 className="mt-4 text-xl font-semibold">সাহায্য দরকার?</h3>
+              <p className="mt-1.5 text-sm text-slate-400">কোড আসছে না, রোল নম্বর গ্রহণ করছে না, বা আপনার পরিচয়ের অপব্যবহারের সন্দেহ — কমিটিকে জানান।</p>
               <ul className="mt-6 space-y-3 text-sm text-slate-200">
                 {settings.contact.email && <li className="flex items-center gap-2.5"><Mail className="size-4 text-slate-400" /><a className="hover:text-white" href={`mailto:${settings.contact.email}`}>{settings.contact.email}</a></li>}
                 {settings.contact.phone && <li className="flex items-center gap-2.5"><Phone className="size-4 text-slate-400" />{settings.contact.phone}</li>}
                 {settings.contact.office && <li className="flex items-center gap-2.5"><MapPin className="size-4 text-slate-400" />{settings.contact.office}</li>}
-                <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-slate-400" />Works on any modern phone browser</li>
+                <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-slate-400" />যেকোনো আধুনিক মোবাইল ব্রাউজারে চলে</li>
               </ul>
-              <Button asChild className="mt-7 w-full bg-white text-navy hover:bg-slate-100"><Link href="/help">Report a problem</Link></Button>
+              <Button asChild className="mt-7 w-full bg-white text-navy hover:bg-slate-100"><Link href="/help">সমস্যা জানান</Link></Button>
             </div>
           </div>
         </div>
@@ -354,10 +354,10 @@ export default async function HomePage() {
         <Image src="/campus/aerial-wide.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover" aria-hidden />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/95 via-emerald-900/85 to-navy/70" aria-hidden />
         <div className="relative mx-auto max-w-2xl px-4">
-          <h2 className="font-display text-4xl font-bold sm:text-6xl">Make your vote <span className="text-gold-gradient italic">count</span>.</h2>
-          <p className="mt-4 text-slate-300">{votingOpen ? "Voting is live. It takes under two minutes." : "Open the voter portal when the election goes live."}</p>
+          <h2 className="font-display text-4xl font-bold sm:text-6xl">আপনার ভোট, <span className="text-gold-gradient">আপনার শক্তি</span>।</h2>
+          <p className="mt-4 text-slate-300">{votingOpen ? "ভোটগ্রহণ চলছে। দুই মিনিটেরও কম সময় লাগবে।" : "নির্বাচন শুরু হলে ভোটার পোর্টাল খুলুন।"}</p>
           <Button asChild size="xl" className="mt-8 bg-gold text-navy shadow-xl shadow-black/30 hover:bg-gold-300">
-            <Link href="/vote"><Vote /> {votingOpen ? "Cast your vote" : "Voter portal"} <ArrowRight /></Link>
+            <Link href="/vote"><Vote /> {votingOpen ? "আপনার ভোট দিন" : "ভোটার পোর্টাল"} <ArrowRight /></Link>
           </Button>
         </div>
       </section>

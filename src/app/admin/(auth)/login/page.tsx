@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
           <AdminLogin />
         </div>
         <p className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">
-          <ShieldCheck className="size-3.5" /> Restricted to authorised Election Committee members. All access is audited.
+          <ShieldCheck className="size-3.5" /> শুধু অনুমোদিত নির্বাচন কমিটির সদস্যদের জন্য। প্রতিটি প্রবেশ অডিট করা হয়।
         </p>
       </div>
     </div>

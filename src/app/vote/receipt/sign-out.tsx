@@ -10,7 +10,7 @@ export function SignOutButton() {
   const [busy, setBusy] = useState(false);
   return (
     <Button variant="navy" className="flex-1" loading={busy} onClick={async () => { setBusy(true); await api("/api/vote/logout", { method: "POST" }); router.replace("/"); router.refresh(); }}>
-      <LogOut /> Finish &amp; sign out
+      <LogOut /> শেষ করে লগআউট করুন
     </Button>
   );
 }

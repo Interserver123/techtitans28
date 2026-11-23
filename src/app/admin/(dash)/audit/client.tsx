@@ -7,8 +7,8 @@ const PREFIXES = ["", "ADMIN.", "ELECTION.", "STUDENT.", "CANDIDATE.", "CORRECTI
 export function AuditFilter({ initial }: { initial: string }) {
   const router = useRouter();
   return (
-    <Select className="h-10 sm:w-60" aria-label="Filter by action" value={initial} onChange={(e) => router.push(e.target.value ? `/admin/audit?action=${e.target.value}` : "/admin/audit")}>
-      {PREFIXES.map((p) => <option key={p} value={p}>{p ? p.replace(".", "") : "All actions"}</option>)}
+    <Select className="h-10 sm:w-60" aria-label="কাজ অনুযায়ী ছাঁকুন" value={initial} onChange={(e) => router.push(e.target.value ? `/admin/audit?action=${e.target.value}` : "/admin/audit")}>
+      {PREFIXES.map((p) => <option key={p} value={p}>{p ? p.replace(".", "") : "সব কাজ"}</option>)}
     </Select>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { bn } from "@/lib/format";
 
 function parts(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -16,7 +17,7 @@ export function Countdown({ target, serverNow, label, dark = false }: { target: 
     return () => clearInterval(t);
   }, [serverNow]);
   const p = parts(new Date(target).getTime() - now);
-  const cells: [string, number][] = [["Days", p.d], ["Hours", p.h], ["Minutes", p.m], ["Seconds", p.s]];
+  const cells: [string, number][] = [["দিন", p.d], ["ঘণ্টা", p.h], ["মিনিট", p.m], ["সেকেন্ড", p.s]];
   return (
     <div aria-live="off">
       <p className={dark ? "text-xs font-semibold uppercase tracking-[0.18em] text-gold-300/80" : "text-xs font-semibold uppercase tracking-[0.18em] text-muted"}>{label}</p>
@@ -24,7 +25,7 @@ export function Countdown({ target, serverNow, label, dark = false }: { target: 
         {cells.map(([k, v]) => (
           <div key={k} className={dark ? "rounded-xl border border-white/10 bg-white/[0.04] px-2 py-3 text-center backdrop-blur" : "rounded-xl border border-line bg-surface px-2 py-3 text-center shadow-card"}>
             <div className={dark ? "text-2xl font-bold tabular-nums text-white sm:text-3xl" : "text-2xl font-bold tabular-nums sm:text-3xl"} suppressHydrationWarning>
-              {String(v).padStart(2, "0")}
+              {bn(String(v).padStart(2, "0"))}
             </div>
             <div className={dark ? "mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400" : "mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted"}>{k}</div>
           </div>

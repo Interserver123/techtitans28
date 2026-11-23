@@ -25,21 +25,21 @@ export function ReceiptVerifier() {
         }}
         className="space-y-4"
       >
-        <Field label="Receipt ID" htmlFor="receipt" hint="Format: TT28-XXXX-XXXX-XXXX">
+        <Field label="রসিদ আইডি" htmlFor="receipt" hint="ফরম্যাট: TT28-XXXX-XXXX-XXXX">
           <Input id="receipt" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="TT28-ABCD-EFGH-JKLM" autoComplete="off" spellCheck={false} className="font-mono tracking-wider" maxLength={19} required />
         </Field>
-        <Button type="submit" loading={busy} className="w-full">Verify receipt</Button>
+        <Button type="submit" loading={busy} className="w-full">রসিদ যাচাই করুন</Button>
       </form>
       {error && <Alert tone="error" className="mt-4">{error}</Alert>}
       {result?.found && (
         <div className="mt-5 flex gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-900">
           <BadgeCheck className="size-5 shrink-0" />
-          <div className="text-sm"><p className="font-semibold">Ballot recorded</p><p>{result.electionTitle} · {fmtDateTime(result.votedAt)}</p></div>
+          <div className="text-sm"><p className="font-semibold">ব্যালট জমা হয়েছে</p><p>{result.electionTitle} · {fmtDateTime(result.votedAt)}</p></div>
         </div>
       )}
       {result && !result.found && (
         <div className="mt-5 flex gap-3 rounded-xl border border-line bg-slate-50 p-4 text-sm text-slate-700">
-          <SearchX className="size-5 shrink-0" /> No ballot matches this receipt ID. Check the characters, or contact the Election Committee.
+          <SearchX className="size-5 shrink-0" /> এই রসিদ আইডির সাথে কোনো ব্যালট মেলেনি। অক্ষরগুলো আবার মিলিয়ে দেখুন, অথবা নির্বাচন কমিটির সাথে যোগাযোগ করুন।
         </div>
       )}
     </Card>

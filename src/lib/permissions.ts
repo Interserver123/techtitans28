@@ -13,10 +13,10 @@ export const ROLE_CODES = ["SUPER_ADMIN", "ELECTION_ADMIN", "RESULTS_OFFICER", "
 export type RoleCode = (typeof ROLE_CODES)[number];
 
 export const ROLE_LABELS: Record<RoleCode, string> = {
-  SUPER_ADMIN: "Super Admin",
-  ELECTION_ADMIN: "Election Admin",
-  RESULTS_OFFICER: "Results Officer",
-  AUDITOR: "Auditor",
+  SUPER_ADMIN: "সুপার অ্যাডমিন",
+  ELECTION_ADMIN: "নির্বাচন অ্যাডমিন",
+  RESULTS_OFFICER: "ফলাফল কর্মকর্তা",
+  AUDITOR: "নিরীক্ষক",
 };
 
 export function effectivePermissions(rolePermissions: string[], role: string, canPublish: boolean): Set<Permission> {

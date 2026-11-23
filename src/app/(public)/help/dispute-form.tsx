@@ -18,10 +18,10 @@ export function DisputeForm({ categories }: { categories: Record<string, string>
     return (
       <Card className="p-8 text-center">
         <CheckCircle2 className="mx-auto size-10 text-success" />
-        <h2 className="mt-4 text-xl font-semibold">Report received</h2>
-        <p className="mt-1 text-sm text-muted">Your reference number</p>
+        <h2 className="mt-4 text-xl font-semibold">আপনার অভিযোগ গৃহীত হয়েছে</h2>
+        <p className="mt-1 text-sm text-muted">আপনার রেফারেন্স নম্বর</p>
         <p className="mt-2 font-mono text-2xl font-bold tracking-wider">{ref}</p>
-        <p className="mt-4 text-sm text-muted">The Election Committee will contact you using the details you provided.</p>
+        <p className="mt-4 text-sm text-muted">আপনার দেওয়া তথ্য ব্যবহার করে নির্বাচন কমিটি আপনার সাথে যোগাযোগ করবে।</p>
       </Card>
     );
   }
@@ -37,19 +37,19 @@ export function DisputeForm({ categories }: { categories: Record<string, string>
           if (r.ok) setRef(r.reference); else setError(r.error.message);
         }}
       >
-        <Field label="What happened?" htmlFor="category">
+        <Field label="কী ঘটেছে?" htmlFor="category">
           <Select id="category" value={form.category} onChange={set("category")}>
             {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Select>
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Your name" htmlFor="name"><Input id="name" value={form.reporterName} onChange={set("reporterName")} required maxLength={120} autoComplete="name" /></Field>
-          <Field label="Roll number" htmlFor="roll" hint="Optional"><Input id="roll" value={form.rollNumber} onChange={set("rollNumber")} maxLength={20} autoComplete="off" /></Field>
+          <Field label="আপনার নাম" htmlFor="name"><Input id="name" value={form.reporterName} onChange={set("reporterName")} required maxLength={120} autoComplete="name" /></Field>
+          <Field label="রোল নম্বর" htmlFor="roll" hint="ঐচ্ছিক"><Input id="roll" value={form.rollNumber} onChange={set("rollNumber")} maxLength={20} autoComplete="off" /></Field>
         </div>
-        <Field label="Phone or email to reach you" htmlFor="contact"><Input id="contact" value={form.reporterContact} onChange={set("reporterContact")} required maxLength={254} /></Field>
-        <Field label="Details" htmlFor="desc" hint="Do not include any one-time codes."><Textarea id="desc" rows={5} value={form.description} onChange={set("description")} required minLength={10} maxLength={3000} /></Field>
+        <Field label="যোগাযোগের ফোন নম্বর বা ইমেইল" htmlFor="contact"><Input id="contact" value={form.reporterContact} onChange={set("reporterContact")} required maxLength={254} /></Field>
+        <Field label="বিস্তারিত" htmlFor="desc" hint="কোনো যাচাই কোড (ওটিপি) লিখবেন না।"><Textarea id="desc" rows={5} value={form.description} onChange={set("description")} required minLength={10} maxLength={3000} /></Field>
         {error && <Alert tone="error">{error}</Alert>}
-        <Button type="submit" loading={busy} className="w-full" size="lg">Submit report</Button>
+        <Button type="submit" loading={busy} className="w-full" size="lg">অভিযোগ জমা দিন</Button>
       </form>
     </Card>
   );

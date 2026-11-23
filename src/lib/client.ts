@@ -19,9 +19,9 @@ export async function api<T = Record<string, unknown>>(url: string, init: { meth
   try {
     const res = await fetch(url, { method: init.method ?? (body ? "POST" : "GET"), headers, body, credentials: "same-origin", cache: "no-store" });
     const data = await res.json().catch(() => null);
-    if (!data) return { ok: false, error: { code: "NETWORK", message: `Unexpected response (${res.status}).` } };
+    if (!data) return { ok: false, error: { code: "NETWORK", message: `অপ্রত্যাশিত সাড়া (${res.status})।` } };
     return data as ApiResult<T>;
   } catch {
-    return { ok: false, error: { code: "NETWORK", message: "Network error — check your connection and try again." } };
+    return { ok: false, error: { code: "NETWORK", message: "নেটওয়ার্কে সমস্যা — সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।" } };
   }
 }

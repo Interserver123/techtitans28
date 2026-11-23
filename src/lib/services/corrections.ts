@@ -6,9 +6,9 @@ import { audit } from "../audit";
 import { putObject, validateEvidence } from "../storage";
 
 export const correctionSchema = z.object({
-  ballotRef: z.string().trim().toUpperCase().regex(/^B-[A-F0-9]{16}$/, "Enter a valid ballot reference (B-…)."),
+  ballotRef: z.string().trim().toUpperCase().regex(/^B-[A-F0-9]{16}$/, "সঠিক ব্যালট রেফারেন্স লিখুন (B-…)।"),
   correction: z.enum(["INVALIDATE_BALLOT", "REINSTATE_BALLOT"]),
-  reason: z.string().trim().min(20, "Explain the reason in at least 20 characters.").max(2000),
+  reason: z.string().trim().min(20, "অন্তত ২০ অক্ষরে কারণ ব্যাখ্যা করুন।").max(2000),
   evidenceNote: z.string().trim().max(2000).optional().default(""),
 });
 
@@ -57,12 +57,12 @@ export async function createCorrection(
   const v = correctionSchema.parse(input);
   const el = await one<{ status: string }>(`select status from elections where id = $1`, [electionId]);
   if (!el) throw new AppError("NOT_FOUND");
-  if (el.status !== "CLOSED") throw new AppError("INVALID_STATE", "Corrections can only be requested after the election closes and before results are published.");
+  if (el.status !== "CLOSED") throw new AppError("INVALID_STATE", "শুধু নির্বাচন শেষ হওয়ার পর এবং ফলাফল প্রকাশের আগে সংশোধনের অনুরোধ করা যায়।");
   const ballot = await one<{ ballot_id: string; status: string }>(
     `select ballot_id, status from ballot_ledger($1) where ballot_ref = $2`, [electionId, v.ballotRef]);
-  if (!ballot) throw new AppError("NOT_FOUND", "No ballot with this reference exists in this election.");
-  if (v.correction === "INVALIDATE_BALLOT" && ballot.status !== "VALID") throw new AppError("INVALID_STATE", "This ballot is already invalidated.");
-  if (v.correction === "REINSTATE_BALLOT" && ballot.status !== "INVALIDATED") throw new AppError("INVALID_STATE", "Only invalidated ballots can be reinstated.");
+  if (!ballot) throw new AppError("NOT_FOUND", "এই নির্বাচনে এই রেফারেন্সের কোনো ব্যালট নেই।");
+  if (v.correction === "INVALIDATE_BALLOT" && ballot.status !== "VALID") throw new AppError("INVALID_STATE", "এই ব্যালট ইতিমধ্যে বাতিল।");
+  if (v.correction === "REINSTATE_BALLOT" && ballot.status !== "INVALIDATED") throw new AppError("INVALID_STATE", "শুধু বাতিল ব্যালটই পুনর্বহাল করা যায়।");
   let evidencePath: string | null = null;
   if (evidence && evidence.length) {
     const kind = validateEvidence(evidence);
@@ -84,7 +84,7 @@ export async function createCorrection(
     });
   } catch (e) {
     const m = fromDbError(e);
-    if (m?.code === "CONFLICT") throw new AppError("CONFLICT", "There is already a pending correction for this ballot.");
+    if (m?.code === "CONFLICT") throw new AppError("CONFLICT", "এই ব্যালটের জন্য ইতিমধ্যে একটি সংশোধন অপেক্ষমাণ।");
     throw m ?? e;
   }
 }
@@ -102,7 +102,7 @@ export async function cancelCorrection(id: string, adminId: string, ipHash: stri
   await tx(async (c) => {
     const r = await one<{ requested_by: string; status: string }>(`select requested_by, status from correction_requests where id = $1 for update`, [id], c);
     if (!r) throw new AppError("NOT_FOUND");
-    if (r.requested_by !== adminId) throw new AppError("FORBIDDEN", "Only the requester can withdraw a correction request.");
+    if (r.requested_by !== adminId) throw new AppError("FORBIDDEN", "শুধু অনুরোধকারীই সংশোধনের অনুরোধ প্রত্যাহার করতে পারেন।");
     if (r.status !== "PENDING") throw new AppError("INVALID_STATE");
     await query(`update correction_requests set status = 'CANCELLED' where id = $1`, [id], c);
     await audit({ actorType: "ADMIN", adminId, action: "CORRECTION.CANCELLED", entityType: "correction_request", entityId: id, ipHash }, c);

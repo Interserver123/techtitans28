@@ -24,7 +24,7 @@ export type AdminCandidate = {
 };
 
 export const candidateSchema = z.object({
-  rollNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "Enter the candidate's roll number."),
+  rollNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,20}$/, "প্রার্থীর রোল নম্বর লিখুন।"),
   displayName: z.string().trim().min(2).max(120),
   introduction: z.string().trim().max(600).default(""),
   manifesto: z.string().trim().max(6000).default(""),
@@ -48,8 +48,8 @@ async function resolveCandidateStudent(rollNumber: string, c: Parameters<typeof 
     [rollNumber],
     c,
   );
-  if (!s) throw new AppError("VALIDATION", "No student with this roll number is on the register.");
-  if (!s.is_active || !s.is_eligible || !s.ok_batch) throw new AppError("VALIDATION", "Candidates must be active, eligible members of the batch.");
+  if (!s) throw new AppError("VALIDATION", "তালিকায় এই রোল নম্বরের কোনো শিক্ষার্থী নেই।");
+  if (!s.is_active || !s.is_eligible || !s.ok_batch) throw new AppError("VALIDATION", "প্রার্থীকে অবশ্যই এই ব্যাচের সক্রিয় ও যোগ্য সদস্য হতে হবে।");
   return s.id;
 }
 
@@ -71,7 +71,7 @@ export async function createCandidate(electionId: string, input: z.input<typeof 
   } catch (e) {
     const m = fromDbError(e);
     if (m?.code === "CONFLICT" && (m.details as { constraint?: string })?.constraint?.includes("position_id_student_id")) {
-      throw new AppError("CONFLICT", "This student is already a candidate in this election.");
+      throw new AppError("CONFLICT", "এই শিক্ষার্থী ইতিমধ্যে এই নির্বাচনের প্রার্থী।");
     }
     throw m ?? e;
   }

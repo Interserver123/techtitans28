@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Brand } from "./brand";
+import { bn } from "@/lib/format";
 
 export function SiteFooter({ institution, department }: { institution: string; department: string }) {
   return (
@@ -13,30 +14,30 @@ export function SiteFooter({ institution, department }: { institution: string; d
         <div>
           <Brand dark />
           <p className="mt-4 max-w-sm text-sm leading-relaxed">
-            The official Class Representative election portal of TechTitans-28, {department}, {institution}.
+            টেকটাইটানস-২৮, {department}, {institution}-এর ক্লাস রিপ্রেজেন্টেটিভ (সিআর) নির্বাচনের অফিসিয়াল পোর্টাল।
           </p>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Election</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">নির্বাচন</p>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link className="hover:text-white" href="/vote">Voter portal</Link></li>
-            <li><Link className="hover:text-white" href="/results">Results &amp; turnout</Link></li>
-            <li><Link className="hover:text-white" href="/verify-receipt">Verify a receipt</Link></li>
+            <li><Link className="hover:text-white" href="/vote">ভোটার পোর্টাল</Link></li>
+            <li><Link className="hover:text-white" href="/results">ফলাফল ও ভোটার উপস্থিতি</Link></li>
+            <li><Link className="hover:text-white" href="/verify-receipt">রসিদ যাচাই করুন</Link></li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Support</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">সহায়তা</p>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link className="hover:text-white" href="/help">Report a problem</Link></li>
-            <li><Link className="hover:text-white" href="/#guidelines">Voting guidelines</Link></li>
-            <li><Link className="hover:text-white" href="/admin/login">Committee sign-in</Link></li>
+            <li><Link className="hover:text-white" href="/help">সমস্যা জানান</Link></li>
+            <li><Link className="hover:text-white" href="/#guidelines">ভোটদানের নির্দেশিকা</Link></li>
+            <li><Link className="hover:text-white" href="/admin/login">কমিটির লগইন</Link></li>
           </ul>
         </div>
       </div>
       <div className="border-t border-white/5">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>© {new Date().getFullYear()} TechTitans-28 Election Committee · {institution}</p>
-          <p>One student · one ballot · secret vote</p>
+          <p>© {bn(new Date().getFullYear())} টেকটাইটানস-২৮ নির্বাচন কমিটি · {institution}</p>
+          <p>একজন শিক্ষার্থী · একটি ব্যালট · গোপন ভোট</p>
         </div>
       </div>
       </div>

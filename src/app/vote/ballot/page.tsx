@@ -13,11 +13,11 @@ export default async function BallotPage() {
   const candidates = await listApprovedCandidates(s.electionId);
   return (
     <div className="animate-fade-up">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-electric">Official ballot · Class Representative</p>
-      <h1 className="font-display mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Choose one candidate</h1>
-      <p className="mt-1 text-sm text-muted">Signed in as <strong className="text-ink">{s.fullName}</strong> ({s.rollNumber}). Your choice is secret.</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-electric">অফিসিয়াল ব্যালট · ক্লাস রিপ্রেজেন্টেটিভ</p>
+      <h1 className="font-display mt-2 text-2xl font-bold tracking-tight sm:text-3xl">একজন প্রার্থী বেছে নিন</h1>
+      <p className="mt-1 text-sm text-muted">লগইন করেছেন <strong className="text-ink">{s.fullName}</strong> ({s.rollNumber}) হিসেবে। আপনার পছন্দ সম্পূর্ণ গোপন।</p>
       {!isVotingOpen(e) ? (
-        <Alert className="mt-6" tone="warning" title={e.status === "PAUSED" ? "Voting is paused" : "Voting is not open"}>Your ballot cannot be submitted right now.</Alert>
+        <Alert className="mt-6" tone="warning" title={e.status === "PAUSED" ? "ভোটগ্রহণ স্থগিত" : "ভোটগ্রহণ চালু নেই"}>এই মুহূর্তে আপনার ব্যালট জমা দেওয়া যাবে না।</Alert>
       ) : (
         <BallotForm candidates={candidates} expiresAt={new Date(s.expiresAt).toISOString()} serverNow={new Date().toISOString()} />
       )}

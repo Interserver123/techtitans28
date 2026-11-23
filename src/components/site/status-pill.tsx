@@ -15,7 +15,7 @@ export function StatusPill({ status, className }: { status: string | null; class
   return (
     <span className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset", tone[s] ?? tone.NONE, className)}>
       <span className={cn("size-2 rounded-full", s === "LIVE" ? "bg-success animate-pulse-dot" : s === "PAUSED" ? "bg-warning" : s === "SCHEDULED" ? "bg-electric" : s === "RESULTS_PUBLISHED" ? "bg-violet-500" : "bg-slate-400")} />
-      {s === "NONE" ? "No election" : s === "LIVE" ? "Voting live" : STATUS_LABEL[s]}
+      {s === "NONE" ? "কোনো নির্বাচন নেই" : s === "LIVE" ? "ভোটগ্রহণ চলছে" : STATUS_LABEL[s]}
     </span>
   );
 }

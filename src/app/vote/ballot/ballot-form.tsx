@@ -61,13 +61,13 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
   return (
     <div className="mt-6 pb-28">
       <div className={cn("mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1", left < 120000 ? "bg-amber-50 text-amber-800 ring-amber-200" : "bg-slate-100 text-slate-600 ring-slate-200")}>
-        <Clock className="size-3.5" /> Session {expired ? "expired" : `expires in ${mm}:${String(ss).padStart(2, "0")}`}
+        <Clock className="size-3.5" /> {expired ? "সেশনের মেয়াদ শেষ" : `সেশন শেষ হবে ${`${mm}:${String(ss).padStart(2, "0")}`.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)])} মিনিটে`}
       </div>
-      {expired && <Alert tone="warning" title="Session expired" className="mb-4">For security, please <a className="underline" href="/vote">verify again</a>. No ballot was submitted.</Alert>}
+      {expired && <Alert tone="warning" title="সেশনের মেয়াদ শেষ" className="mb-4">নিরাপত্তার জন্য অনুগ্রহ করে <a className="underline" href="/vote">আবার যাচাই করুন</a>। কোনো ব্যালট জমা পড়েনি।</Alert>}
 
       {stage === "choose" ? (
         <fieldset>
-          <legend className="sr-only">Class Representative candidates</legend>
+          <legend className="sr-only">ক্লাস রিপ্রেজেন্টেটিভ প্রার্থীরা</legend>
           <div className="grid gap-3">
             {candidates.map((c) => {
               const active = selected === c.id;
@@ -78,7 +78,7 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
                     <CandidateAvatar name={c.display_name} url={c.photo_url} className="size-16 shrink-0 rounded-xl text-lg sm:size-20" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base font-semibold sm:text-lg">{c.display_name}</p>
-                      <p className="text-sm text-muted">Roll {c.roll_number}</p>
+                      <p className="text-sm text-muted">রোল {c.roll_number}</p>
                       {c.introduction && <p className="mt-1 line-clamp-2 text-sm text-slate-600">{c.introduction}</p>}
                     </div>
                     <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition peer-focus-visible:ring-4 peer-focus-visible:ring-electric/30", active ? "border-electric bg-electric text-white" : "border-slate-300")}>
@@ -88,7 +88,7 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
                   {c.manifesto && (
                     <div className="border-t border-line px-4">
                       <button type="button" onClick={() => setOpen(open === c.id ? null : c.id)} className="flex w-full items-center justify-between py-2.5 text-sm font-medium text-electric" aria-expanded={open === c.id}>
-                        Manifesto <ChevronDown className={cn("size-4 transition", open === c.id && "rotate-180")} />
+                        ইশতেহার <ChevronDown className={cn("size-4 transition", open === c.id && "rotate-180")} />
                       </button>
                       {open === c.id && <p className="whitespace-pre-line pb-4 text-sm leading-relaxed text-slate-700">{c.manifesto}</p>}
                     </div>
@@ -101,16 +101,16 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
       ) : (
         choice && (
           <Card className="animate-fade-up p-6 text-center sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Review your ballot</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">আপনার ব্যালট আরেকবার দেখুন</p>
             <CandidateAvatar name={choice.display_name} url={choice.photo_url} className="mx-auto mt-5 size-28 rounded-2xl text-3xl" />
             <p className="mt-4 text-2xl font-bold tracking-tight">{choice.display_name}</p>
-            <p className="text-sm text-muted">Roll {choice.roll_number} · Class Representative</p>
+            <p className="text-sm text-muted">রোল {choice.roll_number} · ক্লাস রিপ্রেজেন্টেটিভ</p>
             <label className="mx-auto mt-6 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4 text-left text-sm">
-              <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-5 accent-[#3B82F6]" />
-              <span>I confirm this is my choice. I understand my ballot is <strong>final</strong> and cannot be changed after submission.</span>
+              <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
+              <span>আমি নিশ্চিত করছি, এটিই আমার পছন্দ। আমি জানি, জমা দেওয়ার পর আমার ব্যালট <strong>চূড়ান্ত</strong> এবং তা আর বদলানো যাবে না।</span>
             </label>
             {error && <Alert tone="error" className="mt-4 text-left">{error}</Alert>}
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> Your identity is recorded separately from your choice.</div>
+            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> আপনার পরিচয় আপনার পছন্দ থেকে আলাদাভাবে সংরক্ষিত হয়।</div>
           </Card>
         )
       )}
@@ -119,13 +119,13 @@ export function BallotForm({ candidates, expiresAt, serverNow }: { candidates: C
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           {stage === "choose" ? (
             <>
-              <p className="min-w-0 flex-1 truncate text-sm text-muted">{choice ? <>Selected: <strong className="text-ink">{choice.display_name}</strong></> : "Select one candidate"}</p>
-              <Button size="lg" disabled={!choice || expired} onClick={() => { setStage("review"); setConfirmed(false); window.scrollTo({ top: 0 }); }}>Review choice</Button>
+              <p className="min-w-0 flex-1 truncate text-sm text-muted">{choice ? <>নির্বাচিত: <strong className="text-ink">{choice.display_name}</strong></> : "একজন প্রার্থী বেছে নিন"}</p>
+              <Button size="lg" disabled={!choice || expired} onClick={() => { setStage("review"); setConfirmed(false); window.scrollTo({ top: 0 }); }}>পছন্দ যাচাই করুন</Button>
             </>
           ) : (
             <>
-              <Button size="lg" variant="outline" onClick={() => setStage("choose")} disabled={busy}><ArrowLeft /> Back</Button>
-              <Button size="lg" className="flex-1" variant="success" disabled={!confirmed || expired} loading={busy} onClick={submit}>Submit final ballot</Button>
+              <Button size="lg" variant="outline" onClick={() => setStage("choose")} disabled={busy}><ArrowLeft /> ফিরে যান</Button>
+              <Button size="lg" className="flex-1" variant="success" disabled={!confirmed || expired} loading={busy} onClick={submit}>চূড়ান্ত ব্যালট জমা দিন</Button>
             </>
           )}
         </div>
