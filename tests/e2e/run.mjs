@@ -67,7 +67,7 @@ await check("public landing page renders (desktop) without console errors", asyn
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: /সিআর নির্বাচন/ }).waitFor();
+  await page.getByRole("heading", { name: /আপনার কণ্ঠ/ }).waitFor();
   await page.getByText("প্রার্থীদের সাথে পরিচিত হোন").first().waitFor();
   await page.screenshot({ path: `${OUT}/landing-desktop.png`, fullPage: true });
   assert(errors.length === 0, `console errors: ${errors.join(" | ")}`);
