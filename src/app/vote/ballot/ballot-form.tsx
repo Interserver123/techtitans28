@@ -6,6 +6,7 @@ import { api } from "@/lib/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
+import { VoterError } from "@/components/site/voter-error";
 import { CandidateAvatar } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 import { dict, errorText, num, posLabel, type Lang } from "@/lib/i18n";
@@ -187,7 +188,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
             <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
             <span>{B.confirm1}<strong>{B.final}</strong>{B.confirm2}</span>
           </label>
-          {error && <Alert tone="error" className="mt-4 text-left">{error}</Alert>}
+          {error && <VoterError message={error} lang={lang} className="mt-4 text-left" />}
           <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> {B.separate}</div>
         </Card>
       )}

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { VoterError } from "@/components/site/voter-error";
+import { UrgentContact } from "@/components/site/urgent-contact";
 import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +65,7 @@ export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; pos
             <Field label={V.rollLabel} htmlFor="demo-roll">
               <Input id="demo-roll" value={roll} onChange={(e) => setRoll(latin(e.target.value).toUpperCase().replace(/\s/g, ""))} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
-            {error && <Alert tone="error">{error}</Alert>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button type="submit" size="lg" className="w-full" loading={busy} disabled={roll.length < 3}>{V.find} <ArrowRight /></Button>
           </form>
         )}
@@ -76,8 +78,8 @@ export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; pos
               <div className="flex items-center gap-3 p-4"><span className="size-5 shrink-0 text-center text-xs font-bold text-emerald-900" aria-hidden>#</span><div><dt className="text-xs text-muted">{V.rollLabel}</dt><dd className="font-mono font-semibold">{roll}</dd></div></div>
               <div className="flex items-center gap-3 p-4">{who.contactType === "EMAIL" ? <AtSign className="size-5 shrink-0 text-emerald-900" aria-hidden /> : <Phone className="size-5 shrink-0 text-emerald-900" aria-hidden />}<div className="min-w-0"><dt className="text-xs text-muted">{who.contactType === "EMAIL" ? V.confirmEmail : V.confirmPhone}</dt><dd className="break-all font-mono text-[15px] font-semibold">{who.maskedContact}</dd></div></div>
             </dl>
-            {who.deliverable ? <p className="text-sm text-slate-600">{V.codeWillGo(who.maskedContact)}</p> : <Alert tone="warning">{V.cannotDeliver}</Alert>}
-            {error && <Alert tone="error">{error}</Alert>}
+            {who.deliverable ? <p className="text-sm text-slate-600">{V.codeWillGo(who.maskedContact)}</p> : <><Alert tone="warning">{V.cannotDeliver}</Alert><UrgentContact lang={lang} /></>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button size="lg" className="w-full" loading={busy} disabled={!who.deliverable}
               onClick={() => void call<{ token: string }>("/api/demo/request-code", { roll }, (r) => { setToken(r.token); setCode(""); setStep("code"); })}>
               {who.contactType === "EMAIL" ? V.sendHere : V.sendHerePhone} <ArrowRight />
@@ -92,7 +94,7 @@ export function DemoFlow({ candidates, positions, lang }: { candidates: C[]; pos
             <Field label={t.codeLabel} htmlFor="demo-code">
               <Input id="demo-code" value={code} onChange={(e) => setCode(latin(e.target.value).replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="••••••" className="h-14 text-center font-mono text-2xl font-bold tracking-[0.5em]" required />
             </Field>
-            {error && <Alert tone="error">{error}</Alert>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button type="submit" size="lg" className="w-full" loading={busy} disabled={code.length !== 6}>{t.verify} <ArrowRight /></Button>
             <button type="button" onClick={restart} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> {t.other}</button>
           </form>

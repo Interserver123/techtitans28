@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { VoterError } from "@/components/site/voter-error";
+import { UrgentContact } from "@/components/site/urgent-contact";
 import { dict, errorText, num, type Lang } from "@/lib/i18n";
 
 /** Bengali keyboards type ০-৯; roll numbers and codes are stored with ASCII digits. */
@@ -90,7 +92,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
             <Field label={V.rollLabel} htmlFor="roll">
               <Input id="roll" value={roll} onChange={(e) => setRoll(latinDigits(e.target.value).toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>
-            {error && <Alert tone="error">{error}</Alert>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={roll.length < 3}>{V.find} <ArrowRight /></Button>
           </form>
         ) : step === "confirm" && who ? (
@@ -103,8 +105,8 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
             </dl>
             {who.deliverable
               ? <p className="text-sm text-slate-600">{V.codeWillGo(who.maskedContact)}</p>
-              : <Alert tone="warning">{V.cannotDeliver}</Alert>}
-            {error && <Alert tone="error">{error}</Alert>}
+              : <><Alert tone="warning">{V.cannotDeliver}</Alert><UrgentContact lang={lang} /></>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={!who.deliverable} onClick={() => void sendCode()}>
               {who.contactType === "EMAIL" ? V.sendHere : V.sendHerePhone} <ArrowRight />
             </Button>
@@ -129,7 +131,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
                 className="h-14 text-center font-mono text-2xl font-bold tracking-[0.5em]" required
               />
             </Field>
-            {error && <Alert tone="error">{error}</Alert>}
+            {error && <VoterError message={error} lang={lang} />}
             <Button type="submit" size="xl" className="w-full bg-gradient-to-r from-emerald to-emerald-900 shadow-glow hover:brightness-110" loading={busy} disabled={code.length !== 6}>{V.verify} <ArrowRight /></Button>
             <div className="flex items-center justify-between text-sm">
               <button type="button" className="inline-flex items-center gap-1 font-medium text-muted hover:text-ink" onClick={() => { setStep("roll"); setWho(null); setError(null); }}>

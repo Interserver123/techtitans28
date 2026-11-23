@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, Settings, ShieldHalf, UserCog, Users, Vote, X,
+  BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, MessageSquareHeart, Settings, ShieldHalf, UserCog, Users, Vote, X,
 } from "lucide-react";
 import Image from "next/image";
 import { Brand } from "@/components/site/brand";
@@ -22,6 +22,7 @@ const NAV = [
   { href: "/admin/disputes", label: "অভিযোগ", icon: LifeBuoy, perm: "disputes.read" },
   { href: "/admin/audit", label: "অডিট লগ", icon: FileClock, perm: "audit.read" },
   { href: "/admin/admins", label: "অ্যাডমিন", icon: UserCog, perm: "admins.manage" },
+  { href: "/admin/welcome", label: "স্বাগত বার্তা", icon: MessageSquareHeart, perm: "settings.manage" },
   { href: "/admin/settings", label: "সেটিংস", icon: Settings, perm: "settings.manage" },
 ] as const;
 
