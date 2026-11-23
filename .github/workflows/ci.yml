@@ -3,12 +3,18 @@ on:
   push:
   pull_request:
 
+# One publish at a time, so two sessions pushing together cannot race each other.
+concurrency:
+  group: ${{ github.event_name == 'push' && startsWith(github.ref_name, 'claude/') && 'publish' || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   verify:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # Matches the runner's pg_dump (17); a 17 dump cannot be restored into 16, which broke the backup test.
+        image: postgres:17
         env:
           POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
@@ -35,3 +41,46 @@ jobs:
           DATABASE_URL: postgres://unused:unused@localhost:5432/unused
           APP_SECRET_PEPPER: ci-build-pepper-ci-build-pepper-ci-build-pepper
           APP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+  # Every change pushed to a Claude working branch goes live automatically once `verify` passes:
+  # it is published to the branch Vercel deploys to production (and to main, kept identical).
+  # Nothing is ever force-pushed: if the live branch has newer work it is merged in first, and a
+  # real conflict stops the publish (the live site keeps running the previous version).
+  publish:
+    needs: verify
+    if: github.event_name == 'push' && startsWith(github.ref_name, 'claude/') && github.ref_name != 'claude/epic-johnson-2edi2p'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      LIVE_BRANCHES: "claude/epic-johnson-2edi2p main"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Publish to the live branches
+        run: |
+          set -euo pipefail
+          # Merge commits (if any) carry the pushed commit's author, so Vercel attributes the deploy correctly.
+          git config user.name  "$(git log -1 --format=%an)"
+          git config user.email "$(git log -1 --format=%ae)"
+          git fetch --no-tags origin $LIVE_BRANCHES
+          for b in $LIVE_BRANCHES; do
+            if git merge-base --is-ancestor "origin/$b" HEAD; then
+              echo "$b: fast-forward"
+            elif git merge-base --is-ancestor HEAD "origin/$b"; then
+              echo "$b already contains this commit"
+            else
+              echo "$b has newer work: merging it in"
+              if ! git merge --no-edit -m "Merge live branch $b into ${GITHUB_REF_NAME}" "origin/$b"; then
+                git merge --abort || true
+                echo "::error::Your change conflicts with newer work on $b. Nothing was published; the live site is unchanged."
+                exit 1
+              fi
+            fi
+          done
+          for b in $LIVE_BRANCHES; do
+            if git merge-base --is-ancestor HEAD "origin/$b"; then continue; fi
+            git push origin "HEAD:refs/heads/$b"
+          done
+          echo "### Published $(git rev-parse --short HEAD) to: $LIVE_BRANCHES" >> "$GITHUB_STEP_SUMMARY"
