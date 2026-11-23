@@ -265,14 +265,19 @@ describe("audit log integrity", () => {
     await expect(query(`update audit_logs set action = 'X.HIDDEN' where id = (select max(id) from audit_logs)`)).rejects.toThrow();
     await expect(query(`delete from audit_logs`)).rejects.toThrow();
     // Simulate a privileged attacker bypassing the trigger: the chain check catches it.
-    await asOwner(async (c) => {
+    const tamper = (sql: string) => asOwner(async (c) => {
       await c.query("alter table audit_logs disable trigger trg_audit_immutable");
-      await c.query(`update audit_logs set details = '{"tampered":true}' where id = (select min(id) + 1 from audit_logs)`);
+      await c.query(sql);
       await c.query("alter table audit_logs enable trigger trg_audit_immutable");
     });
+    const victim = await one<{ id: string; details: unknown }>(`select id::text, details from audit_logs order by id limit 1 offset 1`);
+    await tamper(`update audit_logs set details = '{"tampered":true}' where id = ${Number(victim!.id)}`);
     const broken = await verifyAuditChain();
     expect(broken.ok).toBe(false);
-    expect(broken.first_broken_id).not.toBeNull();
+    expect(String(broken.first_broken_id)).toBe(victim!.id);
+    // restore so later suites (backup verification) see an intact chain
+    await tamper(`update audit_logs set details = '${JSON.stringify(victim!.details).replace(/'/g, "''")}'::jsonb where id = ${Number(victim!.id)}`);
+    expect((await verifyAuditChain()).ok).toBe(true);
   });
 
   it("never contains OTP codes, passwords or ballot selections", async () => {

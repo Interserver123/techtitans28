@@ -10,8 +10,9 @@ psql "$PG_ADMIN_URL/postgres" -tAc "select 1 from pg_database where datname = '$
   || psql "$PG_ADMIN_URL/postgres" -c "create database $DB_NAME"
 MIGRATION_DATABASE_URL="$PG_ADMIN_URL/$DB_NAME" npx tsx scripts/migrate.ts
 psql "$PG_ADMIN_URL/$DB_NAME" -v ON_ERROR_STOP=1 -v pw="$APP_DB_PASSWORD" <<'SQL'
-select format('create role techtitans_app_user login password %L', :'pw')
+select 'create role techtitans_app_user login'
  where not exists (select 1 from pg_roles where rolname = 'techtitans_app_user') \gexec
+select format('alter role techtitans_app_user password %L', :'pw') \gexec
 grant techtitans_app to techtitans_app_user;
 SQL
 echo "✓ local database ready: postgres://techtitans_app_user:${APP_DB_PASSWORD}@localhost:5432/$DB_NAME"

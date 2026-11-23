@@ -14,10 +14,10 @@ export default async function setup() {
   const owner = new Client({ connectionString: `${base}/techtitans_test` });
   await owner.connect();
   await owner.query(`do $$ begin
-      if not exists (select 1 from pg_roles where rolname = 'techtitans_app_user') then
-        create role techtitans_app_user login password 'test_app_password';
+      if not exists (select 1 from pg_roles where rolname = 'techtitans_app_test') then
+        create role techtitans_app_test login password 'test_app_password';
       end if;
     end $$`);
-  await owner.query("grant techtitans_app to techtitans_app_user");
+  await owner.query("grant techtitans_app to techtitans_app_test");
   await owner.end();
 }

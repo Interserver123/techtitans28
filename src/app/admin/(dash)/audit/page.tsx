@@ -1,0 +1,51 @@
+import Link from "next/link";
+import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { adminPage } from "@/lib/session";
+import { listAudit, verifyAuditChain } from "@/lib/services/audit-read";
+import { PageHeader } from "@/components/admin/ui";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
+import { fmtDateTime } from "@/lib/format";
+import { AuditFilter } from "./client";
+
+export default async function AuditPage({ searchParams }: { searchParams: Promise<{ action?: string; before?: string }> }) {
+  await adminPage("audit.read");
+  const sp = await searchParams;
+  const action = sp.action && /^[A-Z][A-Z0-9_.]{0,63}$/.test(sp.action) ? sp.action : undefined;
+  const before = sp.before && /^\d+$/.test(sp.before) ? Number(sp.before) : undefined;
+  const [rows, chain] = await Promise.all([listAudit({ action, before, limit: 100 }), verifyAuditChain()]);
+  const last = rows.at(-1)?.id;
+  return (
+    <div>
+      <PageHeader title="Audit log" description="Append-only, hash-chained record of every privileged action. It cannot be edited or erased through the application." />
+      <Card className={`mb-4 flex items-center gap-3 p-4 ${chain.ok ? "border-green-500/25" : "border-red-500/40"}`}>
+        {chain.ok ? <ShieldCheck className="size-5 text-green-400" /> : <ShieldAlert className="size-5 text-red-400" />}
+        <p className="text-sm text-slate-200">
+          {chain.ok ? <>Hash chain intact · {chain.entries} entries verified</> : <>Hash chain BROKEN at entry #{chain.first_broken_id} — the audit log has been tampered with outside the application.</>}
+        </p>
+      </Card>
+      <Card>
+        <div className="border-b border-white/[0.06] p-4"><AuditFilter initial={action ?? ""} /></div>
+        <Table>
+          <THead><tr><TH>#</TH><TH>Time</TH><TH>Actor</TH><TH>Action</TH><TH className="hidden md:table-cell">Entity</TH><TH className="hidden lg:table-cell">Details</TH></tr></THead>
+          <TBody>
+            {rows.map((r) => (
+              <TR key={r.id}>
+                <TD className="font-mono text-xs text-slate-500">{r.id}</TD>
+                <TD className="whitespace-nowrap text-xs text-slate-400">{fmtDateTime(r.occurred_at, { second: "2-digit" })}</TD>
+                <TD className="text-xs text-slate-300">{r.actor_label ?? r.actor_type.toLowerCase()}</TD>
+                <TD><code className="text-xs text-blue-300">{r.action}</code></TD>
+                <TD className="hidden text-xs text-slate-400 md:table-cell">{r.entity_type}{r.entity_id ? ` · ${r.entity_id.slice(0, 8)}` : ""}</TD>
+                <TD className="hidden max-w-md truncate font-mono text-[11px] text-slate-500 lg:table-cell" title={JSON.stringify(r.details)}>{JSON.stringify(r.details)}</TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+        {rows.length === 100 && last && (
+          <div className="border-t border-white/[0.06] p-3 text-right"><Button asChild size="sm" variant="outline"><Link href={`?${new URLSearchParams({ ...(action ? { action } : {}), before: last })}`}>Older entries</Link></Button></div>
+        )}
+      </Card>
+    </div>
+  );
+}
