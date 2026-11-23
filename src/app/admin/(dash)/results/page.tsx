@@ -2,7 +2,7 @@ import { CheckCircle2, Download, FileSpreadsheet, Fingerprint, Scale, Trophy, XC
 import { DownloadButton } from "@/components/admin/step-up";
 import { adminPage } from "@/lib/session";
 import { getAdminElections } from "@/lib/admin-context";
-import { getResultSummary } from "@/lib/services/results";
+import { getResultSummary, getLiveTop3 } from "@/lib/services/results";
 import { getTurnout } from "@/lib/services/elections";
 import { PageHeader, NoElection, Sealed, Stat, ElectionStatusBadge } from "@/components/admin/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +14,14 @@ import { CandidateAvatar } from "@/components/site/candidate-avatar";
 import { bnNum, fmtDateTime, pct } from "@/lib/format";
 import { posLabel } from "@/lib/i18n";
 import { VerifyButton, PublishDialog } from "./client";
+import { LiveTop3 } from "./live-top3";
 
 export default async function ResultsAdminPage() {
   const admin = await adminPage("results.view");
   const { selected: e } = await getAdminElections();
+  const isSuper = admin.role === "SUPER_ADMIN";
+  const live = e && isSuper ? await getLiveTop3(admin.tokenHash, e.id).catch(() => null) : null;
+  const liveCard = e && live ? <LiveTop3 electionId={e.id} initial={live} live={e.status === "LIVE"} /> : null;
   if (!e) return <><PageHeader title="ফলাফল" /><NoElection /></>;
   if (!["CLOSED", "RESULTS_PUBLISHED"].includes(e.status)) {
     const t = await getTurnout(e);
@@ -25,6 +29,7 @@ export default async function ResultsAdminPage() {
       <div>
         <PageHeader title="ফলাফল" description={<span className="inline-flex items-center gap-2">{e.title} <ElectionStatusBadge status={e.status} /></span>} />
         <div className="mb-6 grid grid-cols-3 gap-3"><Stat label="যোগ্য" value={t.eligible} /><Stat label="ব্যালট" value={t.voted} tone="green" /><Stat label="ভোটার উপস্থিতি" value={`${bnNum(t.turnoutPct, t.turnoutPct % 1 ? 1 : 0)}%`} /></div>
+        {liveCard}
         <Sealed />
       </div>
     );
@@ -42,6 +47,7 @@ export default async function ResultsAdminPage() {
           {admin.permissions.has("ballots.read") && <DownloadButton size="sm" variant="outline" href={`/api/admin/results/${e.id}/ledger`} fallbackName="ballot-ledger.csv"><FileSpreadsheet /> ব্যালট লেজার</DownloadButton>}
         </>}
       />
+      {liveCard}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Stat label="যোগ্য ভোটার" value={r.turnout.eligible} />
         <Stat label="ভোটার (ব্যালট পেপার)" value={r.totals.participation} tone="green" hint={`প্রত্যেকে ${bnNum(r.totals.positions)}টি করে ভোট`} />
