@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChevronDown, Clock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Clock, Search, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +21,10 @@ export function BallotForm({ candidates, expiresAt, serverNow, lang = "en" }: { 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const T = dict(lang).cand;
+  const needle = q.trim().toLowerCase();
+  const visible = needle ? candidates.filter((c) => c.id === selected || c.display_name.toLowerCase().includes(needle) || c.roll_number.toLowerCase().includes(needle)) : candidates;
   const [left, setLeft] = useState(() => new Date(expiresAt).getTime() - new Date(serverNow).getTime());
   useEffect(() => {
     const skew = new Date(serverNow).getTime() - Date.now();
@@ -70,8 +74,17 @@ export function BallotForm({ candidates, expiresAt, serverNow, lang = "en" }: { 
       {stage === "choose" ? (
         <fieldset>
           <legend className="sr-only">{B.legend}</legend>
+          {candidates.length > 8 && (
+            <label className="relative mb-4 block">
+              <span className="sr-only">{T.search}</span>
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={T.search}
+                className="h-12 w-full rounded-xl border border-line bg-surface pl-11 pr-4 text-[15px] outline-none transition focus:border-emerald focus:ring-4 focus:ring-emerald/15" />
+            </label>
+          )}
+          {visible.length === 0 && <p className="py-6 text-center text-sm text-muted">{T.noMatch}</p>}
           <div className="grid gap-3">
-            {candidates.map((c) => {
+            {visible.map((c) => {
               const active = selected === c.id;
               return (
                 <Card key={c.id} className={cn("overflow-hidden rounded-2xl transition duration-300", active ? "border-electric bg-gradient-to-br from-electric-50/70 to-white shadow-glow ring-4 ring-electric/10" : "hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lift")}>

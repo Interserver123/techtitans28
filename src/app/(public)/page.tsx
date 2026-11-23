@@ -17,6 +17,7 @@ import { fmtDateTime } from "@/lib/format";
 import { getLang } from "@/lib/i18n-server";
 import { dict, num } from "@/lib/i18n";
 import { Alpana } from "@/components/site/alpana";
+import { CandidateRoster } from "@/components/site/candidate-roster";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -181,7 +182,9 @@ export default async function HomePage() {
       <section id="candidates" className="relative scroll-mt-24 overflow-hidden py-20 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Heading eyebrow={t.cand.eyebrow} title={t.cand.title} subtitle={t.cand.sub} />
-          {candidates.length === 0 ? (
+          {candidates.length > 9 ? (
+            <CandidateRoster lang={lang} candidates={candidates.map((c) => ({ id: c.id, display_name: c.display_name, roll_number: c.roll_number, photo_url: c.photo_url }))} />
+          ) : candidates.length === 0 ? (
             <div className="mt-12 rounded-3xl border border-dashed border-line bg-surface p-14 text-center text-muted">{t.cand.empty}</div>
           ) : (
             <div className="mt-14 flex flex-wrap justify-center gap-6">

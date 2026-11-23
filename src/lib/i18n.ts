@@ -55,6 +55,7 @@ const en = {
     sub: "Approved by the Election Committee. Order does not imply ranking.",
     empty: "Candidates will be announced by the Election Committee.",
     no: "No.", roll: "Roll", introSoon: "Introduction coming soon.", read: "Read manifesto",
+    search: "Search by name or roll number", count: (n: string) => `${n} candidates`, noMatch: "No candidate matches your search.",
   },
   how: {
     eyebrow: "Four steps · about two minutes", title: "Vote in under two minutes",
@@ -210,6 +211,7 @@ const bn: Dict = {
     sub: "নির্বাচন কমিটি কর্তৃক অনুমোদিত। তালিকার ক্রম কোনো র‍্যাঙ্কিং নির্দেশ করে না।",
     empty: "নির্বাচন কমিটি শীঘ্রই প্রার্থীদের নাম ঘোষণা করবে।",
     no: "নং", roll: "রোল", introSoon: "পরিচিতি শীঘ্রই আসছে।", read: "ইশতেহার পড়ুন",
+    search: "নাম বা রোল নম্বর দিয়ে খুঁজুন", count: (n) => `${n} জন প্রার্থী`, noMatch: "আপনার খোঁজার সাথে কোনো প্রার্থী মেলেনি।",
   },
   how: {
     eyebrow: "চারটি ধাপ · প্রায় দুই মিনিট", title: "দুই মিনিটেই ভোট দিন",
