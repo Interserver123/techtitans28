@@ -7,7 +7,7 @@ import { listVoteRecords, requestChoiceChange, voteChangedAt } from "@/lib/servi
 import { createCorrection, reviewCorrection, listCorrections, correctionSubjects } from "@/lib/services/corrections";
 import { auditExport, correctionsExport, participationCsv } from "@/lib/services/records-export";
 import { getAdminIdentity, requireStepUp, stepUpMfa } from "@/lib/services/admin-auth";
-import { getResultSummary, verifyResults } from "@/lib/services/results";
+import { getLiveTop3, getResultSummary, verifyResults } from "@/lib/services/results";
 import { castVote } from "@/lib/services/voting";
 import { getVoterSession, requestOtp, verifyOtp } from "@/lib/services/voter-auth";
 import { devOutbox } from "@/lib/otp/provider";
@@ -47,6 +47,29 @@ describe("open ballot: votes stored with the voter, visible only to a Super Admi
     expect(mine.choices.every((c) => c.originalName === c.candidateName && c.status === "VALID" && c.corrections === 0)).toBe(true);
     const audit = await query<{ actor_admin_id: string }>(`select actor_admin_id from audit_logs where action = 'VOTES.VIEWED' order by id desc limit 1`);
     expect(audit[0].actor_admin_id).toBe(sup.id);
+  });
+
+  it("live top 3 while voting is open: Super Admin only, valid ballots only, at most 3 per race", async () => {
+    const e = await makeElection({ boys: 4, girls: 2 });
+    await voteAs(e, 1, 0, "203.0.113.61");
+    await voteAs(e, 1, 1, "203.0.113.62");
+    await voteAs(e, 2, 1, "203.0.113.63");
+    const sup = await makeAdmin("SUPER_ADMIN");
+    // No step-up needed for this aggregate view.
+    const live = await getLiveTop3((await sessionFor(sup.id, { stepUp: false })).hash, e.electionId);
+    expect(live.map((p) => p.position.code)).toEqual(["CR_BOYS", "CR_GIRLS"]);
+    const [boys, girls] = live;
+    expect(boys.top).toHaveLength(3);
+    expect(boys.top[0]).toMatchObject({ name: "Boy 2", votes: 2, rank: 1 });
+    expect(boys.top[1]).toMatchObject({ name: "Boy 3", votes: 1, rank: 2 });
+    expect(girls.top.map((t) => [t.name, t.votes])).toEqual([["Girl 2", 2], ["Girl 1", 1]]);
+    // The sealed tally is still sealed for everyone while voting is open.
+    await expect(getResultSummary(e.electionId)).rejects.toMatchObject({ code: "RESULTS_SEALED" });
+    for (const role of ["ELECTION_ADMIN", "RESULTS_OFFICER", "AUDITOR"] as const) {
+      const a = await makeAdmin(role);
+      await expect(getLiveTop3((await sessionFor(a.id)).hash, e.electionId)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    await expect(getLiveTop3("not-a-session", e.electionId)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
   });
 
   it("refused without a fresh code, with a stale or revoked session, for every other role, and for the application role", async () => {
