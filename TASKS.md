@@ -34,7 +34,7 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ✅ Public results dashboard with winner announcement animation
 
 ## Phase 6 — Validation
-- ✅ 39 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
+- ✅ 40 automated tests (auth, voting, concurrency, 150-voter load, admin/RBAC, corrections, audit, RLS, backup/restore)
 - ✅ Playwright e2e: desktop + emulated phones, full voting flow, CSRF, admin MFA
 - ✅ Typecheck, lint, production build, CI workflow
 - 🟡 Test on real phones (Android Chrome, iOS Safari) and slow networks — emulation only so far
@@ -42,10 +42,12 @@ Legend: ✅ done & tested · 🟡 done, needs human verification · ⬜ not star
 - ⬜ Independent security review / penetration test before the live election
 
 ## Phase 7 — Deployment (requires committee credentials)
-- ⬜ Create Supabase project, apply migrations, create app login role, storage buckets
+- ✅ Supabase deployment bundle (`supabase/deploy.sql`: schema, functions, RLS, service_role lockdown, storage buckets, app role) verified on a Supabase-like non-superuser database, including a full e2e run
+- ✅ SQL-editor Super Admin bootstrap (`supabase/bootstrap-admin.sql`)
+- ⬜ Create the Supabase project and run `deploy.sql` + `bootstrap-admin.sql` in its SQL Editor (needs the committee's Supabase account)
 - ⬜ Configure SMTP and/or SMS gateway; confirm delivery to real student contacts (adapt SMS payload to the chosen Bangladeshi gateway if needed)
 - ⬜ Configure Vercel env vars and custom domain (HTTPS)
-- ⬜ Bootstrap first Super Admin (`npm run admin:create`), create committee accounts
+- ⬜ Sign in as the bootstrapped Super Admin, enrol MFA, create committee accounts
 - ⬜ Import the **official** student register (no real data is included in this repository)
 - ⬜ Dry-run election with committee members; take and verify a backup
 

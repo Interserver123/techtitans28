@@ -19,5 +19,6 @@ export default async function setup() {
       end if;
     end $$`);
   await owner.query("grant techtitans_app to techtitans_app_test");
+  await owner.query("alter role techtitans_app_test set search_path = public, extensions");
   await owner.end();
 }

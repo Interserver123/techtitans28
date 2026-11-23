@@ -14,5 +14,6 @@ select 'create role techtitans_app_user login'
  where not exists (select 1 from pg_roles where rolname = 'techtitans_app_user') \gexec
 select format('alter role techtitans_app_user password %L', :'pw') \gexec
 grant techtitans_app to techtitans_app_user;
+alter role techtitans_app_user set search_path = public, extensions;
 SQL
 echo "✓ local database ready: postgres://techtitans_app_user:${APP_DB_PASSWORD}@localhost:5432/$DB_NAME"

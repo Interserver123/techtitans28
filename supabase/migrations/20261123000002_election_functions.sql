@@ -38,7 +38,7 @@ create trigger trg_election_publication before update on elections
 -- ---------------------------------------------------------------------------
 create or replace function random_code(p_len integer) returns text
 language plpgsql volatile
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   alphabet constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; -- 32 symbols, no 0/O/1/I
   bytes bytea := gen_random_bytes(p_len);
@@ -52,7 +52,7 @@ end $$;
 
 create or replace function setting_text(p_key text, p_default text) returns text
 language sql stable
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
   select coalesce((select value #>> '{}' from system_settings where key = p_key), p_default);
 $$;
 
@@ -61,7 +61,7 @@ create or replace function append_audit(
   p_details jsonb, p_ip_hash text
 ) returns bigint
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   v_id bigint;
   v_label text;
@@ -77,7 +77,7 @@ end $$;
 
 create or replace function admin_has_permission(p_admin_id uuid, p_permission text) returns boolean
 language sql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
   select exists (
     select 1 from election_admins a join admin_roles r on r.code = a.role_code
     where a.id = p_admin_id and a.is_active and a.mfa_enabled
@@ -91,7 +91,7 @@ $$;
 -- ---------------------------------------------------------------------------
 create or replace function eligible_voter_count() returns integer
 language sql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
   select count(*)::int from students
   where is_active and is_eligible and batch = setting_text('election.batch', 'TechTitans-28');
 $$;
@@ -101,7 +101,7 @@ $$;
 -- ---------------------------------------------------------------------------
 create or replace function refresh_election_status() returns void
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   e record;
 begin
@@ -129,7 +129,7 @@ end $$;
 create or replace function cast_ballot(p_token_hash text, p_candidate_id uuid)
 returns table (receipt_code text, voted_at timestamptz)
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   v_cred   voter_credentials%rowtype;
   v_el     elections%rowtype;
@@ -195,7 +195,7 @@ end $$;
 create or replace function ballot_totals(p_election_id uuid)
 returns table (total_ballots integer, valid_ballots integer, invalidated_ballots integer, participation integer)
 language sql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
   select
     (select count(*)::int from ballots where election_id = p_election_id),
     (select count(*)::int from ballots where election_id = p_election_id and status = 'VALID'),
@@ -209,7 +209,7 @@ $$;
 create or replace function compute_tally(p_election_id uuid)
 returns table (candidate_id uuid, display_name text, roll_number text, votes integer, rank integer)
 language plpgsql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   st election_status;
 begin
@@ -235,7 +235,7 @@ end $$;
 
 create or replace function tally_hash(p_election_id uuid) returns text
 language plpgsql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   v_rows text;
   v_tot record;
@@ -255,7 +255,7 @@ end $$;
 create or replace function ballot_ledger(p_election_id uuid)
 returns table (ballot_id uuid, ballot_ref text, candidate_id uuid, candidate_name text, status ballot_status, last_correction_id uuid)
 language plpgsql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   st election_status;
 begin
@@ -277,7 +277,7 @@ create or replace function review_correction(
   p_request_id uuid, p_reviewer_id uuid, p_approve boolean, p_note text, p_ip_hash text
 ) returns correction_status
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   r correction_requests%rowtype;
   b ballots%rowtype;
@@ -344,7 +344,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 create or replace function verify_results(p_election_id uuid, p_admin_id uuid, p_ip_hash text) returns text
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   st election_status;
   v_hash text;
@@ -375,7 +375,7 @@ end $$;
 create or replace function publish_results(p_election_id uuid, p_admin_id uuid, p_note text, p_ip_hash text)
 returns table (candidate_id uuid, vote_count integer, rank integer, is_winner boolean, is_tied boolean)
 language plpgsql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   e elections%rowtype;
   v_hash text;
@@ -428,7 +428,7 @@ end $$;
 create or replace function verify_audit_chain()
 returns table (ok boolean, entries bigint, first_broken_id bigint)
 language plpgsql stable security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
 declare
   r record;
   v_prev text := repeat('0', 64);
@@ -455,7 +455,7 @@ end $$;
 -- Housekeeping (expired OTPs/sessions/rate-limit buckets). Never touches ballots.
 create or replace function purge_expired_auth_material() returns void
 language sql security definer
-set search_path = public, pg_temp as $$
+set search_path = public, extensions, pg_temp as $$
   delete from otp_verifications where expires_at < now() - interval '1 day';
   delete from voter_credentials where expires_at < now() - interval '1 day';
   delete from admin_sessions where expires_at < now() - interval '7 days';

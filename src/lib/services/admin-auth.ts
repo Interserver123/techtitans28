@@ -3,7 +3,7 @@ import { z } from "zod";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 import { query, one, tx } from "../db";
-import { DUMMY_PASSWORD_HASH, decrypt, encrypt, hmac, randomToken, verifyPassword } from "../crypto";
+import { DUMMY_PASSWORD_HASH, decrypt, encrypt, hashPassword, hmac, isLegacyHash, randomToken, verifyPassword } from "../crypto";
 import { AppError } from "../errors";
 import { audit } from "../audit";
 import { enforceRateLimit } from "../rate-limit";
@@ -74,6 +74,9 @@ export async function adminLogin(input: z.infer<typeof loginSchema>, ctx: Reques
     throw new AppError("INVALID_CREDENTIALS");
   }
   await query(`update election_admins set failed_login_count = 0, locked_until = null where id = $1`, [admin.id]);
+  if (isLegacyHash(admin.password_hash)) {
+    await query(`update election_admins set password_hash = $2 where id = $1`, [admin.id, await hashPassword(password)]);
+  }
   const token = await newSession(admin.id, false, ctx);
   await audit({ actorType: "ADMIN", adminId: admin.id, action: "ADMIN.LOGIN_PASSWORD_OK", entityType: "election_admin", entityId: admin.id, ipHash: ctx.ipHash });
   return { token, mfaEnrolled: admin.mfa_enabled };

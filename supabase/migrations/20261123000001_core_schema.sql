@@ -11,8 +11,11 @@
 --    or DELETE those tables directly, and cannot SELECT ballots at all.
 -- =============================================================================
 
-create extension if not exists pgcrypto;
-create extension if not exists citext;
+-- Supabase convention: extensions live in the `extensions` schema.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+create extension if not exists citext with schema extensions;
+set search_path = public, extensions;
 
 -- ---------------------------------------------------------------------------
 -- Enumerations
@@ -546,7 +549,8 @@ create index if not exists idx_audit_action on audit_logs(action);
 create index if not exists idx_audit_actor on audit_logs(actor_admin_id);
 
 create or replace function audit_logs_compute_hash() returns trigger
-language plpgsql as $$
+language plpgsql
+set search_path = public, extensions, pg_temp as $$
 declare
   v_prev text;
 begin

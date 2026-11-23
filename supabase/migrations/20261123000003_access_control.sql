@@ -26,6 +26,7 @@ do $$ begin
 end $$;
 
 grant usage on schema public to techtitans_app, anon, authenticated;
+grant usage on schema extensions to techtitans_app;
 
 -- Start from zero for every client role.
 revoke all on all tables in schema public from techtitans_app, anon, authenticated;

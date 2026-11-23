@@ -1,6 +1,7 @@
 import "server-only";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomInt, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import bcrypt from "bcryptjs";
 import { env } from "./env";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number, opts: object) => Promise<Buffer>;
@@ -31,7 +32,11 @@ export async function hashPassword(password: string) {
   const key = await scrypt(password.normalize("NFKC"), salt, 64, SCRYPT);
   return `scrypt$${SCRYPT.N}$${SCRYPT.r}$${SCRYPT.p}$${salt.toString("base64")}$${key.toString("base64")}`;
 }
+/** bcrypt hashes come only from the SQL-editor bootstrap (pgcrypto crypt()); they are upgraded to scrypt at first sign-in. */
+export const isLegacyHash = (stored: string) => /^\$2[aby]\$/.test(stored);
+
 export async function verifyPassword(password: string, stored: string) {
+  if (isLegacyHash(stored)) return bcrypt.compare(password.normalize("NFKC"), stored);
   const [alg, n, r, p, salt, key] = stored.split("$");
   if (alg !== "scrypt" || !salt || !key) return false;
   const expected = Buffer.from(key, "base64");

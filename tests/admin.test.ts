@@ -54,6 +54,19 @@ describe("admin authentication & MFA", () => {
     await expect(adminLogin({ email: "nobody@committee.test", password: "x" }, ctx())).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
   });
 
+  it("an admin bootstrapped from the SQL editor (pgcrypto bcrypt) can sign in and is upgraded to scrypt", async () => {
+    const email = `boot-${Date.now()}@committee.test`;
+    await asOwner((c) => c.query(
+      `insert into election_admins (email, full_name, role_code, password_hash)
+       values ($1, 'Bootstrapped Chief', 'SUPER_ADMIN', extensions.crypt('Bootstrap-Pass-2026', extensions.gen_salt('bf', 8)))`, [email]));
+    await expect(adminLogin({ email, password: "wrong-Password-1" }, ctx())).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
+    const r = await adminLogin({ email, password: "Bootstrap-Pass-2026" }, ctx());
+    expect(r.mfaEnrolled).toBe(false);
+    const row = await one<{ password_hash: string }>(`select password_hash from election_admins where email = $1`, [email]);
+    expect(row!.password_hash.startsWith("scrypt$")).toBe(true);
+    await expect(adminLogin({ email, password: "Bootstrap-Pass-2026" }, ctx())).resolves.toBeTruthy();
+  });
+
   it("rejects TOTP replay of an already-used code", async () => {
     const a = await makeAdmin("AUDITOR");
     const code = a.totp();
