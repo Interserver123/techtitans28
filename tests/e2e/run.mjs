@@ -120,7 +120,7 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   assert(reviewText.includes("Rakib Hossain") && reviewText.includes("Sadia Akter"), "review shows both choices");
   const submit = page.getByRole("button", { name: "চূড়ান্ত ব্যালট জমা দিন" });
   assert(await submit.isDisabled(), "submit must be disabled until confirmation is ticked");
-  await page.getByRole("checkbox").check();
+  for (const cb of await page.getByRole("checkbox").all()) await cb.check();
   await page.screenshot({ path: `${OUT}/vote-review-mobile.png` });
   await submit.click();
   await page.waitForURL("**/vote/receipt");
@@ -134,7 +134,7 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const again = await ctx.request.post(`${BASE}/api/vote/cast`, {
     headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" },
-    data: { candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
+    data: { openBallotAck: true, candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
   });
   assert(again.status() === 409 && (await again.json()).error.code === "ALREADY_VOTED", `expected ALREADY_VOTED, got ${again.status()}`);
 

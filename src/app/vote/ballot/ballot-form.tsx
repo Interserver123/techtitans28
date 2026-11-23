@@ -28,6 +28,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
   const [active, setActive] = useState(0);
   const [stage, setStage] = useState<"choose" | "review">("choose");
   const [confirmed, setConfirmed] = useState(false);
+  const [openAck, setOpenAck] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -57,10 +58,10 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
   }
 
   async function submit() {
-    if (!allChosen || !confirmed) return;
+    if (!allChosen || !confirmed || !openAck) return;
     setBusy(true); setError(null);
     const candidateIds = positions.map((p) => selected[p.id]);
-    const r = await api("/api/vote/cast", { json: { candidateIds } });
+    const r = await api("/api/vote/cast", { json: { candidateIds, openBallotAck: true } });
     if (r.ok || (!r.ok && r.error.code === "ALREADY_VOTED")) {
       router.replace("/vote/receipt");
       router.refresh();
@@ -173,7 +174,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
                   <CandidateAvatar name={c.display_name} url={c.photo_url} className="mx-auto mt-3 size-24 rounded-2xl text-2xl" />
                   <p className="mt-3 text-lg font-bold tracking-tight">{c.display_name}</p>
                   <p className="text-sm text-muted">{B.roll} {c.roll_number}</p>
-                  <button type="button" onClick={() => { setStage("choose"); setActive(i); setConfirmed(false); }} disabled={busy}
+                  <button type="button" onClick={() => { setStage("choose"); setActive(i); setConfirmed(false); setOpenAck(false); }} disabled={busy}
                     className="mt-2 text-xs font-semibold text-electric hover:underline">{B.change}</button>
                 </div>
               );
@@ -182,6 +183,10 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
           <label className="mx-auto mt-6 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4 text-left text-sm">
             <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
             <span>{B.confirm1}<strong>{B.final}</strong>{B.confirm2}</span>
+          </label>
+          <label className="mx-auto mt-3 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-gold/50 bg-amber-50/70 p-4 text-left text-sm">
+            <input type="checkbox" checked={openAck} onChange={(e) => setOpenAck(e.target.checked)} className="mt-0.5 size-5 accent-[#0f7a4f]" />
+            <span>{dict(lang).openBallot.ack} <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold underline">{dict(lang).openBallot.terms}</a></span>
           </label>
           {error && <VoterError message={error} lang={lang} className="mt-4 text-left" />}
           <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted"><ShieldCheck className="size-4 text-success" /> {B.separate}</div>
@@ -202,7 +207,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
               <Button size="lg" className="ml-auto flex-1 sm:flex-none" disabled={expired || !selected[pos?.id ?? ""]}
                 onClick={() => {
                   if (active < positions.length - 1) { setActive(active + 1); setQ(""); window.scrollTo({ top: 0, behavior: "smooth" }); }
-                  else { setStage("review"); setConfirmed(false); window.scrollTo({ top: 0 }); }
+                  else { setStage("review"); setConfirmed(false); setOpenAck(false); window.scrollTo({ top: 0 }); }
                 }}>
                 {!selected[pos?.id ?? ""] ? B.selectOne : active < positions.length - 1 ? <>{B.next(posLabel(positions[active + 1].gender, lang))} <ArrowRight /></> : B.review}
               </Button>
@@ -210,7 +215,7 @@ export function BallotForm({ positions, candidates, expiresAt, serverNow, lang =
           ) : (
             <div className="flex items-center gap-3">
               <Button size="lg" variant="outline" onClick={() => setStage("choose")} disabled={busy}><ArrowLeft /> {B.back}</Button>
-              <Button size="lg" className="flex-1" variant="success" disabled={!confirmed || expired || !allChosen} loading={busy} onClick={submit}>{B.submit}</Button>
+              <Button size="lg" className="flex-1" variant="success" disabled={!confirmed || !openAck || expired || !allChosen} loading={busy} onClick={submit}>{B.submit}</Button>
             </div>
           )}
         </div>

@@ -31,6 +31,7 @@ export function SiteFooter({ institution, department, lang }: { institution: str
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link className="hover:text-white" href="/help">{t.links.report}</Link></li>
               <li><Link className="hover:text-white" href="/#guidelines">{t.links.guide}</Link></li>
+              <li><Link className="hover:text-white" href="/terms">{t.links.terms}</Link></li>
               <li><Link className="hover:text-white" href="/admin/login">{t.links.admin}</Link></li>
             </ul>
           </div>

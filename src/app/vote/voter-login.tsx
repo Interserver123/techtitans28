@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, AtSign, KeyRound, MessageSquareText, Phone, UserRound } from "lucide-react";
 import { api } from "@/lib/client";
@@ -89,6 +90,7 @@ export function VoterLogin({ lang = "en" }: { lang?: Lang }) {
               <h2 className="text-xl font-semibold">{V.rollTitle}</h2>
               <p className="mt-1 text-sm text-muted">{V.rollSub}</p>
             </div>
+            <Alert tone="warning"><span>{dict(lang).openBallot.notice} <Link href="/terms" className="font-semibold underline">{dict(lang).openBallot.terms}</Link></span></Alert>
             <Field label={V.rollLabel} htmlFor="roll">
               <Input id="roll" value={roll} onChange={(e) => setRoll(latinDigits(e.target.value).toUpperCase().replace(/\s/g, ""))} inputMode="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={V.rollPh} maxLength={20} required className="h-12 text-lg font-semibold tracking-wide" />
             </Field>

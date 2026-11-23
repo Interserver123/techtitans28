@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import { SignOutButton } from "./sign-out";
 import { getDict } from "@/lib/i18n-server";
+import { dict } from "@/lib/i18n";
 import { getWelcomeTemplate, renderWelcome } from "@/lib/services/settings";
+import { voteChangedAt } from "@/lib/services/vote-records";
+import { Alert } from "@/components/ui/alert";
 
 export default async function ReceiptPage() {
   const s = await voterFromCookies();
@@ -15,6 +18,7 @@ export default async function ReceiptPage() {
   if (!s.hasVoted) redirect("/vote/ballot");
   const { lang, t } = await getDict();
   const R = t.receipt;
+  const changedAt = await voteChangedAt(s.studentId, s.electionId);
   const welcome = renderWelcome((await getWelcomeTemplate()) ?? R.welcomeDefault, { name: s.fullName, roll: s.rollNumber });
   return (
     <Card className="animate-fade-up overflow-hidden rounded-3xl shadow-elite">
@@ -26,6 +30,7 @@ export default async function ReceiptPage() {
         <p className="relative mt-1 text-sm text-slate-400">{R.thanks(s.electionTitle)}</p>
       </div>
       <div className="space-y-5 p-6 sm:p-8">
+        {changedAt && <Alert tone="warning" title={dict(lang).openBallot.terms}>{dict(lang).openBallot.changed(fmtDateTime(changedAt, {}, lang))}</Alert>}
         <p data-testid="welcome" className="whitespace-pre-line rounded-2xl border border-gold/40 bg-gradient-to-br from-amber-50/70 to-white p-5 text-center text-[15px] font-medium leading-relaxed text-emerald-900">{welcome}</p>
         <div className="rounded-2xl border border-dashed border-gold/60 bg-gradient-to-br from-amber-50/60 to-white p-5 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{R.id}</p>
