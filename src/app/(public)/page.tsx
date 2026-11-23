@@ -105,7 +105,7 @@ export default async function HomePage() {
           <div className="relative mx-auto w-full max-w-[420px] animate-fade-up [animation-delay:150ms] lg:mr-0">
             <div className="relative aspect-[4/5] overflow-hidden rounded-b-[2rem] rounded-t-[999px] border border-gold/50 p-2 shadow-[0_40px_80px_-30px_rgb(0_0_0/0.7)]">
               <div className="relative size-full overflow-hidden rounded-b-[1.6rem] rounded-t-[999px]">
-                <Image src="/campus/aerial.jpg" alt={t.ui.archAlt} fill priority sizes="(min-width:1024px) 420px, 90vw" className="ken-burns object-cover" />
+                <Image src="/campus/academic-building.webp" alt={t.ui.archAlt} fill priority sizes="(min-width:1024px) 420px, 90vw" className="ken-burns object-cover object-[62%_center]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/20 to-transparent" />
               </div>
             </div>
