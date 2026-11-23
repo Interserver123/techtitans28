@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { env, isProductionLike } from "../env";
 import { bn as bnDigits } from "../format";
 
-export type OtpMessage = { contactType: "EMAIL" | "PHONE"; to: string; code: string; studentName: string; ttlMinutes: number };
+export type OtpMessage = { contactType: "EMAIL" | "PHONE"; to: string; code: string; studentName: string; ttlMinutes: number; demo?: boolean };
 
 export interface OtpProvider {
   name: string;
@@ -37,11 +37,13 @@ const devProvider: OtpProvider = {
 const esc = (v: string) => v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** The verification email: Bengali first with an English line, plain-text twin for every client. */
-export function otpEmail(msg: Pick<OtpMessage, "code" | "studentName" | "ttlMinutes">) {
+export function otpEmail(msg: Pick<OtpMessage, "code" | "studentName" | "ttlMinutes" | "demo">) {
   const mins = bnDigits(msg.ttlMinutes);
-  const subject = `${msg.code} — টেকটাইটানস-২৮ সিআর নির্বাচনের যাচাই কোড`;
+  const subject = `${msg.demo ? "[ডেমো] " : ""}${msg.code} — টেকটাইটানস-২৮ সিআর নির্বাচনের যাচাই কোড`;
+  const demoNote = "এটি ডেমো ভোটের কোড — এতে কোনো ভোট গণনা হয় না। (Demo code: no vote is counted.)";
   const text = [
     `প্রিয় ${msg.studentName},`,
+    ...(msg.demo ? ["", demoNote] : []),
     "",
     `আপনার এককালীন যাচাই কোড: ${msg.code}`,
     `কোডটি ${mins} মিনিট পর মেয়াদোত্তীর্ণ হবে এবং একবারই ব্যবহার করা যাবে।`,
@@ -60,7 +62,7 @@ export function otpEmail(msg: Pick<OtpMessage, "code" | "studentName" | "ttlMinu
 </td></tr>
 <tr><td style="background:#ffffff;border:1px solid #ece4cf;border-top:0;border-radius:0 0 18px 18px;padding:26px">
 <p style="margin:0 0 6px;font-size:15px">প্রিয় ${esc(msg.studentName)},</p>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.7">ভোট দিতে নিচের এককালীন যাচাই কোডটি লিখুন।</p>
+${msg.demo ? `<p style="margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#fff7e0;color:#8a6a22;font-size:13px">${esc(demoNote)}</p>` : ""}<p style="margin:0 0 18px;font-size:15px;line-height:1.7">ভোট দিতে নিচের এককালীন যাচাই কোডটি লিখুন।</p>
 <div style="text-align:center;background:#fbf6e8;border-radius:14px;padding:18px 8px">${digits}</div>
 <p style="margin:16px 0 0;font-size:13px;line-height:1.7;color:#475569">কোডটি <b>${mins} মিনিট</b> পর মেয়াদোত্তীর্ণ হবে এবং একবারই ব্যবহার করা যাবে।<br>এই কোড কখনো কাউকে দেবেন না — নির্বাচন কমিটির কেউ কখনো এটি চাইবেন না।<br>আপনি এই কোড না চেয়ে থাকলে এখনই নির্বাচন কমিটিকে জানান।</p>
 <p lang="en" style="margin:16px 0 0;padding-top:14px;border-top:1px solid #eef0ea;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#64748b">Your one-time code for the TechTitans-28 CR election is <b>${esc(msg.code)}</b>. It expires in ${msg.ttlMinutes} minutes and works once. Never share it.</p>
