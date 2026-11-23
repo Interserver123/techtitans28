@@ -5,7 +5,7 @@ on:
 
 # One publish at a time, so two sessions pushing together cannot race each other.
 concurrency:
-  group: ${{ github.event_name == 'push' && startsWith(github.ref_name, 'claude/') && 'publish' || github.run_id }}
+  group: ${{ github.event_name == 'push' && startsWith(github.ref_name, 'claude/') && github.ref_name != 'claude/epic-johnson-2edi2p' && 'publish' || github.run_id }}
   cancel-in-progress: false
 
 jobs:

@@ -348,6 +348,19 @@ Later schema changes: add a migration file, run `npm run supabase:bundle`, and p
 5. Checklist: `/api/dev/outbox` returns 404; a test OTP reaches a real committee phone/mailbox; a dry-run election on real
    Android/iOS phones succeeds; Audit page shows "hash chain intact"; a backup is taken (Supabase dashboard → Backups).
 
+### Automatic publishing
+
+Production deploys the `claude/epic-johnson-2edi2p` branch (`main` mirrors it). Work happens on
+`claude/...` branches; when one is pushed, CI runs the `verify` job (typecheck, lint, unit tests, build)
+and, only if that passes, the `publish` job moves the commit onto both live branches, merging in newer
+live work when needed. Vercel then deploys it, usually within about five minutes of the push.
+
+- Nothing is force-pushed. A real conflict with newer live work stops `publish` with an error, and the
+  live site keeps the previous version until the branch is updated and pushed again.
+- `/api/health` shows the deployed commit, so you can confirm what is live.
+- Edits to `.github/workflows/*` are the exception: GitHub does not let the workflow token publish them,
+  so those must be pushed to the live branches directly.
+
 ### Troubleshooting a deployment ("This page couldn't load" / server error)
 
 Open **`https://<your-domain>/api/health`**. It reports, without revealing any secret values:
