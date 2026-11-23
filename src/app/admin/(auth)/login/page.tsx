@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
       <div className="absolute left-1/2 top-0 h-80 w-[640px] -translate-x-1/2 rounded-full bg-electric/20 blur-[110px]" aria-hidden />
       <div className="relative w-full max-w-md">
         <div className="mb-8 flex justify-center"><Brand dark /></div>
-        <div className="rounded-2xl border border-white/10 bg-navy-800/90 p-6 shadow-2xl backdrop-blur sm:p-8">
+        <div className="glass rounded-3xl bg-navy-800/80 p-6 sm:p-8">
           <AdminLogin />
         </div>
         <p className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">

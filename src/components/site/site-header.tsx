@@ -13,19 +13,19 @@ const NAV = [
 
 export function SiteHeader({ status, canVote }: { status: string | null; canVote: boolean }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-line/60 bg-white/70 backdrop-blur-2xl backdrop-saturate-150">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Brand />
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-ink">
+            <Link key={n.href} href={n.href} className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-900/5 hover:text-ink">
               {n.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
           <StatusPill status={status} className="hidden sm:inline-flex" />
-          <Button asChild size="sm" variant={canVote ? "default" : "outline"}>
+          <Button asChild size="sm" variant={canVote ? "default" : "outline"} className={canVote ? "rounded-full bg-gradient-to-r from-electric to-indigo-500 px-4 shadow-glow hover:brightness-110" : "rounded-full"}>
             <Link href="/vote">{canVote ? "Vote now" : "Voter portal"}</Link>
           </Button>
         </div>

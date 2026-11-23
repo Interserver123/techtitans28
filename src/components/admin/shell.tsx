@@ -48,7 +48,7 @@ export function AdminShell({ admin, elections, selectedId, children }: Props) {
         {nav.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} onClick={() => setOpen(false)}
             className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-              isActive(href) ? "bg-electric/15 text-white ring-1 ring-inset ring-electric/30" : "text-slate-400 hover:bg-white/5 hover:text-white")}>
+              isActive(href) ? "bg-gradient-to-r from-electric/20 to-indigo-500/10 text-white ring-1 ring-inset ring-electric/30" : "text-slate-400 hover:bg-white/5 hover:text-white")}>
             <Icon className={cn("size-4", isActive(href) && "text-blue-400")} /> {label}
           </Link>
         ))}

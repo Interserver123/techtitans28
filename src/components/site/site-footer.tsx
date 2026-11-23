@@ -3,7 +3,7 @@ import { Brand } from "./brand";
 
 export function SiteFooter({ institution, department }: { institution: string; department: string }) {
   return (
-    <footer className="bg-navy text-slate-400">
+    <footer className="relative bg-navy text-slate-400"><div className="hairline-gold" aria-hidden />
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Brand dark />
