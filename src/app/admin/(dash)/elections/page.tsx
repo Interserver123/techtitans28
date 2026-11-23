@@ -22,7 +22,7 @@ export default async function ElectionsPage() {
       {elections.length === 0 ? <Empty>এখনো কোনো নির্বাচন নেই।{canConfigure && " শুরু করতে সিআর নির্বাচন তৈরি করুন।"}</Empty> : (
         <div className="grid gap-4">
           {elections.map((e) => (
-            <ElectionCard key={e.id} canConfigure={canConfigure} canControl={canControl}
+            <ElectionCard key={e.id} canConfigure={canConfigure} canControl={canControl} isSuperAdmin={admin.role === "SUPER_ADMIN"}
               election={{ id: e.id, title: e.title, description: e.description, status: e.status, opensAt: new Date(e.opens_at).toISOString(), closesAt: new Date(e.closes_at).toISOString(),
                 openedAt: e.opened_at ? new Date(e.opened_at).toISOString() : null, closedAt: e.closed_at ? new Date(e.closed_at).toISOString() : null,
                 publishedAt: e.results_published_at ? new Date(e.results_published_at).toISOString() : null,

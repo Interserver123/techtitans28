@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Brand } from "./brand";
 import { Alpana } from "./alpana";
 import { dict, num, type Lang } from "@/lib/i18n";
+import { UrgentContact } from "./urgent-contact";
 
 export function SiteFooter({ institution, department, lang }: { institution: string; department: string; lang: Lang }) {
   const t = dict(lang).footer;
@@ -30,10 +31,12 @@ export function SiteFooter({ institution, department, lang }: { institution: str
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link className="hover:text-white" href="/help">{t.links.report}</Link></li>
               <li><Link className="hover:text-white" href="/#guidelines">{t.links.guide}</Link></li>
+              <li><Link className="hover:text-white" href="/terms">{t.links.terms}</Link></li>
               <li><Link className="hover:text-white" href="/admin/login">{t.links.admin}</Link></li>
             </ul>
           </div>
         </div>
+        <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6"><UrgentContact lang={lang} tone="dark" /></div>
         <div className="border-t border-white/5">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p>© {num(new Date().getFullYear(), lang)} {t.copyright}</p>

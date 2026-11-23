@@ -64,3 +64,4 @@ export function SettingsForm({ initial }: { initial: S }) {
     </form>
   );
 }
+

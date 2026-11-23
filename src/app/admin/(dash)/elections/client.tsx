@@ -12,7 +12,7 @@ import { bnNum, fmtDateTime, fromDhakaLocalInput, toDhakaLocalInput } from "@/li
 
 type E = { id: string; title: string; description: string; status: string; opensAt: string; closesAt: string; openedAt: string | null; closedAt: string | null; publishedAt: string | null; approved: number; votes: number };
 
-export function ElectionForm({ election }: { election?: E }) {
+export function ElectionForm({ election, isSuperAdmin = false }: { election?: E; isSuperAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const { run, busy, error } = useAction();
   const now = new Date();
@@ -22,7 +22,8 @@ export function ElectionForm({ election }: { election?: E }) {
     opensAt: toDhakaLocalInput(election?.opensAt ?? new Date(now.getTime() + 86400e3)),
     closesAt: toDhakaLocalInput(election?.closesAt ?? new Date(now.getTime() + 86400e3 + 8 * 3600e3)),
   });
-  const live = election && ["LIVE", "PAUSED"].includes(election.status);
+  const live = election && ["LIVE", "PAUSED"].includes(election.status) && !isSuperAdmin;
+  const underway = election && ["LIVE", "PAUSED"].includes(election.status);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -38,6 +39,7 @@ export function ElectionForm({ election }: { election?: E }) {
           if (r) setOpen(false);
         }}>
           {live && <Alert tone="info">ভোটগ্রহণ চলছে: শুধু শেষ হওয়ার সময় বাড়ানো যাবে।</Alert>}
+          {isSuperAdmin && underway && <Alert tone="info">সুপার অ্যাডমিন হিসেবে আপনি শুরু ও শেষ — দুটি সময়ই বদলাতে পারবেন। ভোট চলাকালীন শুরুর সময় আজকের সময়ের আগে এবং শেষের সময় ভবিষ্যতে হতে হবে। পরিবর্তন অডিট লগে থাকবে।</Alert>}
           <Field label="শিরোনাম" htmlFor="t"><Input id="t" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} required maxLength={160} disabled={!!live} /></Field>
           <Field label="বিবরণ" htmlFor="d" hint="পাবলিক ওয়েবসাইটে দেখানো হবে।"><Textarea id="d" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={4000} disabled={!!live} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -92,7 +94,7 @@ function TransitionButton({ id, a }: { id: string; a: (typeof ACTIONS)["LIVE"][n
   );
 }
 
-export function ElectionCard({ election: e, canConfigure, canControl }: { election: E; canConfigure: boolean; canControl: boolean }) {
+export function ElectionCard({ election: e, canConfigure, canControl, isSuperAdmin = false }: { election: E; canConfigure: boolean; canControl: boolean; isSuperAdmin?: boolean }) {
   const { run, busy } = useAction();
   const actions = ACTIONS[e.status] ?? [];
   return (
@@ -115,7 +117,7 @@ export function ElectionCard({ election: e, canConfigure, canControl }: { electi
           </dl>
         </div>
         <div className="flex flex-wrap gap-2 lg:justify-end">
-          {canConfigure && ["DRAFT", "SCHEDULED", "LIVE", "PAUSED"].includes(e.status) && <ElectionForm election={e} />}
+          {canConfigure && ["DRAFT", "SCHEDULED", "LIVE", "PAUSED"].includes(e.status) && <ElectionForm election={e} isSuperAdmin={isSuperAdmin} />}
           {canControl && actions.map((a) => <TransitionButton key={a.action} id={e.id} a={a} />)}
           {canConfigure && e.status === "DRAFT" && (
             <Button size="sm" variant="ghost" loading={busy} onClick={() => { if (confirm("এই খসড়া নির্বাচন ও এর প্রার্থীদের মুছে ফেলবেন?")) void run(`/api/admin/elections/${e.id}`, { method: "DELETE" }, "খসড়া মুছে ফেলা হয়েছে"); }}><Trash2 /> মুছুন</Button>

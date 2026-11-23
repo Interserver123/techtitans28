@@ -123,12 +123,19 @@ export async function createElection(input: z.input<typeof electionInputSchema>,
   });
 }
 
-export async function updateElection(id: string, input: z.input<typeof electionInputSchema>, adminId: string, ipHash: string | null) {
+export async function updateElection(id: string, input: z.input<typeof electionInputSchema>, adminId: string, ipHash: string | null, role?: string) {
   const v = electionInputSchema.parse(input);
   try {
     await tx(async (c) => {
       const before = await one<Election>(`select ${ELECTION_COLS} from elections where id = $1 for update`, [id], c);
       if (!before) throw new AppError("NOT_FOUND");
+      const timesChanged = new Date(before.opens_at).getTime() !== v.opensAt.getTime() || new Date(before.closes_at).getTime() !== v.closesAt.getTime();
+      if (role === "SUPER_ADMIN" && timesChanged && ["SCHEDULED", "LIVE", "PAUSED"].includes(before.status)) {
+        // Super Admin: both times may change at any time before closing (checked again inside the database function).
+        await query(`update elections set title = $2, description = $3 where id = $1`, [id, v.title, v.description], c);
+        await query(`select admin_set_election_window($1, $2, $3, $4, $5)`, [id, adminId, v.opensAt, v.closesAt, ipHash], c);
+        return;
+      }
       await query(`update elections set title = $2, description = $3, opens_at = $4, closes_at = $5 where id = $1`, [id, v.title, v.description, v.opensAt, v.closesAt], c);
       await audit({
         actorType: "ADMIN", adminId, action: "ELECTION.UPDATED", entityType: "election", entityId: id,

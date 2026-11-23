@@ -130,7 +130,7 @@ await check("two-vote ballot: one boy then one girl; review shows both; submit n
   const ctx = await phone(); const page = await ctx.newPage();
   await loginAs(page, ctx, "D28020");
   await page.waitForURL("**/vote/ballot");
-  await page.getByText("Two votes: one for a boy, one for a girl").waitFor();
+  await page.getByText(/No more than 2 votes/).waitFor();
   const cont = page.getByRole("button", { name: "Select one candidate" });
   assert(await cont.isDisabled(), "cannot continue before choosing a boy");
   await page.getByText("Manifesto").first().click();
@@ -165,7 +165,7 @@ await check("two-vote ballot: one boy then one girl; review shows both; submit n
   await page.getByRole("button", { name: "Review choices" }).click();
   const submit = page.getByRole("button", { name: "Submit final ballot" });
   assert(await submit.isDisabled(), "submit disabled until confirmed");
-  await page.getByRole("checkbox").check();
+  for (const cb of await page.getByRole("checkbox").all()) await cb.check();
   await page.screenshot({ path: `${OUT}/portal-4-review.png` });
   await submit.click();
   await page.waitForURL("**/vote/receipt");
@@ -212,7 +212,7 @@ await check("a tampered/forged session cookie cannot reach the ballot or vote", 
   const page = await ctx.newPage();
   await page.goto(`${BASE}/vote/ballot`); await page.waitForURL(`${BASE}/vote`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf")?.value ?? "";
-  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] } });
+  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { openBallotAck: true, candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] } });
   assert(r.status() === 401, `expected 401, got ${r.status()}`);
   await ctx.close();
 });
@@ -228,7 +228,7 @@ await check("STRICT RULE over the API: one vote only, two boys or two girls are 
   assert(boyIds.length >= 2 && girlIds.length >= 2, `need 2+ candidates per race (boys ${boyIds.length}, girls ${girlIds.length})`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const h = { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" };
-  const post = (ids) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { candidateIds: ids } });
+  const post = (ids) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { openBallotAck: true, candidateIds: ids } });
   for (const [name, ids] of [["boy only", [boyIds[0]]], ["girl only", [girlIds[0]]], ["two boys", [boyIds[0], boyIds[1]]], ["two girls", [girlIds[0], girlIds[1]]], ["three", [boyIds[0], girlIds[0], girlIds[1]]]]) {
     const r = await post(ids);
     const j = await r.json();

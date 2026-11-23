@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
-import { StudentDialog, ImportDialog, ActiveToggle, StudentFilters } from "./client";
+import { StudentDialog, ImportDialog, ActiveToggle, StudentFilters, AccessLinkDialog } from "./client";
 
 export default async function StudentsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const admin = await adminPage("students.read");
@@ -70,6 +70,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                 <TD className="text-right">
                   {canWrite && <div className="flex justify-end gap-1">
                     <StudentDialog batch={settings.batch} student={{ id: s.id, rollNumber: s.roll_number, fullName: s.full_name, contactType: s.contact_type, contactValue: s.contact_value, batch: s.batch, gender: s.gender ?? "", isEligible: s.is_eligible, isActive: s.is_active, notes: s.notes ?? "" }} />
+                    {s.is_active && s.is_eligible && <AccessLinkDialog studentId={s.id} name={s.full_name} roll={s.roll_number} hasVoted={!!s.has_voted} />}
                     <ActiveToggle id={s.id} active={s.is_active} />
                   </div>}
                 </TD>

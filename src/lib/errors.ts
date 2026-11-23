@@ -7,6 +7,7 @@ export const ERRORS = {
   MFA_REQUIRED: [401, "Multi-factor verification is required."],
   INVALID_CREDENTIALS: [401, "Invalid email or password."],
   INVALID_OTP: [401, "The code is invalid or has expired."],
+  INVALID_LINK: [401, "This voting link is invalid, expired or the roll number does not match."],
   OTP_LOCKED: [429, "Too many incorrect attempts. Request a new code."],
   FORBIDDEN: [403, "You do not have permission to perform this action."],
   CSRF: [403, "Security check failed. Refresh the page and try again."],

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, Settings, ShieldHalf, UserCog, Users, Vote, X,
+  BarChart3, ClipboardCheck, FileClock, Gauge, GraduationCap, LifeBuoy, LogOut, Menu, MessageSquareHeart, ScrollText, Settings, ShieldHalf, UserCog, Users, Vote, X,
 } from "lucide-react";
 import Image from "next/image";
 import { Brand } from "@/components/site/brand";
@@ -17,11 +17,13 @@ const NAV = [
   { href: "/admin/elections", label: "নির্বাচন", icon: Vote, perm: "elections.read" },
   { href: "/admin/students", label: "শিক্ষার্থী", icon: GraduationCap, perm: "students.read" },
   { href: "/admin/candidates", label: "প্রার্থী", icon: Users, perm: "candidates.read" },
+  { href: "/admin/votes", label: "ভোটের রেকর্ড", icon: ScrollText, perm: "admins.manage" },
   { href: "/admin/results", label: "ফলাফল", icon: BarChart3, perm: "results.view" },
   { href: "/admin/corrections", label: "সংশোধন", icon: ClipboardCheck, perm: "corrections.read" },
   { href: "/admin/disputes", label: "অভিযোগ", icon: LifeBuoy, perm: "disputes.read" },
   { href: "/admin/audit", label: "অডিট লগ", icon: FileClock, perm: "audit.read" },
   { href: "/admin/admins", label: "অ্যাডমিন", icon: UserCog, perm: "admins.manage" },
+  { href: "/admin/welcome", label: "স্বাগত বার্তা", icon: MessageSquareHeart, perm: "settings.manage" },
   { href: "/admin/settings", label: "সেটিংস", icon: Settings, perm: "settings.manage" },
 ] as const;
 

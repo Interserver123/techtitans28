@@ -5,6 +5,7 @@ import { Brand } from "@/components/site/brand";
 import { LanguageToggle } from "@/components/site/language-toggle";
 import { Alpana } from "@/components/site/alpana";
 import { getDict } from "@/lib/i18n-server";
+import { UrgentContact } from "@/components/site/urgent-contact";
 
 export const metadata = { title: "Voter portal", robots: { index: false } };
 
@@ -35,6 +36,7 @@ export default async function VoteLayout({ children }: { children: React.ReactNo
       <main className="relative z-10 mx-auto -mt-8 w-full max-w-3xl flex-1 px-4 pb-8 sm:pb-12">
         <div className="rounded-3xl border border-gold/30 bg-surface p-5 shadow-lift sm:p-8">{children}</div>
       </main>
+      <div className="mx-auto w-full max-w-3xl px-4 pb-6"><UrgentContact lang={lang} /></div>
       <footer className="pb-8 text-center text-xs text-muted">
         <Link href="/" className="hover:text-ink">{t.vote.home}</Link> · <Link href="/help" className="hover:text-ink">{t.vote.needHelp}</Link>
       </footer>

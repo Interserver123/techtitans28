@@ -5,7 +5,7 @@ import { deleteDraftElection, electionInputSchema, updateElection } from "@/lib/
 
 export const PATCH = adminRoute<{ id: string }>("elections.configure", async (req, { admin, c, params }) => {
   const input = await parseJson(req, electionInputSchema);
-  await updateElection(assertUuid(params.id), input, admin.adminId, c.ipHash);
+  await updateElection(assertUuid(params.id), input, admin.adminId, c.ipHash, admin.role);
   return ok();
 });
 
