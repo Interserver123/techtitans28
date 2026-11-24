@@ -74,7 +74,7 @@ const en = {
       ["One person, one vote", "Database-level locking makes a second ballot impossible — even under thousands of simultaneous requests."],
       ["Sealed results", "Candidate-wise counts cannot be computed until voting closes."],
       ["Tamper-evident audit trail", "Every administrative action is recorded in a hash-chained, append-only log."],
-      ["Two-person corrections", "No ballot is ever edited. Corrections need a reason and a second administrator’s approval."],
+      ["Controlled corrections", "No ballot is ever edited. Except when the voter asks for a change themselves, a correction needs a reason and a second administrator’s approval."],
     ],
   },
   timeline: {
@@ -94,13 +94,13 @@ const en = {
       ["Who can vote?", `Only registered, active students of ${batch}. Your roll number must be on the official register.`],
       ["How many votes do I get?", "Exactly two: one vote for a Boys' CR candidate and one for a Girls' CR candidate. Both are submitted together; you cannot vote twice in the same race. Once submitted you cannot change your ballot yourself; only the Super Admin can correct a vote (recorded in the audit log)."],
       ["I didn’t get my code.", "Wait a minute and request a new one, and check spam. If your registered contact is wrong, report it on the help page so the committee can correct it."],
-      ["Can someone see who I voted for?", "Yes, Super Admins can. This is an open ballot, not a secret one. Election Admins only see whether you voted, not who you chose. A vote can only be corrected after voting closes, with a written reason and a second Super Admin's approval. Your original ballot is kept, and your receipt tells you. Every view and correction is recorded in the audit log. Other students and the public cannot see your choice. Votes cast before this notice was introduced stay anonymous."],
+      ["Can someone see who I voted for?", "Yes, Super Admins can. This is an open ballot, not a secret one. Election Admins only see whether you voted, not who you chose. If you ask a Super Admin to change your vote, they can do it for you before results are published. Any other correction needs a written reason, must wait until voting closes, and needs a second Super Admin's approval. Your original ballot is always kept, and your receipt tells you. Every view and correction is recorded in the audit log. Other students and the public cannot see your choice. Votes cast before this notice was introduced stay anonymous."],
       ["Someone voted using my identity.", "Report it immediately on the help page. The committee investigates in person. A report never creates an extra ballot."],
       ["Can I vote for someone else or share my code?", "No. Voting on behalf of others is misconduct. Never share your one-time code — committee members will never ask for it."],
     ],
   },
   committee: {
-    eyebrow: "Independent oversight", title: "Election Committee", empty: "Committee members will be listed here once announced.",
+    eyebrow: "Independent oversight", title: "Other committee members", empty: "Committee members will be listed here once announced.",
     help: "Need help?", helpText: "Code not arriving, roll not accepted, or a suspected misuse of your identity — tell the committee.",
     anyPhone: "Works on any modern phone browser", report: "Report a problem",
   },
@@ -108,20 +108,20 @@ const en = {
   urgent: { title: "Urgent inquiry or problem?", body: "Can't vote, code not arriving, or anything else that cannot wait — message us directly.", cta: "Message us on Facebook" },
   link: { title: "Your personal voting link", sub: "The Election Committee gave you this private link. Enter your roll number to continue to your ballot.", cta: "Continue to ballot", note: "Do not share this link — it lets whoever has it vote as you." },
   openBallot: {
-    notice: "Open ballot, not a secret ballot. Your choices are stored with your name. Super Admins can see who you voted for. Election Admins see only whether and when you voted, never your choice. No one can edit or delete a vote: a correction needs a written reason and a second Super Admin's approval, your original ballot is kept, and your receipt page will tell you. Every view and correction is recorded in a tamper-evident log. Other students and the public cannot see your choice.",
-    ack: "I understand this is an open ballot: Super Admins can see who I voted for, and my vote can only be corrected with a second Super Admin's approval, keeping my original ballot.",
+    notice: "Open ballot, not a secret ballot. Your choices are stored with your name. Super Admins can see who you voted for. Election Admins see only whether and when you voted, never your choice. No one can edit or delete a vote. A Super Admin can change your vote only if you ask them to; any other correction needs a written reason and a second Super Admin's approval. Your original ballot is kept, and your receipt page will tell you. Every view and correction is recorded in a tamper-evident log. Other students and the public cannot see your choice.",
+    ack: "I understand this is an open ballot: Super Admins can see who I voted for, and my vote is changed only if I ask a Super Admin, or with a second Super Admin's approval, always keeping my original ballot.",
     terms: "Terms & conditions", refresh: "The voting rules were updated. Please refresh this page and confirm the new notice, then submit again.",
-    changed: (d: string) => `Your vote was corrected on ${d}, approved by two Super Admins. Your original ballot is kept in the record. If you did not expect this, contact the committee using the urgent-contact option.`,
+    changed: (d: string) => `Your vote was changed on ${d}. Your original ballot is kept in the record. If you did not ask for this, contact the committee using the urgent-contact option.`,
   },
   terms: {
     title: "Terms & conditions", sub: "Please read before voting. These are the exact rules the system enforces.",
     items: [
       ["Open ballot, not a secret ballot", "This election does not use a secret ballot. Each vote is stored linked to the voter. Super Admins can see who voted for whom. Other students and the public cannot see how anyone voted."],
       ["Who can see what", "Two things are kept separately: whether you voted (participation) and who you chose (ballot contents). Election Admins see the student register and whether and when each student voted, never anyone's choice. After voting closes, Results Officers and Auditors see the anonymous ballot list (ballot number and candidate, no names) and the audit log. Only Super Admins can see choices linked to voters, and only after re-entering their authenticator code. Whoever holds the database owner credentials could also technically read the stored data; the committee keeps those credentials with as few people as possible."],
-      ["No silent changes", "No one can edit or delete a ballot. A vote can only be corrected after voting closes and before results are published: one administrator requests it with a written reason, and a different Super Admin must approve it. The original ballot is never changed. It is marked invalid and a new ballot linked to it is added, so the full history stays visible. If your vote is corrected, your receipt page tells you."],
+      ["No silent changes", "No one can edit or delete a ballot. If you ask a Super Admin to change your vote (for example on Facebook), one Super Admin can do it for you while voting is open or after it closes, before results are published; they record how you asked and why. Any other correction can only happen after voting closes and before results are published: one administrator requests it with a written reason, and a different Super Admin must approve it. The original ballot is never changed. It is marked invalid and a new ballot linked to it is added, so the full history stays visible. If your vote is corrected, your receipt page tells you."],
       ["Every view and change is recorded", "Each time voter-linked votes are viewed, and each correction request and decision, is written to a tamper-evident, hash-chained audit log. The committee can export it and check it independently."],
       ["Votes cast before this notice", "Votes cast before the open-ballot notice was introduced were stored anonymously and stay anonymous. They cannot be linked to the voter or edited."],
-      ["Your own vote", "Once you submit, you cannot change your ballot yourself. You vote exactly twice: one Boys' CR and one Girls' CR."],
+      ["Your own vote", "Once you submit, you cannot change your ballot yourself. To change it, message a Super Admin. You vote exactly twice: one Boys' CR and one Girls' CR."],
       ["Results", "Candidate-wise counts stay sealed until voting closes. Only the final results are public."],
       ["Questions or problems", "Use the urgent-contact option on any page to reach the committee."],
     ],
@@ -153,7 +153,7 @@ const en = {
   },
   ballot: {
     eyebrow: "Official ballot · Boys' CR + Girls' CR", title: "Cast your two votes",
-    signedIn: "Signed in as", secret: "Open ballot: Super Admins can see your choices; a correction needs two Super Admins (see Terms).",
+    signedIn: "Signed in as", secret: "Open ballot: Super Admins can see your choices; your vote changes only at your request or with two Super Admins (see Terms).",
     pausedTitle: "Voting is paused", closedTitle: "Voting is not open", cannot: "Your ballot cannot be submitted right now.",
     session: "Session", expiresIn: (t: string) => `expires in ${t}`, expired: "expired",
     expiredTitle: "Session expired", expiredBody1: "For security, please", expiredLink: "verify again", expiredBody2: ". No ballot was submitted.",
@@ -172,6 +172,8 @@ const en = {
     note1: "This receipt proves a ballot was recorded for you. It does not show your choice. Keep it to verify later at ",
     welcomeDefault: "Thank you, {name}! Your vote has been recorded. Congratulations on taking part in a fair TechTitans-28 election.",
     verify: "Verify receipt", turnout: "See live turnout", signout: "Finish & sign out",
+    changeTitle: "Want to change your vote?",
+    changeBody: "You cannot change it yourself. Message a Super Admin: they can change it for you before results are published. Your original ballot is kept in the record and this page will show the change.",
   },
   verify: {
     eyebrow: "Receipt check", title: "Verify your ballot receipt",
@@ -203,10 +205,10 @@ const en = {
     showAll: "Show all candidates", more: (n: string) => `${n} more`, manifesto: "Manifesto", roll: "Roll",
   },
   proctorial: {
-    eyebrow: "Election oversight", title: "Proctorial Body",
+    eyebrow: "Election oversight", title: "Election Committee",
     sub: "Responsible for keeping the election fair, orderly and disciplined.",
     names: { afrajur: "Afrajur Zihad", limon: "Limon Sarkar", ratul: "Ratul Roy" } as Record<string, string>,
-    roles: { afrajur: "Manager", limon: "Organizer", ratul: "Technical & System Designer" } as Record<string, string>,
+    roles: { afrajur: "Chief Election Commissioner", limon: "Election Commissioner", ratul: "Head Organizer & Technical Lead" } as Record<string, string>,
   },
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
@@ -232,7 +234,7 @@ export type Dict = typeof en;
  * Version of the open-ballot notice the voter must accept on the ballot page. Bump it whenever the
  * notice or terms change: a ballot page showing an older notice is refused and asked to refresh.
  */
-export const OPEN_BALLOT_NOTICE_VERSION = "2026-11-23.two-person-corrections";
+export const OPEN_BALLOT_NOTICE_VERSION = "2026-11-24.voter-requested-changes";
 
 const bn: Dict = {
   nav: { candidates: "প্রার্থী", how: "ভোটদান পদ্ধতি", guidelines: "নির্দেশিকা", results: "ফলাফল", committee: "নির্বাচন কমিটি" },
@@ -296,7 +298,7 @@ const bn: Dict = {
       ["এক ব্যক্তি, এক ভোট", "ডেটাবেস-স্তরের সুরক্ষায় দ্বিতীয় ব্যালট দেওয়া অসম্ভব — একই সময়ে হাজারো অনুরোধ এলেও।"],
       ["সিলগালা ফলাফল", "ভোটগ্রহণ শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক গণনা করাই যায় না।"],
       ["কারচুপি-প্রতিরোধী অডিট", "প্রতিটি প্রশাসনিক কাজ হ্যাশ-শৃঙ্খলিত, অপরিবর্তনীয় লগে সংরক্ষিত থাকে।"],
-      ["দুই-ব্যক্তির সংশোধন", "কোনো ব্যালট কখনও সম্পাদনা করা হয় না। সংশোধনে কারণ ও দ্বিতীয় একজন প্রশাসকের অনুমোদন লাগে।"],
+      ["নিয়ন্ত্রিত সংশোধন", "কোনো ব্যালট কখনও সম্পাদনা করা হয় না। ভোটারের নিজের অনুরোধ ছাড়া সংশোধনে কারণ ও দ্বিতীয় একজন প্রশাসকের অনুমোদন লাগে।"],
     ],
   },
   timeline: {
@@ -316,13 +318,13 @@ const bn: Dict = {
       ["কে ভোট দিতে পারবেন?", `শুধুমাত্র ${batch}-এর নিবন্ধিত ও সক্রিয় শিক্ষার্থীরা। আপনার রোল নম্বর অবশ্যই অফিসিয়াল তালিকায় থাকতে হবে।`],
       ["আমি কয়টি ভোট দিতে পারব?", "ঠিক দুটি: ছাত্র সিআর পদে একটি এবং ছাত্রী সিআর পদে একটি। দুটি ভোট একসাথে জমা হয়; একই পদে দুবার ভোট দেওয়া যায় না। জমা দেওয়ার পর আপনি নিজে ব্যালট বদলাতে পারবেন না; শুধু সুপার অ্যাডমিন ভোট সংশোধন করতে পারেন (অডিট লগে থাকে)।"],
       ["আমি কোড পাইনি।", "এক মিনিট অপেক্ষা করে নতুন কোড চান এবং স্প্যাম ফোল্ডার দেখুন। নিবন্ধিত যোগাযোগ তথ্য ভুল হলে সাহায্য পাতায় জানান, কমিটি তা সংশোধন করবে।"],
-      ["কেউ কি দেখতে পারবে আমি কাকে ভোট দিয়েছি?", "হ্যাঁ, সুপার অ্যাডমিন পারেন। এটি উন্মুক্ত ব্যালট, গোপন ব্যালট নয়। নির্বাচন অ্যাডমিন শুধু দেখেন আপনি ভোট দিয়েছেন কি না, কাকে দিয়েছেন তা নয়। ভোট সংশোধন করা যায় শুধু ভোটগ্রহণ শেষে, লিখিত কারণসহ এবং দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদনে; আপনার মূল ব্যালট সংরক্ষিত থাকে এবং রসিদে আপনাকে জানানো হয়। প্রতিটি দেখা ও সংশোধন অডিট লগে থাকে। অন্য শিক্ষার্থী বা সাধারণ মানুষ আপনার পছন্দ দেখতে পারে না। এই নোটিশ চালুর আগে দেওয়া ভোটগুলো বেনামিই থাকবে।"],
+      ["কেউ কি দেখতে পারবে আমি কাকে ভোট দিয়েছি?", "হ্যাঁ, সুপার অ্যাডমিন পারেন। এটি উন্মুক্ত ব্যালট, গোপন ব্যালট নয়। নির্বাচন অ্যাডমিন শুধু দেখেন আপনি ভোট দিয়েছেন কি না, কাকে দিয়েছেন তা নয়। আপনি সুপার অ্যাডমিনকে অনুরোধ করলে ফলাফল প্রকাশের আগে তিনি আপনার ভোট পরিবর্তন করে দিতে পারেন। অন্য যেকোনো সংশোধন করা যায় শুধু ভোটগ্রহণ শেষে, লিখিত কারণসহ এবং দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদনে। আপনার মূল ব্যালট সবসময় সংরক্ষিত থাকে এবং রসিদে আপনাকে জানানো হয়। প্রতিটি দেখা ও সংশোধন অডিট লগে থাকে। অন্য শিক্ষার্থী বা সাধারণ মানুষ আপনার পছন্দ দেখতে পারে না। এই নোটিশ চালুর আগে দেওয়া ভোটগুলো বেনামিই থাকবে।"],
       ["কেউ আমার পরিচয় ব্যবহার করে ভোট দিয়েছে।", "অবিলম্বে সাহায্য পাতায় জানান। কমিটি সরাসরি তদন্ত করবে। অভিযোগ করলে কখনও স্বয়ংক্রিয়ভাবে অতিরিক্ত ব্যালট দেওয়া হয় না।"],
       ["আমি কি অন্যের হয়ে ভোট দিতে বা কোড শেয়ার করতে পারি?", "না। অন্যের হয়ে ভোট দেওয়া অসদাচরণ। আপনার এককালীন কোড কখনও কাউকে দেবেন না — কমিটির সদস্যরা কখনও তা চাইবেন না।"],
     ],
   },
   committee: {
-    eyebrow: "স্বাধীন তত্ত্বাবধান", title: "নির্বাচন কমিটি", empty: "ঘোষণার পর কমিটির সদস্যদের নাম এখানে দেওয়া হবে।",
+    eyebrow: "স্বাধীন তত্ত্বাবধান", title: "কমিটির অন্যান্য সদস্য", empty: "ঘোষণার পর কমিটির সদস্যদের নাম এখানে দেওয়া হবে।",
     help: "সাহায্য প্রয়োজন?", helpText: "কোড আসছে না, রোল নম্বর গ্রহণ হচ্ছে না, বা পরিচয়ের অপব্যবহারের সন্দেহ — কমিটিকে জানান।",
     anyPhone: "যেকোনো আধুনিক মোবাইল ব্রাউজারে চলে", report: "সমস্যা জানান",
   },
@@ -330,20 +332,20 @@ const bn: Dict = {
   urgent: { title: "জরুরি জিজ্ঞাসা বা সমস্যা?", body: "ভোট দিতে পারছেন না, কোড আসছে না, বা অন্য কোনো জরুরি বিষয় — সরাসরি আমাদের জানান।", cta: "ফেসবুকে মেসেজ করুন" },
   link: { title: "আপনার ব্যক্তিগত ভোটিং লিংক", sub: "নির্বাচন কমিটি আপনাকে এই গোপন লিংকটি দিয়েছে। ব্যালটে যেতে আপনার রোল নম্বর লিখুন।", cta: "ব্যালটে যান", note: "এই লিংক কাউকে দেবেন না — যার কাছে থাকবে সে আপনার হয়ে ভোট দিতে পারবে।" },
   openBallot: {
-    notice: "উন্মুক্ত ব্যালট, গোপন ব্যালট নয়। আপনার পছন্দ আপনার নামের সাথে সংরক্ষিত হয়। সুপার অ্যাডমিন দেখতে পারেন আপনি কাকে ভোট দিয়েছেন। নির্বাচন অ্যাডমিন শুধু দেখেন আপনি ভোট দিয়েছেন কি না ও কখন, কখনো আপনার পছন্দ নয়। কেউ কোনো ভোট সম্পাদনা বা মুছে ফেলতে পারেন না: সংশোধনে লিখিত কারণ ও দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন লাগে, আপনার মূল ব্যালট সংরক্ষিত থাকে এবং রসিদ পাতায় আপনাকে জানানো হয়। প্রতিটি দেখা ও সংশোধন কারচুপি-প্রতিরোধী লগে থাকে। অন্য শিক্ষার্থী বা সাধারণ মানুষ আপনার পছন্দ দেখতে পারে না।",
-    ack: "আমি বুঝি যে এটি উন্মুক্ত ব্যালট: সুপার অ্যাডমিন দেখতে পারেন আমি কাকে ভোট দিয়েছি, এবং দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন ছাড়া আমার ভোট সংশোধন করা যায় না; আমার মূল ব্যালট সংরক্ষিত থাকে।",
+    notice: "উন্মুক্ত ব্যালট, গোপন ব্যালট নয়। আপনার পছন্দ আপনার নামের সাথে সংরক্ষিত হয়। সুপার অ্যাডমিন দেখতে পারেন আপনি কাকে ভোট দিয়েছেন। নির্বাচন অ্যাডমিন শুধু দেখেন আপনি ভোট দিয়েছেন কি না ও কখন, কখনো আপনার পছন্দ নয়। কেউ কোনো ভোট সম্পাদনা বা মুছে ফেলতে পারেন না। আপনি নিজে অনুরোধ করলেই কেবল একজন সুপার অ্যাডমিন আপনার ভোট পরিবর্তন করতে পারেন; অন্য যেকোনো সংশোধনে লিখিত কারণ ও দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন লাগে। আপনার মূল ব্যালট সংরক্ষিত থাকে এবং রসিদ পাতায় আপনাকে জানানো হয়। প্রতিটি দেখা ও সংশোধন কারচুপি-প্রতিরোধী লগে থাকে। অন্য শিক্ষার্থী বা সাধারণ মানুষ আপনার পছন্দ দেখতে পারে না।",
+    ack: "আমি বুঝি যে এটি উন্মুক্ত ব্যালট: সুপার অ্যাডমিন দেখতে পারেন আমি কাকে ভোট দিয়েছি, এবং আমার অনুরোধ ছাড়া বা দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন ছাড়া আমার ভোট পরিবর্তন করা যায় না; আমার মূল ব্যালট সবসময় সংরক্ষিত থাকে।",
     terms: "শর্তাবলি", refresh: "ভোটের নিয়ম হালনাগাদ হয়েছে। অনুগ্রহ করে পাতাটি রিফ্রেশ করে নতুন নোটিশটি নিশ্চিত করুন, তারপর আবার জমা দিন।",
-    changed: (d) => `দুইজন সুপার অ্যাডমিনের অনুমোদনে ${d} তারিখে আপনার ভোট সংশোধন করা হয়েছে। আপনার মূল ব্যালট রেকর্ডে সংরক্ষিত আছে। এটি আপনার অজানা হলে জরুরি যোগাযোগ অপশনে কমিটিকে জানান।`,
+    changed: (d) => `${d} তারিখে আপনার ভোট পরিবর্তন করা হয়েছে। আপনার মূল ব্যালট রেকর্ডে সংরক্ষিত আছে। আপনি এটি না চেয়ে থাকলে জরুরি যোগাযোগ অপশনে কমিটিকে জানান।`,
   },
   terms: {
     title: "শর্তাবলি", sub: "ভোট দেওয়ার আগে অনুগ্রহ করে পড়ুন। সিস্টেম ঠিক এই নিয়মগুলোই প্রয়োগ করে।",
     items: [
       ["উন্মুক্ত ব্যালট, গোপন ব্যালট নয়", "এই নির্বাচনে গোপন ব্যালট ব্যবহার হচ্ছে না। প্রতিটি ভোট ভোটারের সাথে যুক্ত করে সংরক্ষিত হয়। সুপার অ্যাডমিন দেখতে পারেন কে কাকে ভোট দিয়েছেন। অন্য শিক্ষার্থী বা সাধারণ মানুষ কেউ কীভাবে ভোট দিয়েছে তা দেখতে পারে না।"],
       ["কে কী দেখতে পারেন", "দুটি বিষয় আলাদাভাবে রাখা হয়: আপনি ভোট দিয়েছেন কি না (অংশগ্রহণ) এবং কাকে বেছে নিয়েছেন (ব্যালটের বিষয়বস্তু)। নির্বাচন অ্যাডমিন শিক্ষার্থী তালিকা এবং কে কখন ভোট দিয়েছেন তা দেখেন, কখনো কারও পছন্দ নয়। ভোটগ্রহণ শেষে ফলাফল কর্মকর্তা ও নিরীক্ষক বেনামি ব্যালট তালিকা (ব্যালট নম্বর ও প্রার্থী, কোনো নাম নেই) এবং অডিট লগ দেখেন। শুধু সুপার অ্যাডমিন ভোটারের সাথে যুক্ত পছন্দ দেখতে পারেন, এবং তা-ও অথেনটিকেটর কোড আবার দেওয়ার পর। ডেটাবেস মালিকের (owner) পরিচয়পত্র যার কাছে আছে, তিনিও প্রযুক্তিগতভাবে সংরক্ষিত তথ্য পড়তে পারেন; কমিটি তা যত কম সম্ভব মানুষের কাছে রাখে।"],
-      ["নীরবে কোনো পরিবর্তন নয়", "কেউ কোনো ব্যালট সম্পাদনা বা মুছে ফেলতে পারেন না। ভোট সংশোধন করা যায় শুধু ভোটগ্রহণ শেষে ও ফলাফল প্রকাশের আগে: একজন অ্যাডমিন লিখিত কারণসহ অনুরোধ করেন, এবং ভিন্ন একজন সুপার অ্যাডমিনকে তা অনুমোদন করতে হয়। মূল ব্যালট কখনো বদলায় না; সেটি বাতিল চিহ্নিত হয় এবং তার সাথে যুক্ত একটি নতুন ব্যালট যোগ হয়, ফলে সম্পূর্ণ ইতিহাস দেখা যায়। আপনার ভোট সংশোধিত হলে আপনার রসিদ পাতায় জানানো হবে।"],
+      ["নীরবে কোনো পরিবর্তন নয়", "কেউ কোনো ব্যালট সম্পাদনা বা মুছে ফেলতে পারেন না। আপনি সুপার অ্যাডমিনকে ভোট পরিবর্তনের অনুরোধ করলে (যেমন ফেসবুকে) একজন সুপার অ্যাডমিন ভোটগ্রহণ চলাকালীন বা শেষে, ফলাফল প্রকাশের আগে, তা করে দিতে পারেন; আপনি কীভাবে অনুরোধ করেছেন ও কেন, তা লিপিবদ্ধ হয়। অন্য যেকোনো সংশোধন করা যায় শুধু ভোটগ্রহণ শেষে ও ফলাফল প্রকাশের আগে: একজন অ্যাডমিন লিখিত কারণসহ অনুরোধ করেন, এবং ভিন্ন একজন সুপার অ্যাডমিনকে তা অনুমোদন করতে হয়। মূল ব্যালট কখনো বদলায় না; সেটি বাতিল চিহ্নিত হয় এবং তার সাথে যুক্ত একটি নতুন ব্যালট যোগ হয়, ফলে সম্পূর্ণ ইতিহাস দেখা যায়। আপনার ভোট সংশোধিত হলে আপনার রসিদ পাতায় জানানো হবে।"],
       ["প্রতিটি দেখা ও পরিবর্তন লিপিবদ্ধ হয়", "যতবার ভোটারের সাথে যুক্ত ভোট দেখা হয়, এবং প্রতিটি সংশোধনের অনুরোধ ও সিদ্ধান্ত, কারচুপি-প্রতিরোধী হ্যাশ-চেইনড অডিট লগে লেখা হয়। কমিটি তা রপ্তানি করে স্বাধীনভাবে যাচাই করতে পারে।"],
       ["এই নোটিশের আগে দেওয়া ভোট", "উন্মুক্ত ব্যালটের নোটিশ চালুর আগে দেওয়া ভোটগুলো বেনামে সংরক্ষিত হয়েছে এবং বেনামিই থাকবে। সেগুলো ভোটারের সাথে যুক্ত করা বা পরিবর্তন করা যায় না।"],
-      ["আপনার নিজের ভোট", "জমা দেওয়ার পর আপনি নিজে ব্যালট বদলাতে পারবেন না। আপনি ঠিক দুটি ভোট দেবেন: একটি ছাত্র সিআর, একটি ছাত্রী সিআর।"],
+      ["আপনার নিজের ভোট", "জমা দেওয়ার পর আপনি নিজে ব্যালট বদলাতে পারবেন না। বদলাতে চাইলে একজন সুপার অ্যাডমিনকে মেসেজ করুন। আপনি ঠিক দুটি ভোট দেবেন: একটি ছাত্র সিআর, একটি ছাত্রী সিআর।"],
       ["ফলাফল", "ভোটগ্রহণ শেষ না হওয়া পর্যন্ত প্রার্থীভিত্তিক গণনা সিলগালা থাকে। শুধু চূড়ান্ত ফলাফল প্রকাশ্য।"],
       ["প্রশ্ন বা সমস্যা", "যেকোনো পাতায় জরুরি যোগাযোগ অপশন ব্যবহার করে কমিটিকে জানান।"],
     ],
@@ -375,7 +377,7 @@ const bn: Dict = {
   },
   ballot: {
     eyebrow: "অফিসিয়াল ব্যালট · ছাত্র সিআর + ছাত্রী সিআর", title: "আপনার দুটি ভোট দিন",
-    signedIn: "প্রবেশ করেছেন:", secret: "উন্মুক্ত ব্যালট: সুপার অ্যাডমিন আপনার পছন্দ দেখতে পারেন; সংশোধনে দুইজন সুপার অ্যাডমিন লাগে (শর্তাবলি দেখুন)।",
+    signedIn: "প্রবেশ করেছেন:", secret: "উন্মুক্ত ব্যালট: সুপার অ্যাডমিন আপনার পছন্দ দেখতে পারেন; আপনার অনুরোধে বা দুইজন সুপার অ্যাডমিনের অনুমোদনে ভোট পরিবর্তন হয় (শর্তাবলি দেখুন)।",
     pausedTitle: "ভোটগ্রহণ স্থগিত", closedTitle: "ভোটগ্রহণ চালু নেই", cannot: "এই মুহূর্তে আপনার ব্যালট জমা দেওয়া যাবে না।",
     session: "সেশন", expiresIn: (t) => `শেষ হবে ${t} পর`, expired: "মেয়াদোত্তীর্ণ",
     expiredTitle: "সেশনের মেয়াদ শেষ", expiredBody1: "নিরাপত্তার জন্য অনুগ্রহ করে", expiredLink: "আবার যাচাই করুন", expiredBody2: "। কোনো ব্যালট জমা হয়নি।",
@@ -394,6 +396,8 @@ const bn: Dict = {
     note1: "এই রসিদ প্রমাণ করে আপনার একটি ব্যালট জমা হয়েছে। এতে আপনার পছন্দ দেখানো হয় না। পরে যাচাইয়ের জন্য সংরক্ষণ করুন: ",
     welcomeDefault: "ধন্যবাদ, {name}! আপনার মূল্যবান ভোট সফলভাবে গৃহীত হয়েছে। টেকটাইটানস-২৮-এর সুষ্ঠু নির্বাচনে অংশ নেওয়ার জন্য অভিনন্দন।",
     verify: "রসিদ যাচাই", turnout: "সরাসরি উপস্থিতি দেখুন", signout: "শেষ করে বের হন",
+    changeTitle: "ভোট পরিবর্তন করতে চান?",
+    changeBody: "আপনি নিজে বদলাতে পারবেন না। একজন সুপার অ্যাডমিনকে মেসেজ করুন: ফলাফল প্রকাশের আগে তিনি আপনার হয়ে পরিবর্তন করে দিতে পারবেন। আপনার মূল ব্যালট রেকর্ডে সংরক্ষিত থাকবে এবং এই পাতায় পরিবর্তনটি দেখানো হবে।",
   },
   verify: {
     eyebrow: "রসিদ যাচাই", title: "আপনার ব্যালটের রসিদ যাচাই করুন",
@@ -425,10 +429,10 @@ const bn: Dict = {
     showAll: "সব প্রার্থী দেখুন", more: (n) => `আরও ${n} জন`, manifesto: "ইশতেহার", roll: "রোল",
   },
   proctorial: {
-    eyebrow: "নির্বাচন তত্ত্বাবধান", title: "প্রক্টরিয়াল বডি",
+    eyebrow: "নির্বাচন তত্ত্বাবধান", title: "নির্বাচন কমিটি",
     sub: "নির্বাচনের সুষ্ঠু, শৃঙ্খলাপূর্ণ ও নিরপেক্ষ পরিবেশ নিশ্চিত করার দায়িত্বে।",
     names: { afrajur: "আফরাজুর জিহাদ", limon: "লিমন সরকার", ratul: "রাতুল রায়" },
-    roles: { afrajur: "ম্যানেজার", limon: "সংগঠক", ratul: "টেকনিক্যাল ও সিস্টেম ডিজাইনার" },
+    roles: { afrajur: "প্রধান নির্বাচন কমিশনার", limon: "নির্বাচন কমিশনার", ratul: "সার্বিক ব্যবস্থাপনা ও কারিগরি প্রধান" },
   },
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",

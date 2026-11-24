@@ -10,7 +10,10 @@
  */
 import { createRequire } from "node:module";
 import { createHmac } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+// The open-ballot notice version the server currently expects (kept in sync with src/lib/i18n.ts).
+const NOTICE_VERSION = readFileSync(new URL("../../src/lib/i18n.ts", import.meta.url), "utf8").match(/OPEN_BALLOT_NOTICE_VERSION = "([^"]+)"/)[1];
+
 
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const OUT = process.env.E2E_SCREENSHOTS ?? "tests/e2e/screenshots";
@@ -134,7 +137,7 @@ await check("full voting flow on a phone: roll → OTP → select → review →
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const again = await ctx.request.post(`${BASE}/api/vote/cast`, {
     headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" },
-    data: { openBallotAck: "2026-11-23.two-person-corrections", candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
+    data: { openBallotAck: NOTICE_VERSION, candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] },
   });
   assert(again.status() === 409 && (await again.json()).error.code === "ALREADY_VOTED", `expected ALREADY_VOTED, got ${again.status()}`);
 

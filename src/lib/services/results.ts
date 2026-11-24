@@ -147,3 +147,25 @@ export async function getBallotLedger(electionId: string) {
     throw fromDbError(e) ?? e;
   }
 }
+
+export type LiveTop3 = {
+  position: { id: string; code: string; gender: "MALE" | "FEMALE" | null };
+  top: { candidateId: string; name: string; roll: string; votes: number; rank: number }[];
+};
+
+/** Super Admin only (re-checked in the database): current top three per position, even while voting is open. */
+export async function getLiveTop3(sessionTokenHash: string, electionId: string): Promise<LiveTop3[]> {
+  try {
+    const rows = await query<{ position_id: string; position_code: string; position_gender: "MALE" | "FEMALE" | null; candidate_id: string; display_name: string; roll_number: string; votes: number; rank: number }>(
+      `select * from admin_live_top3($1, $2)`, [sessionTokenHash, electionId]);
+    const out = new Map<string, LiveTop3>();
+    for (const r of rows) {
+      let p = out.get(r.position_id);
+      if (!p) out.set(r.position_id, (p = { position: { id: r.position_id, code: r.position_code, gender: r.position_gender }, top: [] }));
+      p.top.push({ candidateId: r.candidate_id, name: r.display_name, roll: r.roll_number, votes: r.votes, rank: r.rank });
+    }
+    return [...out.values()];
+  } catch (e) {
+    throw fromDbError(e) ?? e;
+  }
+}

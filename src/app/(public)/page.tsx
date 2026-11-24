@@ -21,14 +21,14 @@ import { CandidateGrid } from "@/components/site/candidate-grid";
 import { initials } from "@/components/site/candidate-avatar";
 import { cn } from "@/lib/utils";
 
-/** Proctorial Body members (photos in public/committee). */
+/** Election Committee members (photos in public/committee). Ratul Roy (overall management & technical lead) first. */
 const PROCTORIAL = [
+  { key: "ratul", photo: "/committee/ratul-roy.webp" },
   { key: "afrajur", photo: "/committee/afrajur-zihad.webp" },
   { key: "limon", photo: "/committee/limon-sarkar.webp" },
-  { key: "ratul", photo: "/committee/ratul-roy.webp" },
 ] as const;
 
-/** Committee entries from Settings that are already shown above as Proctorial Body cards. */
+/** Committee entries from Settings that are already shown above as Election Committee cards. */
 const isProctorial = (name: string) => /afrajur|limon|ratul/i.test(name);
 
 export default async function HomePage() {
@@ -330,7 +330,7 @@ export default async function HomePage() {
 
       {/* ───────────── COMMITTEE + HELP ───────────── */}
       <section id="committee" className="scroll-mt-24 border-t border-line bg-surface pb-20 sm:pb-24">
-        {/* ── Proctorial Body ── */}
+        {/* ── Election Committee ── */}
         <div className="noise relative isolate overflow-hidden bg-emerald-900 py-16 text-white sm:py-20">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_70%_at_50%_0%,rgb(201_162_74/0.22),transparent_70%)]" aria-hidden />
           <div className="mx-auto max-w-6xl px-4 sm:px-6">

@@ -11,6 +11,7 @@ import { dict } from "@/lib/i18n";
 import { getWelcomeTemplate, renderWelcome } from "@/lib/services/settings";
 import { voteChangedAt } from "@/lib/services/vote-records";
 import { Alert } from "@/components/ui/alert";
+import { UrgentContact } from "@/components/site/urgent-contact";
 
 export default async function ReceiptPage() {
   const s = await voterFromCookies();
@@ -44,6 +45,7 @@ export default async function ReceiptPage() {
         <p className="text-center text-xs leading-relaxed text-muted">
           {R.note1}<Link className="text-electric hover:underline" href="/verify-receipt">{R.verify}</Link>.
         </p>
+        {s.electionStatus !== "RESULTS_PUBLISHED" && <UrgentContact lang={lang} title={R.changeTitle} body={R.changeBody} />}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button asChild variant="outline" className="flex-1"><Link href="/results">{R.turnout}</Link></Button>
           <SignOutButton label={R.signout} />

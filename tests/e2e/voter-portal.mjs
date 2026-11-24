@@ -3,7 +3,10 @@
  *   node tests/e2e/voter-portal.mjs      (needs a seeded LIVE election: npm run db:seed)
  */
 import { createRequire } from "node:module";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+// The open-ballot notice version the server currently expects (kept in sync with src/lib/i18n.ts).
+const NOTICE_VERSION = readFileSync(new URL("../../src/lib/i18n.ts", import.meta.url), "utf8").match(/OPEN_BALLOT_NOTICE_VERSION = "([^"]+)"/)[1];
+
 const { chromium, devices } = createRequire(import.meta.url)("playwright");
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const OUT = process.env.E2E_SCREENSHOTS ?? "tests/e2e/screenshots";
@@ -212,7 +215,7 @@ await check("a tampered/forged session cookie cannot reach the ballot or vote", 
   const page = await ctx.newPage();
   await page.goto(`${BASE}/vote/ballot`); await page.waitForURL(`${BASE}/vote`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf")?.value ?? "";
-  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { openBallotAck: "2026-11-23.two-person-corrections", candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] } });
+  const r = await ctx.request.post(`${BASE}/api/vote/cast`, { headers: { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" }, data: { openBallotAck: NOTICE_VERSION, candidateIds: ["00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"] } });
   assert(r.status() === 401, `expected 401, got ${r.status()}`);
   await ctx.close();
 });
@@ -228,7 +231,7 @@ await check("STRICT RULE over the API: one vote only, two boys or two girls are 
   assert(boyIds.length >= 2 && girlIds.length >= 2, `need 2+ candidates per race (boys ${boyIds.length}, girls ${girlIds.length})`);
   const csrf = (await ctx.cookies()).find((c) => c.name === "tt_csrf").value;
   const h = { "x-csrf-token": csrf, origin: BASE, "content-type": "application/json" };
-  const post = (ids) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { openBallotAck: "2026-11-23.two-person-corrections", candidateIds: ids } });
+  const post = (ids) => ctx.request.post(`${BASE}/api/vote/cast`, { headers: h, data: { openBallotAck: NOTICE_VERSION, candidateIds: ids } });
   for (const [name, ids] of [["boy only", [boyIds[0]]], ["girl only", [girlIds[0]]], ["two boys", [boyIds[0], boyIds[1]]], ["two girls", [girlIds[0], girlIds[1]]], ["three", [boyIds[0], girlIds[0], girlIds[1]]]]) {
     const r = await post(ids);
     const j = await r.json();
