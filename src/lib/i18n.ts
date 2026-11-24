@@ -100,7 +100,7 @@ const en = {
     ],
   },
   committee: {
-    eyebrow: "Independent oversight", title: "Election Committee", empty: "Committee members will be listed here once announced.",
+    eyebrow: "Independent oversight", title: "Other committee members", empty: "Committee members will be listed here once announced.",
     help: "Need help?", helpText: "Code not arriving, roll not accepted, or a suspected misuse of your identity — tell the committee.",
     anyPhone: "Works on any modern phone browser", report: "Report a problem",
   },
@@ -205,10 +205,10 @@ const en = {
     showAll: "Show all candidates", more: (n: string) => `${n} more`, manifesto: "Manifesto", roll: "Roll",
   },
   proctorial: {
-    eyebrow: "Election oversight", title: "Proctorial Body",
+    eyebrow: "Election oversight", title: "Election Committee",
     sub: "Responsible for keeping the election fair, orderly and disciplined.",
     names: { afrajur: "Afrajur Zihad", limon: "Limon Sarkar", ratul: "Ratul Roy" } as Record<string, string>,
-    roles: { afrajur: "Manager", limon: "Organizer", ratul: "Technical & System Designer" } as Record<string, string>,
+    roles: { afrajur: "Chief Election Commissioner", limon: "Election Commissioner", ratul: "Head Organizer & Technical Lead" } as Record<string, string>,
   },
   demo: {
     title: "Try a demo vote", banner: "DEMO — nothing you do here is counted",
@@ -324,7 +324,7 @@ const bn: Dict = {
     ],
   },
   committee: {
-    eyebrow: "স্বাধীন তত্ত্বাবধান", title: "নির্বাচন কমিটি", empty: "ঘোষণার পর কমিটির সদস্যদের নাম এখানে দেওয়া হবে।",
+    eyebrow: "স্বাধীন তত্ত্বাবধান", title: "কমিটির অন্যান্য সদস্য", empty: "ঘোষণার পর কমিটির সদস্যদের নাম এখানে দেওয়া হবে।",
     help: "সাহায্য প্রয়োজন?", helpText: "কোড আসছে না, রোল নম্বর গ্রহণ হচ্ছে না, বা পরিচয়ের অপব্যবহারের সন্দেহ — কমিটিকে জানান।",
     anyPhone: "যেকোনো আধুনিক মোবাইল ব্রাউজারে চলে", report: "সমস্যা জানান",
   },
@@ -429,10 +429,10 @@ const bn: Dict = {
     showAll: "সব প্রার্থী দেখুন", more: (n) => `আরও ${n} জন`, manifesto: "ইশতেহার", roll: "রোল",
   },
   proctorial: {
-    eyebrow: "নির্বাচন তত্ত্বাবধান", title: "প্রক্টরিয়াল বডি",
+    eyebrow: "নির্বাচন তত্ত্বাবধান", title: "নির্বাচন কমিটি",
     sub: "নির্বাচনের সুষ্ঠু, শৃঙ্খলাপূর্ণ ও নিরপেক্ষ পরিবেশ নিশ্চিত করার দায়িত্বে।",
     names: { afrajur: "আফরাজুর জিহাদ", limon: "লিমন সরকার", ratul: "রাতুল রায়" },
-    roles: { afrajur: "ম্যানেজার", limon: "সংগঠক", ratul: "টেকনিক্যাল ও সিস্টেম ডিজাইনার" },
+    roles: { afrajur: "প্রধান নির্বাচন কমিশনার", limon: "নির্বাচন কমিশনার", ratul: "সার্বিক ব্যবস্থাপনা ও কারিগরি প্রধান" },
   },
   demo: {
     title: "ডেমো ভোট দিয়ে দেখুন", banner: "ডেমো — এখানে দেওয়া কোনো ভোট গণনা হবে না",
