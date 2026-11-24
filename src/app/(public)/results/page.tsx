@@ -20,7 +20,7 @@ const STR = {
     roll: "Roll", votes: "votes", ofValid: "of valid ballots", published: "Published", tie: "Tied result",
     tieText: (names: string, v: string) => `${names} received ${v} votes each. No winner is declared automatically.`, decision: "Committee decision:",
     cw: "Candidate-wise results", top3: "Top 3", validLine: (v: string, i: string) => `${v} valid ballots · ${i} invalidated by approved correction`,
-    report: "Official report", reportText: "Signed-off result report with participation, candidate-wise votes and the tally fingerprint.", download: "Download PDF report",
+    report: "Official result notice", reportText: "Final result notice signed by the Election Committee (memo TT-28/EC/2026/01, 25 November 2026).", download: "Download notice (PDF)",
     sealedA: "Candidate-wise results are ", sealed: "sealed", sealedClosed: " until the Election Committee verifies and publishes them.",
     sealedOpen: " until voting closes. They cannot be computed — by anyone — while the election is open.",
     part: "Participation over time", empty: "No ballots recorded yet.", partSub: "Cumulative ballots recorded, by hour (Asia/Dhaka)", voted: "Voted already?", verify: "Verify your receipt", and: " and ",
@@ -30,7 +30,7 @@ const STR = {
     roll: "রোল", votes: "ভোট", ofValid: "বৈধ ব্যালটের", published: "প্রকাশিত", tie: "সমান ভোট",
     tieText: (names: string, v: string) => `${names} প্রত্যেকে ${v}টি করে ভোট পেয়েছেন। স্বয়ংক্রিয়ভাবে কোনো বিজয়ী ঘোষণা করা হয় না।`, decision: "কমিটির সিদ্ধান্ত:",
     cw: "প্রার্থীভিত্তিক ফলাফল", top3: "শীর্ষ ৩ জন", validLine: (v: string, i: string) => `${v}টি বৈধ ব্যালট · অনুমোদিত সংশোধনে ${i}টি বাতিল`,
-    report: "আনুষ্ঠানিক প্রতিবেদন", reportText: "উপস্থিতি, প্রার্থীভিত্তিক ভোট ও গণনার ফিঙ্গারপ্রিন্টসহ স্বাক্ষরিত ফলাফল প্রতিবেদন।", download: "পিডিএফ প্রতিবেদন ডাউনলোড",
+    report: "আনুষ্ঠানিক বিজ্ঞপ্তি", reportText: "নির্বাচন কমিটি স্বাক্ষরিত চূড়ান্ত ফলাফল ঘোষণার বিজ্ঞপ্তি (স্মারক নং টিটি-২৮/নিক/২০২৬/০১, ২৫ নভেম্বর ২০২৬)।", download: "বিজ্ঞপ্তি ডাউনলোড (পিডিএফ)",
     sealedA: "প্রার্থীভিত্তিক ফলাফল ", sealed: "সিলগালা", sealedClosed: " — নির্বাচন কমিটি যাচাই করে প্রকাশ না করা পর্যন্ত।",
     sealedOpen: " — ভোটগ্রহণ শেষ না হওয়া পর্যন্ত। নির্বাচন চলাকালে কেউই তা গণনা করতে পারে না।",
     part: "সময়ের সাথে অংশগ্রহণ", empty: "এখনও কোনো ব্যালট জমা হয়নি।", partSub: "ঘণ্টাভিত্তিক মোট জমা হওয়া ব্যালট (ঢাকা সময়)", voted: "ভোট দিয়েছেন?", verify: "রসিদ যাচাই করুন", and: " ও ",
@@ -141,7 +141,7 @@ export default async function ResultsPage() {
             <Card className="p-6">
               <h3 className="font-semibold">{S.report}</h3>
               <p className="mt-1 text-sm text-muted">{S.reportText}</p>
-              <Button asChild className="mt-4 w-full" variant="navy"><a href="/api/public/report"><Download /> {S.download}</a></Button>
+              <Button asChild className="mt-4 w-full" variant="navy"><a href="/notices/techtitans28-cr-result-notice-2026.pdf" download="techtitans28-cr-result-notice-2026.pdf"><Download /> {S.download}</a></Button>
             </Card>
           </div>
         </section>
