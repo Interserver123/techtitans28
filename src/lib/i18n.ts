@@ -111,7 +111,7 @@ const en = {
     notice: "Open ballot, not a secret ballot. Your choices are stored with your name. Super Admins can see who you voted for. Election Admins see only whether and when you voted, never your choice. No one can edit or delete a vote. A Super Admin can change your vote only if you ask them to; any other correction needs a written reason and a second Super Admin's approval. Your original ballot is kept, and your receipt page will tell you. Every view and correction is recorded in a tamper-evident log. Other students and the public cannot see your choice.",
     ack: "I understand this is an open ballot: Super Admins can see who I voted for, and my vote is changed only if I ask a Super Admin, or with a second Super Admin's approval, always keeping my original ballot.",
     terms: "Terms & conditions", refresh: "The voting rules were updated. Please refresh this page and confirm the new notice, then submit again.",
-    changed: (d: string) => `Your vote was changed on ${d}. Your original ballot is kept in the record. If you did not ask for this, contact the committee using the urgent-contact option.`,
+    changed: (d: string) => `Your vote was changed or cancelled on ${d}. Your original ballot is kept in the record. If you did not expect this, contact the committee using the urgent-contact option.`,
   },
   terms: {
     title: "Terms & conditions", sub: "Please read before voting. These are the exact rules the system enforces.",
@@ -335,7 +335,7 @@ const bn: Dict = {
     notice: "উন্মুক্ত ব্যালট, গোপন ব্যালট নয়। আপনার পছন্দ আপনার নামের সাথে সংরক্ষিত হয়। সুপার অ্যাডমিন দেখতে পারেন আপনি কাকে ভোট দিয়েছেন। নির্বাচন অ্যাডমিন শুধু দেখেন আপনি ভোট দিয়েছেন কি না ও কখন, কখনো আপনার পছন্দ নয়। কেউ কোনো ভোট সম্পাদনা বা মুছে ফেলতে পারেন না। আপনি নিজে অনুরোধ করলেই কেবল একজন সুপার অ্যাডমিন আপনার ভোট পরিবর্তন করতে পারেন; অন্য যেকোনো সংশোধনে লিখিত কারণ ও দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন লাগে। আপনার মূল ব্যালট সংরক্ষিত থাকে এবং রসিদ পাতায় আপনাকে জানানো হয়। প্রতিটি দেখা ও সংশোধন কারচুপি-প্রতিরোধী লগে থাকে। অন্য শিক্ষার্থী বা সাধারণ মানুষ আপনার পছন্দ দেখতে পারে না।",
     ack: "আমি বুঝি যে এটি উন্মুক্ত ব্যালট: সুপার অ্যাডমিন দেখতে পারেন আমি কাকে ভোট দিয়েছি, এবং আমার অনুরোধ ছাড়া বা দ্বিতীয় একজন সুপার অ্যাডমিনের অনুমোদন ছাড়া আমার ভোট পরিবর্তন করা যায় না; আমার মূল ব্যালট সবসময় সংরক্ষিত থাকে।",
     terms: "শর্তাবলি", refresh: "ভোটের নিয়ম হালনাগাদ হয়েছে। অনুগ্রহ করে পাতাটি রিফ্রেশ করে নতুন নোটিশটি নিশ্চিত করুন, তারপর আবার জমা দিন।",
-    changed: (d) => `${d} তারিখে আপনার ভোট পরিবর্তন করা হয়েছে। আপনার মূল ব্যালট রেকর্ডে সংরক্ষিত আছে। আপনি এটি না চেয়ে থাকলে জরুরি যোগাযোগ অপশনে কমিটিকে জানান।`,
+    changed: (d) => `${d} তারিখে আপনার ভোট পরিবর্তন বা বাতিল করা হয়েছে। আপনার মূল ব্যালট রেকর্ডে সংরক্ষিত আছে। এটি আপনার অজানা হলে জরুরি যোগাযোগ অপশনে কমিটিকে জানান।`,
   },
   terms: {
     title: "শর্তাবলি", sub: "ভোট দেওয়ার আগে অনুগ্রহ করে পড়ুন। সিস্টেম ঠিক এই নিয়মগুলোই প্রয়োগ করে।",

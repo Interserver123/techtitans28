@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { FilePlus2, Search, UserPen } from "lucide-react";
+import { Ban, FilePlus2, Search, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -104,6 +104,41 @@ function VoterRequestDialog({ electionId, voter, choice, candidates }: { electio
   );
 }
 
+function CancelVoteDialog({ electionId, voter }: { electionId: string; voter: Voter }) {
+  const [open, setOpen] = useState(false);
+  const [channel, setChannel] = useState("");
+  const [reason, setReason] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const { run, busy, error } = useAction();
+  const current = voter.choices.filter((c) => c.status === "VALID").map((c) => `${posName(c.gender)}: ${c.candidateName}`).join(" · ");
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setConfirmed(false); }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="mt-2 border-red-400/40 text-red-300 hover:bg-red-500/10" aria-label={`${voter.name}-এর ভোট বাতিল`}><Ban /> ভোট বাতিল</Button>
+      </DialogTrigger>
+      <DialogContent title="ভোট বাতিল" description={`${voter.name} (রোল ${voter.roll}) — বর্তমান: ${current}`}>
+        <form className="space-y-4" onSubmit={async (e) => {
+          e.preventDefault();
+          const r = await run("/api/admin/votes/cancel", { json: { electionId, studentId: voter.studentId, channel, reason } }, "ভোট বাতিল করা হয়েছে");
+          if (r) { setOpen(false); setChannel(""); setReason(""); setConfirmed(false); }
+        }}>
+          <Alert tone="error">
+            এই ভোটারের দুটি ভোটই সঙ্গে সঙ্গে বাতিল হবে এবং আর গণনায় আসবে না। ব্যালটগুলো মুছে ফেলা হবে না (বাতিল চিহ্নিত থাকবে), অডিট লগে আপনার নামে লেখা হবে এবং ভোটার রসিদ পাতায় দেখতে পাবেন। ভোটার &ldquo;ভোট দিয়েছেন&rdquo; হিসেবেই থাকবেন — <strong>আবার ভোট দিতে পারবেন না</strong>। কারণে ভোটারের নাম বা রোল লিখবেন না।
+          </Alert>
+          <Field label="কীভাবে/কার অনুরোধে (বাধ্যতামূলক)" htmlFor="cx-ch"><Input id="cx-ch" value={channel} onChange={(e) => setChannel(e.target.value)} placeholder="যেমন: নির্বাচন কমিটির সিদ্ধান্ত, ফেসবুক মেসেজ" minLength={2} maxLength={200} required /></Field>
+          <Field label="কারণ (বাধ্যতামূলক, অন্তত ২০ অক্ষর)" htmlFor="cx-r"><Textarea id="cx-r" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} minLength={20} maxLength={2000} required /></Field>
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input type="checkbox" className="mt-1" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+            <span>আমি নিশ্চিত করছি যে {voter.name}-এর ভোট বাতিল করা প্রয়োজন।</span>
+          </label>
+          {error && <Alert tone="error">{error}</Alert>}
+          <Button type="submit" variant="danger" className="w-full" loading={busy} disabled={!confirmed || channel.trim().length < 2 || reason.trim().length < 20}>এখনই ভোট বাতিল করুন</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function VotesTable({ electionId, voters, positions, candidates, canRequest, canVoterChange, adminId }: { electionId: string; voters: Voter[]; positions: Pos[]; candidates: Cand[]; canRequest: boolean; canVoterChange: boolean; adminId: string }) {
   const [q, setQ] = useState("");
   const shown = useMemo(() => {
@@ -155,7 +190,11 @@ export function VotesTable({ electionId, voters, positions, candidates, canReque
             {shown.map((v) => (
               <tr key={v.studentId} className="align-top">
                 <td className="px-4 py-3 font-mono text-xs text-slate-200">{v.roll}</td>
-                <td className="px-4 py-3 text-slate-100">{v.name}{v.anonymous && <Badge tone="amber" className="ml-2">বেনামি</Badge>}</td>
+                <td className="px-4 py-3 text-slate-100">
+                  {v.name}{v.anonymous && <Badge tone="amber" className="ml-2">বেনামি</Badge>}
+                  {!v.anonymous && v.choices.length > 0 && v.choices.every((c) => c.status === "INVALIDATED") && <Badge tone="red" className="ml-2">ভোট বাতিল</Badge>}
+                  {canVoterChange && !v.anonymous && v.choices.some((c) => c.status === "VALID" && !c.pending) && <div><CancelVoteDialog electionId={electionId} voter={v} /></div>}
+                </td>
                 <td className="px-4 py-3 text-xs text-slate-400">{fmtDateTime(v.votedAt)}</td>
                 {positions.map((p) => <td key={p.id} className="px-4 py-3">{cell(v, p)}</td>)}
               </tr>
