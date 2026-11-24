@@ -1,7 +1,7 @@
 -- =============================================================================
--- TechTitans-28 — UPGRADE ONLY: migrations 0010–0012
+-- TechTitans-28 — UPGRADE ONLY: migrations 0010–0013
 --   0010 live top 3 (Super Admin)  ·  0011 vote change at the voter's request
---   0012 cancel a voter's vote
+--   0012/0013 (0012's cancel-vote function is removed again by 0013)
 -- Copied verbatim from supabase/deploy.sql (same checksum guards), for databases
 -- that already have migration 0009. Safe while voting is live: it only adds
 -- columns, constraints and functions; it never changes or deletes existing votes.
@@ -345,6 +345,37 @@ $tt_migration_12$;
   end if;
 end $tt_wrap$;
 
+-- ---------------------------------------------------------------------------
+-- 20261124000013_remove_cancel_vote.sql
+-- ---------------------------------------------------------------------------
+do $tt_wrap$
+declare prev text;
+begin
+  select checksum into prev from public.schema_migrations where filename = '20261124000013_remove_cancel_vote.sql';
+  if prev is null then
+    execute $tt_migration_13$-- =============================================================================
+-- REMOVE THE ONE-PERSON "CANCEL VOTE" OPTION (added in 0012)
+--
+-- The committee decided not to offer it. The function is dropped, and a
+-- one-Super-Admin correction is again allowed only for a vote change the voter
+-- asked for (REPLACE_CHOICE). Any correction already recorded stays as it is
+-- (NOT VALID only checks new rows): nothing is edited or deleted.
+-- =============================================================================
+set search_path = public, extensions;
+
+drop function if exists cancel_vote_on_request(text, uuid, uuid, text, text, text);
+
+alter table correction_requests drop constraint if exists voter_request_shape;
+alter table correction_requests add constraint voter_request_shape
+  check (not voter_requested or (correction::text = 'REPLACE_CHOICE' and request_channel is not null)) not valid;
+$tt_migration_13$;
+    insert into public.schema_migrations (filename, checksum) values ('20261124000013_remove_cancel_vote.sql', '786e58a291beef8cd17b4389f13feadb6cc0c3ea59dd7c519724c04f8eabd722');
+    raise notice 'applied 20261124000013_remove_cancel_vote.sql';
+  elsif prev <> '786e58a291beef8cd17b4389f13feadb6cc0c3ea59dd7c519724c04f8eabd722' then
+    raise exception 'Migration 20261124000013_remove_cancel_vote.sql was already applied with different contents. Create a new migration instead.';
+  end if;
+end $tt_wrap$;
+
 commit;
 
-select filename, applied_at from public.schema_migrations order by filename desc limit 4;
+select filename, applied_at from public.schema_migrations order by filename desc limit 5;

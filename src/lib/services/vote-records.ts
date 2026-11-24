@@ -110,29 +110,6 @@ export async function changeVoteOnRequest(sessionTokenHash: string, input: z.inp
   }
 }
 
-export const cancelVoteSchema = z.object({
-  electionId: z.string().uuid(),
-  studentId: z.string().uuid(),
-  channel: z.string().trim().min(2, "কীভাবে/কার অনুরোধে বাতিল করা হচ্ছে তা লিখুন।").max(200),
-  reason: z.string().trim().min(20, "অন্তত ২০ অক্ষরে কারণ ব্যাখ্যা করুন।").max(2000),
-});
-
-/**
- * Cancels all of a voter's current ballots (e.g. a vote cast by mistake): one Super Admin, while voting is live
- * or paused or after it closes. Ballots are kept and marked invalidated; the voter stays "voted" and cannot vote
- * again. The database re-checks the Super Admin session and a fresh authenticator code, and writes the audit log.
- */
-export async function cancelVote(sessionTokenHash: string, input: z.input<typeof cancelVoteSchema>, ipHash: string | null) {
-  const v = cancelVoteSchema.parse(input);
-  try {
-    const r = await one<{ n: number }>(`select cancel_vote_on_request($1, $2, $3, $4, $5, $6) as n`,
-      [sessionTokenHash, v.electionId, v.studentId, v.channel, v.reason, ipHash]);
-    return r!.n;
-  } catch (e) {
-    throw fromDbError(e) ?? e;
-  }
-}
-
 /** When this voter's vote was last corrected (null if never). Safe before the upgrade is applied. */
 export async function voteChangedAt(studentId: string, electionId: string): Promise<Date | null> {
   try {

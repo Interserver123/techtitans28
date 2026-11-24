@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { cancelVote, changeVoteOnRequest, listVoteRecords, requestChoiceChange, voteChangedAt } from "@/lib/services/vote-records";
+import { changeVoteOnRequest, listVoteRecords, requestChoiceChange, voteChangedAt } from "@/lib/services/vote-records";
 import { createCorrection, reviewCorrection, listCorrections, correctionSubjects } from "@/lib/services/corrections";
 import { auditExport, correctionsExport, participationCsv } from "@/lib/services/records-export";
 import { getAdminIdentity, requireStepUp, stepUpMfa } from "@/lib/services/admin-auth";
@@ -114,37 +114,9 @@ describe("open ballot: votes stored with the voter, visible only to a Super Admi
     expect(list.every((c) => c.voter_requested && c.status === "APPROVED" && c.reviewed_by === sup.id)).toBe(true);
   });
 
-  it("cancel a vote: one Super Admin cancels both ballots during voting; kept as invalidated, audited, no re-vote", async () => {
-    const e = await makeElection();
-    const { s, token } = await voteAs(e, 1, 1, "203.0.113.81");
-    await voteAs(e, 0, 0, "203.0.113.82");
-    const sup = await makeAdmin("SUPER_ADMIN");
-    const hash = (await sessionFor(sup.id)).hash;
-    const input = { electionId: e.electionId, studentId: s.id, channel: "Committee decision", reason: "Vote was cast by mistake, cancelled on request" };
-    await expect(cancelVote((await sessionFor(sup.id, { stepUp: false })).hash, input, "h")).rejects.toMatchObject({ code: "STEP_UP_REQUIRED" });
-    const a = await makeAdmin("ELECTION_ADMIN");
-    await expect(cancelVote((await sessionFor(a.id)).hash, input, "h")).rejects.toMatchObject({ code: "FORBIDDEN" });
-    const before = await getBallotTotals(e.electionId);
-    expect(await cancelVote(hash, input, "h")).toBe(2);
-    const after = await getBallotTotals(e.electionId);
-    expect(after.participation).toBe(before.participation);
-    expect(after.valid_ballots).toBe(before.valid_ballots - 2);
-    const mine = (await listVoteRecords(hash, e.electionId, "h")).find((r) => r.studentId === s.id)!;
-    expect(mine.choices.every((c) => c.status === "INVALIDATED")).toBe(true);
-    expect(await voteChangedAt(s.id, e.electionId)).not.toBeNull();
-    const top = await getLiveTop3(hash, e.electionId);
-    expect(top[0].top.find((t) => t.name === "Boy 2")?.votes ?? 0).toBe(0);
-    const audit = await query<{ actor_admin_id: string; details: { ballots: unknown[]; channel: string } }>(
-      `select actor_admin_id, details from audit_logs where action = 'CORRECTION.VOTE_CANCELLED' order by id desc limit 1`);
-    expect(audit[0].actor_admin_id).toBe(sup.id);
-    expect(audit[0].details.ballots).toHaveLength(2);
-    // Already cancelled; no second ballot; the change path refuses an invalidated vote.
-    await expect(cancelVote(hash, input, "h")).rejects.toMatchObject({ code: "INVALID_STATE" });
-    await expect(castVote(token, e.ballot(0, 0))).rejects.toMatchObject({ code: "ALREADY_VOTED" });
-    await expect(changeVoteOnRequest(hash, { electionId: e.electionId, studentId: s.id, positionId: e.boysPositionId, candidateId: e.boys[0], channel: "x1", reason: "Voter asked to switch their Boys' CR vote" }, "h"))
-      .rejects.toMatchObject({ code: "INVALID_STATE" });
-    await setElectionStatus(e.electionId, "CLOSED");
-    expect((await getResultSummary(e.electionId)).reconciled).toBe(true);
+  it("there is no one-person vote cancel option", async () => {
+    const r = await asOwner(async (c) => (await c.query(`select count(*)::int as n from pg_proc where proname = 'cancel_vote_on_request'`)).rows[0].n);
+    expect(r).toBe(0);
   });
 
   it("voter-requested change is refused without a fresh code, for other roles, with bad input, and cannot be forged by the app role", async () => {
