@@ -40,6 +40,11 @@ export function SiteFooter({ institution, department, lang }: { institution: str
         <div className="border-t border-white/5">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p>© {num(new Date().getFullYear(), lang)} {t.copyright}</p>
+            <p>
+              {t.credit.pre}{" "}
+              <a href="https://ratulroy.com" target="_blank" rel="noopener" className="font-semibold text-gold-300 hover:text-white hover:underline">{t.credit.name}</a>{" "}
+              <span className="text-slate-500">(ratulroy.com)</span>{t.credit.post}
+            </p>
             <p>{t.tagline}</p>
           </div>
         </div>
