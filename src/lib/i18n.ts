@@ -130,7 +130,7 @@ const en = {
     about: (dept: string, inst: string) => `The official Class Representative election portal of TechTitans-28, ${dept}, ${inst}.`,
     election: "Election", support: "Support",
     links: { portal: "Voter portal", results: "Results & turnout", verify: "Verify a receipt", report: "Report a problem", guide: "Voting guidelines", terms: "Terms & conditions", admin: "Committee sign-in" },
-    copyright: "TechTitans-28 Election Committee", tagline: "One student · one ballot · open ballot",
+    copyright: "TechTitans-28 Election Committee", credit: { pre: "Designed and developed by", name: "Ratul Roy", post: "" }, tagline: "One student · one ballot · open ballot",
   },
   vote: {
     secure: "Secure ballot", eyebrow: "Islamic University · ICT", tagline: "Your voice. Your vote.", home: "Election home", needHelp: "Need help?",
@@ -352,7 +352,7 @@ const bn: Dict = {
     about: () => "টেকটাইটানস-২৮, তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ, ইসলামী বিশ্ববিদ্যালয়ের ক্লাস প্রতিনিধি নির্বাচনের অফিসিয়াল পোর্টাল।",
     election: "নির্বাচন", support: "সহায়তা",
     links: { portal: "ভোটার পোর্টাল", results: "ফলাফল ও উপস্থিতি", verify: "রসিদ যাচাই", report: "সমস্যা জানান", guide: "ভোটদান নির্দেশিকা", terms: "শর্তাবলি", admin: "কমিটি লগইন" },
-    copyright: "টেকটাইটানস-২৮ নির্বাচন কমিটি", tagline: "এক শিক্ষার্থী · এক ব্যালট · উন্মুক্ত ব্যালট",
+    copyright: "টেকটাইটানস-২৮ নির্বাচন কমিটি", credit: { pre: "ডিজাইন ও ডেভেলপ করেছেন", name: "রাতুল রায়", post: "" }, tagline: "এক শিক্ষার্থী · এক ব্যালট · উন্মুক্ত ব্যালট",
   },
   vote: {
     secure: "সুরক্ষিত ব্যালট", eyebrow: "ইসলামী বিশ্ববিদ্যালয় · আইসিটি", tagline: "আপনার কণ্ঠ। আপনার ভোট।", home: "নির্বাচনের মূল পাতা", needHelp: "সাহায্য প্রয়োজন?",
