@@ -187,6 +187,7 @@ export type VoterSession = {
   rollNumber: string;
   electionId: string;
   electionTitle: string;
+  electionStatus: string;
   expiresAt: Date;
   hasVoted: boolean;
   receiptCode: string | null;
@@ -197,7 +198,7 @@ export async function getVoterSession(token: string | undefined | null): Promise
   if (!token || token.length > 100) return null;
   const row = await one<VoterSession>(
     `select s.id as "studentId", s.full_name as "fullName", s.roll_number as "rollNumber",
-            e.id as "electionId", e.title as "electionTitle", c.expires_at as "expiresAt",
+            e.id as "electionId", e.title as "electionTitle", e.status::text as "electionStatus", c.expires_at as "expiresAt",
             (p.id is not null) as "hasVoted", p.receipt_code as "receiptCode", p.voted_at as "votedAt"
        from voter_credentials c
        join students s on s.id = c.student_id

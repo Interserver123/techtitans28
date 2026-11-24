@@ -49,6 +49,7 @@ export default async function CorrectionsPage() {
                     {r.replacement_ref && <span className="ml-2 text-xs text-slate-400">নতুন ব্যালট <code className="text-gold-300">{r.replacement_ref}</code> (মূলটি বাতিল চিহ্নিত, মুছে ফেলা হয়নি)</span>}
                   </p>
                 )}
+                {r.voter_requested && <p className="mt-1 text-xs text-sky-300">ভোটারের অনুরোধে একজন সুপার অ্যাডমিন সরাসরি পরিবর্তন করেছেন · মাধ্যম: {r.request_channel}</p>}
                 {subjects?.get(r.id) && <p className="mt-1 text-xs text-amber-300">ভোটার (শুধু সুপার অ্যাডমিন দেখেন): {subjects.get(r.id)!.name} · রোল {subjects.get(r.id)!.roll}</p>}
                 <p className="mt-2 text-sm text-slate-300">{r.reason}</p>
                 {r.evidence_note && <p className="mt-1 text-sm text-slate-400">প্রমাণ: {r.evidence_note}</p>}

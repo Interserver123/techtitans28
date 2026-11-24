@@ -3,11 +3,11 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { listVoteRecords, requestChoiceChange, voteChangedAt } from "@/lib/services/vote-records";
+import { changeVoteOnRequest, listVoteRecords, requestChoiceChange, voteChangedAt } from "@/lib/services/vote-records";
 import { createCorrection, reviewCorrection, listCorrections, correctionSubjects } from "@/lib/services/corrections";
 import { auditExport, correctionsExport, participationCsv } from "@/lib/services/records-export";
 import { getAdminIdentity, requireStepUp, stepUpMfa } from "@/lib/services/admin-auth";
-import { getLiveTop3, getResultSummary, verifyResults } from "@/lib/services/results";
+import { getBallotTotals, getLiveTop3, getResultSummary, verifyResults } from "@/lib/services/results";
 import { castVote } from "@/lib/services/voting";
 import { getVoterSession, requestOtp, verifyOtp } from "@/lib/services/voter-auth";
 import { devOutbox } from "@/lib/otp/provider";
@@ -70,6 +70,72 @@ describe("open ballot: votes stored with the voter, visible only to a Super Admi
       await expect(getLiveTop3((await sessionFor(a.id)).hash, e.electionId)).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
     await expect(getLiveTop3("not-a-session", e.electionId)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+  });
+
+  it("voter-requested change: one Super Admin with a fresh code changes a vote during voting; original kept, audited, receipt told", async () => {
+    const e = await makeElection();
+    const { s } = await voteAs(e, 0, 0, "203.0.113.71");
+    const sup = await makeAdmin("SUPER_ADMIN");
+    const hash = (await sessionFor(sup.id)).hash;
+    const input = { electionId: e.electionId, studentId: s.id, positionId: e.boysPositionId, candidateId: e.boys[1], channel: "Facebook message 10:05", reason: "Voter asked to switch their Boys' CR vote" };
+    const before = await getBallotTotals(e.electionId);
+    expect(await voteChangedAt(s.id, e.electionId)).toBeNull();
+    const id = await changeVoteOnRequest(hash, input, "h");
+
+    const bs = (await ballots(e.electionId)).filter((b) => b.position_id === e.boysPositionId);
+    expect(bs.find((b) => b.candidate_id === e.boys[0])?.status).toBe("INVALIDATED");
+    expect(bs.find((b) => b.candidate_id === e.boys[1])).toMatchObject({ status: "VALID", created_by_correction_id: id });
+    const mine = (await listVoteRecords(hash, e.electionId, "h")).find((r) => r.studentId === s.id)!;
+    const boy = mine.choices.find((c) => c.positionId === e.boysPositionId)!;
+    expect([boy.originalName, boy.candidateName, boy.status]).toEqual(["Boy 1", "Boy 2", "VALID"]);
+    expect(await voteChangedAt(s.id, e.electionId)).not.toBeNull();
+    const after = await getBallotTotals(e.electionId);
+    expect(after.participation).toBe(before.participation);
+    expect(after.valid_ballots).toBe(before.valid_ballots);
+    const top = await getLiveTop3(hash, e.electionId);
+    expect(top[0].top[0]).toMatchObject({ name: "Boy 2", votes: 1 });
+    const audit = await query<{ actor_admin_id: string; details: Record<string, unknown> }>(
+      `select actor_admin_id, details from audit_logs where action = 'CORRECTION.VOTER_REQUESTED' order by id desc limit 1`);
+    expect(audit[0].actor_admin_id).toBe(sup.id);
+    expect(audit[0].details).toMatchObject({ channel: "Facebook message 10:05", from_candidate: "Boy 1", to_candidate: "Boy 2", election_status: "LIVE" });
+
+    // Can be changed again (follows the replacement chain), also while paused and after closing.
+    await setElectionStatus(e.electionId, "PAUSED");
+    await changeVoteOnRequest(hash, { ...input, candidateId: e.boys[2] }, "h");
+    await setElectionStatus(e.electionId, "CLOSED");
+    await changeVoteOnRequest(hash, { ...input, candidateId: e.boys[0] }, "h");
+    const r = await getResultSummary(e.electionId);
+    expect(r.reconciled).toBe(true);
+    expect(r.positions[0].tally.find((t) => t.display_name === "Boy 1")?.votes).toBe(1);
+    // Shown as voter-requested on the corrections page.
+    const { listCorrections } = await import("@/lib/services/corrections");
+    const list = await listCorrections(e.electionId);
+    expect(list).toHaveLength(3);
+    expect(list.every((c) => c.voter_requested && c.status === "APPROVED" && c.reviewed_by === sup.id)).toBe(true);
+  });
+
+  it("voter-requested change is refused without a fresh code, for other roles, with bad input, and cannot be forged by the app role", async () => {
+    const e = await makeElection();
+    const { s } = await voteAs(e, 0, 0, "203.0.113.72");
+    const sup = await makeAdmin("SUPER_ADMIN");
+    const input = { electionId: e.electionId, studentId: s.id, positionId: e.boysPositionId, candidateId: e.boys[1], channel: "In person", reason: "Voter asked to switch their Boys' CR vote" };
+    await expect(changeVoteOnRequest((await sessionFor(sup.id, { stepUp: false })).hash, input, "h")).rejects.toMatchObject({ code: "STEP_UP_REQUIRED" });
+    for (const role of ["ELECTION_ADMIN", "RESULTS_OFFICER", "AUDITOR"] as const) {
+      const a = await makeAdmin(role);
+      await expect(changeVoteOnRequest((await sessionFor(a.id)).hash, input, "h")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    const hash = (await sessionFor(sup.id)).hash;
+    await expect(changeVoteOnRequest(hash, { ...input, candidateId: e.boys[0] }, "h")).rejects.toMatchObject({ code: "INVALID_STATE" });
+    await expect(changeVoteOnRequest(hash, { ...input, candidateId: e.girls[1] }, "h")).rejects.toMatchObject({ code: "INVALID_CANDIDATE" });
+    await expect(changeVoteOnRequest(hash, { ...input, reason: "too short" }, "h")).rejects.toThrow();
+    await expect(changeVoteOnRequest(hash, { ...input, channel: "" }, "h")).rejects.toThrow();
+    // The application role cannot mark a request as voter-requested itself.
+    const b = (await ballots(e.electionId))[0];
+    await expect(query(`insert into correction_requests (election_id, ballot_id, correction, reason, requested_by, new_candidate_id, voter_requested, request_channel)
+      values ($1, $2, 'REPLACE_CHOICE', 'forged voter request, should fail', $3, $4, true, 'x')`, [e.electionId, b.ballot_ref ? (await asOwner(async (c) => (await c.query(`select id from ballots where ballot_ref = $1`, [b.ballot_ref])).rows[0].id)) : null, sup.id, e.boys[1]]))
+      .rejects.toThrow(/permission denied/);
+    // Nothing changed.
+    expect((await ballots(e.electionId)).every((x) => x.status === "VALID")).toBe(true);
   });
 
   it("refused without a fresh code, with a stale or revoked session, for every other role, and for the application role", async () => {

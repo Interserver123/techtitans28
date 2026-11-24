@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { FilePlus2, Search } from "lucide-react";
+import { FilePlus2, Search, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -60,7 +60,51 @@ function RequestDialog({ electionId, voter, choice, candidates }: { electionId: 
   );
 }
 
-export function VotesTable({ electionId, voters, positions, candidates, canRequest, adminId }: { electionId: string; voters: Voter[]; positions: Pos[]; candidates: Cand[]; canRequest: boolean; adminId: string }) {
+function VoterRequestDialog({ electionId, voter, choice, candidates }: { electionId: string; voter: Voter; choice: Choice; candidates: Cand[] }) {
+  const [open, setOpen] = useState(false);
+  const options = candidates.filter((c) => c.positionId === choice.positionId && c.id !== choice.candidateId);
+  const [candidateId, setCandidateId] = useState(options[0]?.id ?? "");
+  const [channel, setChannel] = useState("");
+  const [reason, setReason] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const { run, busy, error } = useAction();
+  const target = options.find((c) => c.id === candidateId)?.name ?? "";
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setConfirmed(false); }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" aria-label={`${voter.name}-এর অনুরোধে ${posName(choice.gender)} ভোট পরিবর্তন`}><UserPen /> ভোটারের অনুরোধে পরিবর্তন</Button>
+      </DialogTrigger>
+      <DialogContent title={`ভোটারের অনুরোধে ${posName(choice.gender)} ভোট পরিবর্তন`} description={`${voter.name} (রোল ${voter.roll}) — বর্তমান: ${choice.candidateName} · ${choice.ballotRef}`}>
+        <form className="space-y-4" onSubmit={async (e) => {
+          e.preventDefault();
+          const r = await run("/api/admin/votes/voter-request", { json: { electionId, studentId: voter.studentId, positionId: choice.positionId, candidateId, channel, reason } }, "ভোট পরিবর্তন করা হয়েছে");
+          if (r) { setOpen(false); setChannel(""); setReason(""); setConfirmed(false); }
+        }}>
+          <Alert tone="warning">
+            শুধু তখনই ব্যবহার করুন যখন ভোটার <strong>নিজে</strong> পরিবর্তন চেয়েছেন এবং আপনি নিশ্চিত হয়েছেন অনুরোধটি তাঁরই। পরিবর্তন সঙ্গে সঙ্গে কার্যকর হবে: মূল ব্যালট বাতিল চিহ্নিত হবে (মুছে ফেলা হবে না), নতুন প্রার্থীর জন্য একটি যুক্ত ব্যালট যোগ হবে, অডিট লগে আপনার নামে লেখা হবে এবং ভোটার রসিদ পাতায় দেখতে পাবেন। কারণে ভোটারের নাম বা রোল লিখবেন না।
+          </Alert>
+          {options.length === 0 ? <Alert tone="error">এই পদে অন্য কোনো অনুমোদিত প্রার্থী নেই।</Alert> : (
+            <Field label="নতুন প্রার্থী" htmlFor="vr-c">
+              <Select id="vr-c" value={candidateId} onChange={(e) => setCandidateId(e.target.value)}>
+                {options.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </Select>
+            </Field>
+          )}
+          <Field label="ভোটার কীভাবে অনুরোধ করেছেন (বাধ্যতামূলক)" htmlFor="vr-ch"><Input id="vr-ch" value={channel} onChange={(e) => setChannel(e.target.value)} placeholder="যেমন: ফেসবুক মেসেজ, ২৪ নভেম্বর সকাল ১০টা" minLength={2} maxLength={200} required /></Field>
+          <Field label="কারণ (বাধ্যতামূলক, অন্তত ২০ অক্ষর)" htmlFor="vr-r"><Textarea id="vr-r" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} minLength={20} maxLength={2000} required /></Field>
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input type="checkbox" className="mt-1" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+            <span>আমি নিশ্চিত করছি যে ভোটার নিজে {choice.candidateName} থেকে {target || "নতুন প্রার্থী"}-তে ভোট পরিবর্তনের অনুরোধ করেছেন।</span>
+          </label>
+          {error && <Alert tone="error">{error}</Alert>}
+          <Button type="submit" className="w-full" loading={busy} disabled={!candidateId || !confirmed || channel.trim().length < 2 || reason.trim().length < 20}>এখনই পরিবর্তন করুন</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function VotesTable({ electionId, voters, positions, candidates, canRequest, canVoterChange, adminId }: { electionId: string; voters: Voter[]; positions: Pos[]; candidates: Cand[]; canRequest: boolean; canVoterChange: boolean; adminId: string }) {
   const [q, setQ] = useState("");
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -83,7 +127,12 @@ export function VotesTable({ electionId, voters, positions, candidates, canReque
           <p className="text-[11px] text-gold-300">
             অপেক্ষমাণ অনুরোধ{c.pending.candidateName ? ` → ${c.pending.candidateName}` : ""}{c.pending.requestedBy === adminId ? " (আপনার — অন্য সুপার অ্যাডমিনের অনুমোদন লাগবে)" : ""}
           </p>
-        ) : canRequest && c.status === "VALID" && <RequestDialog electionId={electionId} voter={v} choice={c} candidates={candidates} />}
+        ) : c.status === "VALID" && (canVoterChange || canRequest) && (
+          <div className="flex flex-wrap gap-2">
+            {canVoterChange && <VoterRequestDialog electionId={electionId} voter={v} choice={c} candidates={candidates} />}
+            {canRequest && <RequestDialog electionId={electionId} voter={v} choice={c} candidates={candidates} />}
+          </div>
+        )}
       </div>
     );
   };

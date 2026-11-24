@@ -85,6 +85,31 @@ export async function requestChoiceChange(sessionTokenHash: string, input: z.inp
   }
 }
 
+export const voterRequestSchema = z.object({
+  electionId: z.string().uuid(),
+  studentId: z.string().uuid(),
+  positionId: z.string().uuid(),
+  candidateId: z.string().uuid(),
+  channel: z.string().trim().min(2, "ভোটার কীভাবে অনুরোধ করেছেন তা লিখুন।").max(200),
+  reason: z.string().trim().min(20, "অন্তত ২০ অক্ষরে কারণ ব্যাখ্যা করুন।").max(2000),
+});
+
+/**
+ * The voter asked (e.g. on Facebook) to change their vote: one Super Admin records it at once, while voting is
+ * live or paused or after it closes. The original ballot is kept (invalidated) and a linked replacement is added;
+ * the database re-checks the Super Admin session and a fresh authenticator code, and writes the audit log.
+ */
+export async function changeVoteOnRequest(sessionTokenHash: string, input: z.input<typeof voterRequestSchema>, ipHash: string | null) {
+  const v = voterRequestSchema.parse(input);
+  try {
+    const r = await one<{ id: string }>(`select change_vote_on_voter_request($1, $2, $3, $4, $5, $6, $7, $8) as id`,
+      [sessionTokenHash, v.electionId, v.studentId, v.positionId, v.candidateId, v.channel, v.reason, ipHash]);
+    return r!.id;
+  } catch (e) {
+    throw fromDbError(e) ?? e;
+  }
+}
+
 /** When this voter's vote was last corrected (null if never). Safe before the upgrade is applied. */
 export async function voteChangedAt(studentId: string, electionId: string): Promise<Date | null> {
   try {

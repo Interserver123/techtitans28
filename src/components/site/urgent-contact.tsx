@@ -4,8 +4,8 @@ import { URGENT_CONTACT_URL } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
 /** "Urgent problem? Knock here" — one link, shown on the voter portal, the footer and the help card. */
-export function UrgentContact({ lang, tone = "light", className }: { lang: Lang; tone?: "light" | "dark"; className?: string }) {
-  const t = dict(lang).urgent;
+export function UrgentContact({ lang, tone = "light", className, title, body }: { lang: Lang; tone?: "light" | "dark"; className?: string; title?: string; body?: string }) {
+  const t = { ...dict(lang).urgent, ...(title ? { title } : {}), ...(body ? { body } : {}) };
   const dark = tone === "dark";
   return (
     <div className={cn("flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center", dark ? "border-white/15 bg-white/5 text-slate-200" : "border-gold/40 bg-amber-50/70 text-ink", className)}>

@@ -36,6 +36,9 @@ export type CorrectionRow = {
   reviewed_at: Date | null;
   review_note: string | null;
   ballot_status_before: string | null;
+  /** Changed by one Super Admin at the voter's own request (migration 0011; false before it). */
+  voter_requested: boolean;
+  request_channel: string | null;
 };
 
 export async function listCorrections(electionId: string) {
@@ -45,6 +48,7 @@ export async function listCorrections(electionId: string) {
        select r.id, r.election_id, b.ballot_ref, b.status as ballot_status, r.correction, r.reason, r.evidence_note, r.evidence_path,
               r.status, r.requested_by, ra.full_name as requester_name, r.requested_at, r.reviewed_by, rv.full_name as reviewer_name,
               r.reviewed_at, r.review_note, r.ballot_status_before,
+              coalesce((to_jsonb(r)->>'voter_requested')::boolean, false) as voter_requested, to_jsonb(r)->>'request_channel' as request_channel,
               case when r.correction::text = 'REPLACE_CHOICE' then b.candidate_name end as from_candidate,
               nc.display_name as to_candidate, rb.ballot_ref as replacement_ref,
               exists (select 1 from ledger x where x.replaces_ballot_ref = b.ballot_ref) as replaced
