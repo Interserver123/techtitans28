@@ -19,7 +19,7 @@ const STR = {
     none: "No election has been announced yet.", eyebrow: "Public transparency dashboard", official: "Official result · Elected Class Representative",
     roll: "Roll", votes: "votes", ofValid: "of valid ballots", published: "Published", tie: "Tied result",
     tieText: (names: string, v: string) => `${names} received ${v} votes each. No winner is declared automatically.`, decision: "Committee decision:",
-    cw: "Candidate-wise results", validLine: (v: string, i: string) => `${v} valid ballots · ${i} invalidated by approved correction`,
+    cw: "Candidate-wise results", top3: "Top 3", validLine: (v: string, i: string) => `${v} valid ballots · ${i} invalidated by approved correction`,
     report: "Official report", reportText: "Signed-off result report with participation, candidate-wise votes and the tally fingerprint.", download: "Download PDF report",
     sealedA: "Candidate-wise results are ", sealed: "sealed", sealedClosed: " until the Election Committee verifies and publishes them.",
     sealedOpen: " until voting closes. They cannot be computed — by anyone — while the election is open.",
@@ -29,13 +29,16 @@ const STR = {
     none: "এখনও কোনো নির্বাচন ঘোষণা করা হয়নি।", eyebrow: "জনসাধারণের স্বচ্ছতা ড্যাশবোর্ড", official: "আনুষ্ঠানিক ফলাফল · নির্বাচিত ক্লাস প্রতিনিধি",
     roll: "রোল", votes: "ভোট", ofValid: "বৈধ ব্যালটের", published: "প্রকাশিত", tie: "সমান ভোট",
     tieText: (names: string, v: string) => `${names} প্রত্যেকে ${v}টি করে ভোট পেয়েছেন। স্বয়ংক্রিয়ভাবে কোনো বিজয়ী ঘোষণা করা হয় না।`, decision: "কমিটির সিদ্ধান্ত:",
-    cw: "প্রার্থীভিত্তিক ফলাফল", validLine: (v: string, i: string) => `${v}টি বৈধ ব্যালট · অনুমোদিত সংশোধনে ${i}টি বাতিল`,
+    cw: "প্রার্থীভিত্তিক ফলাফল", top3: "শীর্ষ ৩ জন", validLine: (v: string, i: string) => `${v}টি বৈধ ব্যালট · অনুমোদিত সংশোধনে ${i}টি বাতিল`,
     report: "আনুষ্ঠানিক প্রতিবেদন", reportText: "উপস্থিতি, প্রার্থীভিত্তিক ভোট ও গণনার ফিঙ্গারপ্রিন্টসহ স্বাক্ষরিত ফলাফল প্রতিবেদন।", download: "পিডিএফ প্রতিবেদন ডাউনলোড",
     sealedA: "প্রার্থীভিত্তিক ফলাফল ", sealed: "সিলগালা", sealedClosed: " — নির্বাচন কমিটি যাচাই করে প্রকাশ না করা পর্যন্ত।",
     sealedOpen: " — ভোটগ্রহণ শেষ না হওয়া পর্যন্ত। নির্বাচন চলাকালে কেউই তা গণনা করতে পারে না।",
     part: "সময়ের সাথে অংশগ্রহণ", empty: "এখনও কোনো ব্যালট জমা হয়নি।", partSub: "ঘণ্টাভিত্তিক মোট জমা হওয়া ব্যালট (ঢাকা সময়)", voted: "ভোট দিয়েছেন?", verify: "রসিদ যাচাই করুন", and: " ও ",
   },
 } satisfies Record<Lang, unknown>;
+
+/** Rank badges: gold, silver, bronze. */
+const MEDAL: Record<number, string> = { 1: "bg-gold text-navy", 2: "bg-slate-300 text-slate-800", 3: "bg-amber-700 text-white" };
 
 export const metadata = { title: "Results & transparency" };
 
@@ -69,6 +72,8 @@ export default async function ResultsPage() {
           {published.positions.map((pr) => {
             const valid = pr.totals.valid_ballots;
             const title = posLabel(pr.position.gender, lang, true);
+            // Top 3 by rank (candidates tied for 3rd are all shown); candidates without votes are left out.
+            const top = pr.tally.filter((r) => r.rank <= 3 && r.votes > 0);
             return (
               <div key={pr.position.id}>
                 <h2 className="font-display mb-4 flex items-center gap-3 text-2xl font-bold sm:text-3xl">
@@ -105,15 +110,15 @@ export default async function ResultsPage() {
                 )}
                 <Card className="mt-6">
                   <CardHeader>
-                    <CardTitle>{S.cw}</CardTitle>
+                    <CardTitle>{S.top3} · {title}</CardTitle>
                     <CardDescription>{S.validLine(n(valid), n(pr.totals.invalidated_ballots))}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ResultsBarChart data={pr.tally.slice(0, 12).map((r) => ({ name: r.display_name, votes: r.votes, lead: r.rank === 1 && r.votes > 0 }))} />
+                    <ResultsBarChart data={top.map((r) => ({ name: r.display_name, votes: r.votes, lead: r.rank === 1 && r.votes > 0 }))} />
                     <ul className="mt-4 divide-y divide-line">
-                      {pr.tally.map((r) => (
+                      {top.map((r) => (
                         <li key={r.candidate_id} className="flex items-center gap-3 py-3">
-                          <span className="w-7 text-sm font-bold text-muted">{n(r.rank)}</span>
+                          <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${MEDAL[r.rank] ?? "bg-slate-100 text-muted"}`}>{n(r.rank)}</span>
                           <CandidateAvatar name={r.display_name} url={r.photo_url ?? null} className="size-10 rounded-full text-sm" />
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-semibold">{r.display_name}</p>
